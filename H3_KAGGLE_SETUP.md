@@ -42,3 +42,21 @@ The pinned Comfy-Org INT8 checkpoint stores quantization configuration in per-la
 If the previous notebook failed in `h3_tensor_parallel.py` while reading that metadata, keep the same Kaggle session. Paste [the recovery cell](patches/resume_h3_after_metadata_error.py) into a new cell and run it. It stops only the notebook's own ComfyUI process and applies the compatibility patch. Then rerun steps **5, 6 and 7**. The already verified weights remain in scratch storage; step 4 can be skipped in this recovery path.
 
 The uploaded run's step 4 took 10 minutes 44 seconds for downloading and verifying 41.38 GiB. GPUs do not accelerate network transfer or the notebook's CPU SHA-256 checks. The updated notebook hashes each newly downloaded file once instead of twice, prints download durations, and preserves complete failure details in `failed-history.json`. These changes do not establish a new download-speed or full-render benchmark.
+
+## Decoder failure audit and safeguards
+
+The later uploaded run reached `VAEDecodeH3DualGPU` with sampled video/audio latents and failed after about 4 minutes 13 seconds. Its older runner retained only the last 14,000 characters of the error, dominated by tensor contents. The exception type, message and decoder traceback are absent. An out-of-memory diagnosis cannot be established from that upload. Run [the read-only diagnostic cell](patches/diagnose_h3_failure.py) in the existing session before restarting it; it prints the full exception without another render.
+
+The current notebook defaults to the built-in video VAE decoder and one render. Dual-T4 tensor-parallel sampling remains enabled. Disabling the optional dual VAE avoids that node, but does not establish why that node failed. Before decoding, the notebook saves both sampled latent tensors to `ComfyUI/output/h3_latents/<run-id>.safetensors`, checks for non-finite values, clears both TP shard references and unloads sampler models. This gives decoding more GPU memory. Future full renders reload shards, so the timing report no longer calls a second render a warm-resident benchmark.
+
+If decoding or export fails after the checkpoint is saved, set `RESUME_CHECKPOINT` to its run ID and rerun the render cell. That submitted graph contains only latent loading, VAEs and export; it contains no sampler or text encoder. Keep the same canvas and duration settings. Checkpoints are written to working output, so they can also survive a saved notebook version. This safeguard cannot retroactively recover a latent that an older notebook never saved.
+
+Audit checks cover checkpoint round-trip with H3 video/audio shapes, both TP cache references, non-finite latent rejection, native temporal chunk planning for 5/22/124 frames, actual H.264 MP4 writing/reading with stereo audio, and ComfyUI graph validation. The decoder geometry tests use synthetic decoded pixels; they do not run pretrained VAE weights. Full T4 inference remains unverified in this CPU workspace.
+
+Run the standard tests with `python -m unittest discover -s tests -v`. With the pinned ComfyUI dependencies installed, run the additional CPU runtime checks using `COMFY_ROOT=/path/to/ComfyUI python tests/test_h3_runtime.py`.
+
+### Confirmed follow-up: helper VAE CUDA OOM
+
+The diagnostic supplied afterward confirms `torch.OutOfMemoryError` in `VAEDecodeH3DualGPU.decode`, specifically `load_models_gpu([helper.patcher], force_full_load=True)`. GPU 1 had 14.36 GiB allocated and 10.81 MiB free. It failed while loading helper weights, before decoding pixels. The retained sampler allocations and a fully resident helper decoder exhausted the card's capacity.
+
+[The one-cell OOM recovery](patches/recover_h3_decoder_oom.py) upgrades the existing Kaggle kernel without reinstalling packages or downloading models. It preserves failure history, installs the checkpoint node, restarts only ComfyUI, and runs one clip using built-in video decoding after sampler-memory cleanup. If a checkpoint from the updated runner already exists, rerunning the recovery cell uses it for decode-only recovery. The initial recovery from an older notebook must resample once because that notebook never persisted its latents. This is a targeted fix with CPU validation; it still needs the user's T4 run to verify full pretrained rendering.
