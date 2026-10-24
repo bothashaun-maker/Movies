@@ -6,6 +6,7 @@ import os
 from pathlib import Path
 import shutil
 import tempfile
+import time
 from types import SimpleNamespace
 import unittest
 from unittest.mock import patch
@@ -45,7 +46,7 @@ class StorageTests(unittest.TestCase):
         tree=ast.parse(''.join(self.nb['cells'][2]['source']))
         funcs=ast.Module(body=[n for n in tree.body if isinstance(n,ast.FunctionDef)],type_ignores=[])
         self.scope=dict(ROOT=root,COMFY=root/'ComfyUI',Path=paths,os=os,shutil=shutil,
-                        hashlib=hashlib,json=json,MODEL_FAMILY='ref2va',USE_BRIDGE=False,
+                        hashlib=hashlib,json=json,time=time,MODEL_FAMILY='ref2va',USE_BRIDGE=False,
                         MODEL_DATASET='',MODEL_STORAGE='auto',ALLOW_MODEL_DOWNLOADS=True,MODELS_READY=False,
                         child_env=os.environ.copy())
         exec(compile(funcs,'model_storage_functions','exec'),self.scope)

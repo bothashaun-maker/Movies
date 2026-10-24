@@ -34,3 +34,11 @@ For FL2VA, set `MODEL_FAMILY='fl2va'` consistently in the renderer and preparati
 ## Validation
 
 The uploaded run establishes that CUDA 13, FP16 computation, host-staged GPU transfer, and Kitchen's native INT8 ConvRot kernel worked on its two T4s. CPU regression checks cover storage selection, nested input discovery, missing-model guards and resumable downloads. ComfyUI graph schema validation covers the supported graph variants. Full pretrained rendering, peak memory and timing still require a successful Kaggle render.
+
+## Recover the quantization metadata error without downloading again
+
+The pinned Comfy-Org INT8 checkpoint stores quantization configuration in per-layer `.comfy_quant` tensors. The original two-GPU loader expected the legacy `_quantization_metadata` global field. The notebook now installs a reader supporting both layouts and checks the actual checkpoint metadata before GPU model loading. Model bytes and hashes remain unchanged.
+
+If the previous notebook failed in `h3_tensor_parallel.py` while reading that metadata, keep the same Kaggle session. Paste [the recovery cell](patches/resume_h3_after_metadata_error.py) into a new cell and run it. It stops only the notebook's own ComfyUI process and applies the compatibility patch. Then rerun steps **5, 6 and 7**. The already verified weights remain in scratch storage; step 4 can be skipped in this recovery path.
+
+The uploaded run's step 4 took 10 minutes 44 seconds for downloading and verifying 41.38 GiB. GPUs do not accelerate network transfer or the notebook's CPU SHA-256 checks. The updated notebook hashes each newly downloaded file once instead of twice, prints download durations, and preserves complete failure details in `failed-history.json`. These changes do not establish a new download-speed or full-render benchmark.
