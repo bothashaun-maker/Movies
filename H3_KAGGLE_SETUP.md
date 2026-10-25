@@ -4,12 +4,12 @@ Use [minimax_h3_kaggle_complete.ipynb](minimax_h3_kaggle_complete.ipynb). This r
 
 1. Import the complete notebook into Kaggle.
 2. Select **GPU T4 ×2** and **Internet ON**.
-3. Edit the prompt and, optionally, an attached first-frame image in step 1.
-4. **Run All**. Step 7 previews the result and places a downloadable MP4 at the top of `/kaggle/working`.
+3. Edit the prompt and, optionally, an attached first-frame image at the top of the single code cell.
+4. Press **that cell’s ▶ button once**. Setup, weight verification, rendering and preview run automatically. **Run All** also works. The MP4 is placed at the top of `/kaggle/working`.
 
 The default is one 512 × 768 clip, four Turbo LoRA steps, 124 frames at 24 fps, and native audio. It does not run a second benchmark clip. CUDA 13 requires driver 580 or newer; the notebook checks the driver and tests both T4s before downloading missing weights.
 
-If Run All stops at a cell, the first exception identifies the failing stage; subsequent cells do not run. The reported step-4 `IndentationError` came from the notebook generator indenting the embedded metadata-check program. The generator now preserves that program's contents, checks embedded Python syntax, and enables rendering only after both hashes and metadata pass. Use the updated complete notebook; existing weights in the same session are reused.
+The notebook contains exactly one executable cell, so it does not require manual starts between stages. If a real error occurs, the exception and progress label identify the failing stage; later stages do not run. The reported step-4 `IndentationError` came from the notebook generator indenting the embedded metadata-check program. The generator now preserves that program's contents, checks embedded Python syntax, and enables rendering only after both hashes and metadata pass. Use the updated complete notebook; existing weights in the same session are reused.
 
 ## How the rewrite prevents the observed decoder conflict
 
@@ -29,9 +29,9 @@ The controller closes its processes on success, failure and keyboard interruptio
 
 ## Retry without spending GPU time on sampling again
 
-After successful sampling, step 6 saves `minimax_h3_dual_t4/ComfyUI/output/h3_latents/<run-id>.safetensors`. The run ID depends on the sampling graph, prompt, seed, model hashes, source revisions and prepared reference image.
+After successful sampling, the render stage saves `minimax_h3_dual_t4/ComfyUI/output/h3_latents/<run-id>.safetensors`. The run ID depends on the sampling graph, prompt, seed, model hashes, source revisions and prepared reference image.
 
-If decoding fails, rerun **step 6** with the same settings. It validates and reuses that checkpoint automatically. A completed identical job reuses its verified MP4. Change the seed or prompt to generate another clip. Initial sampling failures cannot be resumed from an unsaved checkpoint.
+If decoding fails, rerun **the single code cell** with the same settings after addressing the reported error. It validates and reuses that checkpoint automatically. A completed identical job reuses its verified MP4. Change the seed or prompt to generate another clip. Initial sampling failures cannot be resumed from an unsaved checkpoint.
 
 Graphs, per-stage logs, full execution histories and concise exceptions are in `minimax_h3_dual_t4/runs/<run-id>/`. Exceptions are retained separately so large tensor dumps cannot hide the cause.
 
@@ -41,9 +41,9 @@ Keep the same session to reuse scratch models. **Save Version** retains working 
 
 The default model payload is **41.38 GiB**. The notebook searches attached `/kaggle/input` files and existing model paths, then measures free space on `/kaggle/temp`, `/tmp` and working storage. It never assumes a 50 GiB quota or adds together directories on the same filesystem.
 
-Downloads and staging stay on the selected model filesystem. Symlinks expose files to ComfyUI without copying the weights. New downloads receive one SHA-256 check; existing files are verified before use. Interrupted Hugging Face downloads can resume. Re-running only step 6 skips model setup and hashing.
+Downloads and staging stay on the selected model filesystem. Symlinks expose files to ComfyUI without copying the weights. New downloads receive one SHA-256 check; existing files are verified before use. Interrupted Hugging Face downloads can resume. Rerunning the cell verifies existing files and reuses them; a matching latent checkpoint skips sampling.
 
-Downloads and hash verification use network, disk and CPU, so low GPU utilization during step 4 is expected. Their duration depends on the session and connection. The notebook makes no one-minute rendering or download promise.
+Downloads and hash verification use network, disk and CPU, so low GPU utilization during weight preparation is expected. Their duration depends on the session and connection. The notebook makes no one-minute rendering or download promise.
 
 To avoid downloading weights during GPU sessions, prepare these inputs with **Accelerator: None** and **Internet ON**, save their outputs, and attach them through Kaggle's **Add Input → Your Work**:
 
@@ -67,7 +67,7 @@ The uploaded Kaggle runs already establish that the pinned FP16 and ConvRot INT8
 
 Development checks exercise actual pinned ComfyUI graph validation for Ref2VA/FL2VA text and image workflows and the supported bridge workflow; terminal checkpoint execution and round-trip; non-finite latent rejection; process reaping after interruption; decoder failure followed by retry without resampling; complete error preservation; native temporal output geometry; and real H.264 MP4 export/readback with audio. Negative graph validation is also tested.
 
-The generated model-setup cell is also executed with small safetensors fixtures and a real metadata-reader subprocess. Tests cover successful validation, repeated execution without downloading again, rejection of incompatible metadata, and keeping rendering disabled on failure.
+The generated model-setup stage is also executed with small safetensors fixtures and a real metadata-reader subprocess. Tests cover successful validation, repeated execution without downloading again, rejection of incompatible metadata, and keeping rendering disabled on failure. Controller tests execute the single notebook cell through real metadata validation, substituting CPU fixtures for installation, GPU rendering and preview. They check automatic stage progression and stopping before rendering when validation fails.
 
 **A full pretrained render of this rewrite on Kaggle T4 ×2 has not been executed in the CPU development environment.** Graph and controller tests do not establish final rendering time, visual quality or measured peak VRAM.
 

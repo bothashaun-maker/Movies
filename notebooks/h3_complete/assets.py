@@ -85,7 +85,7 @@ def sha256_file(path):
 
 def require_models_ready():
     if not MODELS_READY:
-        raise RuntimeError('Model setup has not completed. Run the model setup cell successfully '
+        raise RuntimeError('Model setup has not completed. Fix the reported setup failure and rerun this cell '
                            'before starting ComfyUI or rendering; inspect storage-report.json if space is insufficient.')
     for a in selected_model_assets():
         if not file_has_size(asset_target(a),a):

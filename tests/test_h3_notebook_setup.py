@@ -15,6 +15,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from h3_notebook_helpers import notebook_stages
 
 ROOT=Path(__file__).resolve().parents[1]
 NOTEBOOK=ROOT/'minimax_h3_kaggle_complete.ipynb'
@@ -38,7 +39,7 @@ class GeneratedSetup(unittest.TestCase):
         self.temp=tempfile.TemporaryDirectory();self.addCleanup(self.temp.cleanup)
         self.root=Path(self.temp.name)
         self.nb=json.loads(NOTEBOOK.read_text())
-        self.cells={cell['id']:''.join(cell['source']) for cell in self.nb['cells'] if cell['cell_type']=='code'}
+        self.cells=notebook_stages(self.nb)
 
     def test_all_embedded_programs_compile_in_generated_notebook(self):
         programs={'probe','kernel_probe','metadata_probe','script','code','compat_source','checkpoint_source'}
@@ -78,6 +79,52 @@ class GeneratedSetup(unittest.TestCase):
             return result
         scope['run']=run
         return scope,source_file
+
+    def execute_single_cell(self, valid):
+        scope,source_file=self.prepare_scope(valid)
+        stages={key:value for key,value in self.cells.items() if key!='settings'}
+        # Substitute only installation/GPU rendering/UI for this CPU controller test.
+        # The real catalog, generated weight setup, metadata child process and
+        # workflow definitions still execute in the shipped entry cell.
+        fixture_keys=('ASSETS','MODEL_DATASET','MODEL_STORAGE','STACK_READY')
+        stages['install']='\n'.join(f'{key} = {scope[key]!r}' for key in fixture_keys)
+        stages['install']+=f"\nPY = Path({str(scope['PY'])!r})\nMGPU = Path({str(scope['MGPU'])!r})\n"
+        stages['render']="RESULT_PATH = ROOT/'controller-fixture.mp4'\nRESULT_PATH.write_bytes(b'controller fixture; GPU render replaced in test')"
+        stages['result']="assert RESULT_PATH.is_file()\npreview_reached = True"
+        for key in stages:
+            stages[key]=f'events.append({key!r})\n'+stages[key]
+        cells=[cell for cell in self.nb['cells'] if cell['cell_type']=='code']
+        self.assertEqual(len(cells),1,'Run All must not execute additional standalone stages')
+        source=''.join(cells[0]['source']).replace("Path('/kaggle/working/minimax_h3_dual_t4')",f'Path({str(self.root)!r})')
+        tree=ast.parse(source)
+        package=next(node for node in tree.body if isinstance(node,ast.Assign)
+                     and any(isinstance(t,ast.Name) and t.id=='_H3_PIPELINE_SOURCES' for t in node.targets))
+        package.value=ast.parse(repr(stages),mode='eval').body
+        scope.update(events=[],preview_reached=False)
+        output=io.StringIO()
+        try:
+            with redirect_stdout(output):exec(compile(ast.fix_missing_locations(tree),'single_notebook_cell','exec'),scope)
+        except subprocess.CalledProcessError:
+            if valid:raise
+        else:
+            self.assertTrue(valid,'Invalid metadata should stop the pipeline')
+        return scope,output.getvalue()
+
+    def test_single_cell_advances_through_all_stages_without_another_click(self):
+        scope,output=self.execute_single_cell(valid=True)
+        self.assertEqual(scope['events'],['catalog','install','weights','workflow','render','result'])
+        self.assertTrue(scope['preview_reached'])
+        self.assertTrue(scope['MODELS_READY'])
+        self.assertIn('Complete. The video preview and download are above.',output)
+        self.assertEqual(len(self.results),1)
+
+    def test_single_cell_stops_on_real_metadata_error_before_rendering(self):
+        scope,output=self.execute_single_cell(valid=False)
+        self.assertEqual(scope['events'],['catalog','install','weights'])
+        self.assertFalse(scope['preview_reached'])
+        self.assertFalse(scope['MODELS_READY'])
+        self.assertIn('Stopped during Prepare and verify weights: CalledProcessError',output)
+        self.assertNotIn('Complete. The video preview',output)
 
     def test_generated_cell_runs_real_metadata_subprocess_and_reuses_weights(self):
         scope,source_file=self.prepare_scope(valid=True)

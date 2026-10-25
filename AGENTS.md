@@ -16,7 +16,9 @@ Kaggle notebook conversation, saved on 2026-10-25.
 - Give the user the updated GitHub notebook link. Do not claim a successful push
   until it has succeeded.
 - The user wants a complete, self-contained notebook, rather than separate repair
-  cells they must paste into Kaggle. Avoid repeated setup and wasted GPU time.
+  cells they must paste into Kaggle. Starting its single executable cell must
+  continue through setup, weight verification, rendering and preview without
+  another manual cell start. Avoid repeated setup and wasted GPU time.
 
 ## Current project
 

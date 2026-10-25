@@ -191,7 +191,7 @@ print('MP4 verified:',json.dumps(report))
 
 
 def render_clip():
-    assert STACK_READY, 'Run the installation cell successfully first.'
+    assert STACK_READY, 'The installation stage must complete successfully before rendering.'
     require_models_ready()
     run_id, directory, sample, decode = prepare_job()
     print('Run:', run_id, '|', canvas_size(MEGAPIXELS, ASPECT), '|', frame_count(DURATION), 'frames', flush=True)
@@ -225,5 +225,5 @@ def render_clip():
         (directory/'last-error.txt').write_text(type(error).__name__+': '+str(error))
         print('Stopped. Diagnostics:', directory, flush=True)
         if (COMFY/'output/h3_latents'/(run_id+'.safetensors')).is_file():
-            print('Latents are saved. Rerun this render cell to retry decoding without resampling.', flush=True)
+            print('Latents are saved. Rerun this cell to retry decoding without resampling.', flush=True)
         raise

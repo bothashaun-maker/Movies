@@ -1,7 +1,7 @@
 from pathlib import Path
 import os, sys, json, subprocess, shutil, time, hashlib, urllib.request, urllib.error, uuid
 
-# Edit these settings, then Run All. Kaggle: GPU T4 x2, Internet ON.
+# Edit these settings, then press this cell's Play button once. Kaggle: T4 x2, Internet ON.
 PROMPT = ('A woman in a green dress dances under warm courtyard string lights. '
           'Her dress and curls swirl as the camera gently tracks her. '
           'Audio: soft acoustic guitar, footsteps and a light evening breeze.')

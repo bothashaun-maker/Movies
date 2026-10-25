@@ -8,6 +8,7 @@ import sys
 import tempfile
 import types
 import unittest
+from h3_notebook_helpers import notebook_stages
 from unittest.mock import patch
 
 if not os.environ.get('COMFY_ROOT') or not os.environ.get('H3_MGPU_ROOT'):
@@ -47,9 +48,10 @@ class CompleteRuntime(unittest.TestCase):
             temp=Path(temp);scope={}
             for cell in nb.cells:
                 if cell.cell_type=='code':compile(cell.source,cell.id,'exec')
-                if cell.id in ('settings','catalog','workflow'):
-                    source=cell.source.replace("Path('/kaggle/working/minimax_h3_dual_t4')",f'Path({str(temp)!r})')
-                    exec(source,scope)
+            shipped=notebook_stages(nb)
+            for stage in ('settings','catalog','workflow'):
+                source=shipped[stage].replace("Path('/kaggle/working/minimax_h3_dual_t4')",f'Path({str(temp)!r})')
+                exec(source,scope)
             for asset in scope['ASSETS']:
                 if asset['file'].endswith('.zip'):continue
                 relative=Path(asset.get('dest') or asset['file'])
