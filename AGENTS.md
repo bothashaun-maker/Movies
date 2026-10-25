@@ -19,7 +19,9 @@ Kaggle notebook conversation, saved on 2026-10-25.
   cells they must paste into Kaggle. Starting its single executable cell must
   continue through setup, weight verification and a Cloudflare link to ComfyUI without
   another manual cell start. The user explicitly rejects notebook video previews
-  and download prompts. Do not automatically render; open persistent ComfyUI. Avoid repeated setup and wasted GPU time.
+  and download prompts. Do not automatically render; open persistent ComfyUI. Install the adapted
+  `MiniMax H3 - Kaggle T4` canvas in ComfyUI’s workflow menu, ready for the user
+  to press Run; browser access alone is insufficient. Avoid repeated setup and wasted GPU time.
 
 ## Current project
 

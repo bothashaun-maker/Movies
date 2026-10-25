@@ -34,7 +34,7 @@ class BrowserAccess(unittest.TestCase):
                 kwargs['stdout'].write('https://fixture-test.trycloudflare.com\n');kwargs['stdout'].flush()
                 child=Child();children.append(child);return child
             scope=dict(ROOT=root,COMFY=root,PY=Path(sys.executable),STACK_READY=True,PORT=8188,
-                       api_request=lambda *a,**k:{},tail_log=lambda p:p.read_text(),
+                       api_request=lambda *a,**k:{'H3KaggleRender':{}},tail_log=lambda p:p.read_text(),
                        sha256_file=lambda p:'053b80b0a23031a038fdbf3c073f59f82b8f1f152aa67971d7383ffafc0dbab0')
             with patch.object(subprocess,'Popen',side_effect=spawn),patch('IPython.display.display') as display:
                 exec((ROOT/'notebooks/h3_complete/cloudflare.py').read_text(),scope)

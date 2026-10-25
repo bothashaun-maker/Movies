@@ -29,6 +29,42 @@ def md(source, name):
 install = 'STACK_READY=False\n'+read('bootstrap')+'\n'+read('stack')
 install += '\ncheckpoint_source = '+repr(read('checkpoint_nodes'))+'\n'
 install += "checkpoint_plugin=COMFY/'custom_nodes/H3CheckpointRecovery'\ncheckpoint_plugin.mkdir(parents=True,exist_ok=True)\n(checkpoint_plugin/'__init__.py').write_text(checkpoint_source)\nSTACK_READY=True\nprint('Installation and both T4 kernel probes passed.')\n"
+# The browser node invokes a separate controller. Its GPU workers use another
+# port and never stop the persistent browser server.
+worker = read('settings')+'\n'+read('assets')+'\n'+read('graphs')+'\n'+read('runtime')
+worker += '''
+job=json.loads(Path(sys.argv[1]).read_text())
+PROMPT=job['prompt'];SEED=job['seed'];MEGAPIXELS=job['megapixels'];DURATION=job['duration']
+ASPECT=tuple(job['aspect']);IMAGE_PATH=job['image_path'];MODE='image' if IMAGE_PATH else 'text'
+MODELS_READY=True;STACK_READY=True
+PORT+=1;API=f'http://127.0.0.1:{PORT}'
+def stop_owned_servers():
+    pass  # Only comfy_process owns worker PIDs; never stop the browser server.
+def run(args,**kwargs):
+    kwargs.setdefault('env',child_env)
+    return subprocess.run([str(a) for a in args],check=True,**kwargs)
+path=render_clip()
+Path(job['result']).write_text(json.dumps({'file':str(path)}))
+'''
+compile(worker,'browser_worker','exec')
+install += '\nbrowser_node_source = '+repr(read('browser_node'))+'\n'
+install += 'browser_worker_source = '+repr(worker)+'\n'
+install += read('browser_workflow')
+install += '''
+browser_plugin=COMFY/'custom_nodes/H3KaggleBrowser'
+browser_plugin.mkdir(parents=True,exist_ok=True)
+(browser_plugin/'__init__.py').write_text(browser_node_source)
+# Carry the selected family/bridge into the isolated controller at runtime.
+browser_worker_source=browser_worker_source.replace("Path('/kaggle/working/minimax_h3_dual_t4')",f'Path({str(ROOT)!r})')
+worker_settings = f"PORT={PORT!r};MODEL_FAMILY={MODEL_FAMILY!r};USE_BRIDGE={USE_BRIDGE!r};BRIDGE_ALPHA={BRIDGE_ALPHA!r};"
+browser_worker_source=browser_worker_source.replace("job=json.loads(Path(sys.argv[1]).read_text())",worker_settings+"job=json.loads(Path(sys.argv[1]).read_text())")
+worker_path=ROOT/'h3_browser_worker.py';worker_path.write_text(browser_worker_source)
+(browser_plugin/'config.json').write_text(json.dumps({'root':str(ROOT),'python':str(PY),'worker':str(worker_path)}))
+workflow_dir=COMFY/'user/default/workflows'
+workflow_dir.mkdir(parents=True,exist_ok=True)
+(workflow_dir/'MiniMax H3 - Kaggle T4.json').write_text(json.dumps(browser_workflow(PROMPT,SEED,MEGAPIXELS,DURATION),indent=2))
+print('Installed ComfyUI workflow: MiniMax H3 - Kaggle T4')
+'''
 # Wrap statements, not text lines: indenting a multiline string changes the
 # program passed to Python -c even though the enclosing notebook still compiles.
 weight_tree = ast.parse("""def prepare_models():
@@ -64,7 +100,7 @@ entry += read('pipeline')+"\nrun_pipeline(_H3_PIPELINE_SOURCES, globals())\n"
 nb = nbformat.v4.new_notebook(cells=[
     md('''# MiniMax H3 — open ComfyUI through Cloudflare
 
-Select **GPU T4 ×2** and **Internet ON**, then press the single code cell's **▶ button once**. It installs the pinned runtime, verifies existing or downloaded models, starts ComfyUI and prints **Your ComfyUI Cloudflare link**. Click **Open ComfyUI in browser**.
+Select **GPU T4 ×2** and **Internet ON**, then press the single code cell's **▶ button once**. It installs the pinned runtime, verifies existing or downloaded models, starts ComfyUI and prints **Your ComfyUI Cloudflare link**. Click **Open ComfyUI in browser**, then open **Workflows → MiniMax H3 - Kaggle T4** and press **Run**. The workflow is installed automatically; no JSON download is needed.
 
 This notebook does not queue a render, embed video previews, or copy video downloads. Work in ComfyUI through the link. Keep the Kaggle session running; the temporary public link expires when its tunnel or session stops.
 
@@ -74,7 +110,7 @@ Existing weights in the same session are reused. The first download is roughly 4
 
 Uses Python 3.12.12, PyTorch 2.10 / CUDA 13, pinned ComfyUI and the dual-T4 tensor-parallel fork. Both GPU kernel probes run before missing weights download. CUDA 13 requires driver 580 or newer. Four-step Turbo LoRA weights are included; Semantic Bridge is optional for FL2VA. FastVideo VSA kernels are not enabled for T4.
 
-The supplied workflow is retained for reference, not automatically queued. Browser workflows must use nodes compatible with this pinned stack. Avoid the old dual-helper VAE configuration that exhausted GPU memory. The existing isolated sampling/decoding controller remains available in the embedded runtime, but is not started automatically and may restart ComfyUI when explicitly invoked.
+The adapted **MiniMax H3 - Kaggle T4** workflow is installed in ComfyUI’s workflow menu. Edit the prompt and seed, then press Run. For image input, add a Load Image node and connect it to the render node’s image input. The original supplied canvas remains a reference. Browser workflows must use nodes compatible with this pinned stack. Avoid the old dual-helper VAE configuration that exhausted GPU memory. The existing isolated sampling/decoding controller remains available in the embedded runtime, but is not started automatically and may restart ComfyUI when explicitly invoked.
 
 The uploaded run successfully completed a 124-frame, 512 × 768 video with audio using that controller. The new browser-access path has local lifecycle checks; a live Cloudflare connection from your Kaggle session still needs to be established there.
 
@@ -87,3 +123,12 @@ for filename in ('minimax_h3_kaggle_complete.ipynb','minimax_h3_cloudflare_fixed
     output=ROOT/filename
     nbformat.write(nb, output)
     print(output)
+
+workflow_scope={}
+exec(read('browser_workflow'),workflow_scope)
+settings_tree=ast.parse(read('settings'))
+prompt=next(ast.literal_eval(n.value) for n in settings_tree.body if isinstance(n,ast.Assign) and any(isinstance(t,ast.Name) and t.id=='PROMPT' for t in n.targets))
+import json
+workflow_path=ROOT/'workflows/minimax_h3_kaggle_t4.json'
+workflow_path.parent.mkdir(exist_ok=True)
+workflow_path.write_text(json.dumps(workflow_scope['browser_workflow'](prompt),indent=2)+'\n')
