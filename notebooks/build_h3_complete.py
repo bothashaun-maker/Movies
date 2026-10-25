@@ -11,6 +11,15 @@ def read(name):
 
 def code(source, name, hidden=False):
     compile(source, name, 'exec')
+    # Cell compilation cannot detect syntax errors inside Python -c payloads.
+    # Check the embedded programs after assembling the final cell as well.
+    programs = {'probe', 'kernel_probe', 'metadata_probe', 'script', 'code',
+                'compat_source', 'checkpoint_source'}
+    for node in ast.walk(ast.parse(source)):
+        if isinstance(node, ast.Assign) and isinstance(node.value, ast.Constant):
+            for target in node.targets:
+                if isinstance(target, ast.Name) and target.id in programs and isinstance(node.value.value, str):
+                    compile(node.value.value, f'{name}:{target.id}', 'exec')
     return nbformat.v4.new_code_cell(source, id=name, metadata={
         'jupyter':{'source_hidden':hidden}, 'tags':['implementation'] if hidden else []})
 
@@ -20,9 +29,22 @@ def md(source, name):
 install = 'STACK_READY=False\n'+read('bootstrap')+'\n'+read('stack')
 install += '\ncheckpoint_source = '+repr(read('checkpoint_nodes'))+'\n'
 install += "checkpoint_plugin=COMFY/'custom_nodes/H3CheckpointRecovery'\ncheckpoint_plugin.mkdir(parents=True,exist_ok=True)\n(checkpoint_plugin/'__init__.py').write_text(checkpoint_source)\nSTACK_READY=True\nprint('Installation and both T4 kernel probes passed.')\n"
-weights = "def prepare_models():\n    global MODELS_READY\n    assert STACK_READY, 'Run the installation cell successfully first.'\n    try:\n"
-weights += '\n'.join('        '+line for line in read('weights').splitlines())
-weights += '\n    except BaseException:\n        MODELS_READY=False\n        raise\n\nprepare_models()\n'
+# Wrap statements, not text lines: indenting a multiline string changes the
+# program passed to Python -c even though the enclosing notebook still compiles.
+weight_tree = ast.parse("""def prepare_models():
+    global MODELS_READY
+    assert STACK_READY, 'Run the installation cell successfully first.'
+    try:
+        pass
+    except BaseException:
+        MODELS_READY=False
+        raise
+
+prepare_models()
+""")
+guard = next(node for node in weight_tree.body[0].body if isinstance(node, ast.Try))
+guard.body = ast.parse(read('weights')).body
+weights = ast.unparse(ast.fix_missing_locations(weight_tree))+'\n'
 nb = nbformat.v4.new_notebook(cells=[
     md('''# MiniMax H3 — complete Kaggle T4 ×2 notebook
 

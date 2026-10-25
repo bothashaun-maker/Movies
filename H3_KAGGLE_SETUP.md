@@ -9,6 +9,8 @@ Use [minimax_h3_kaggle_complete.ipynb](minimax_h3_kaggle_complete.ipynb). This r
 
 The default is one 512 × 768 clip, four Turbo LoRA steps, 124 frames at 24 fps, and native audio. It does not run a second benchmark clip. CUDA 13 requires driver 580 or newer; the notebook checks the driver and tests both T4s before downloading missing weights.
 
+If Run All stops at a cell, the first exception identifies the failing stage; subsequent cells do not run. The reported step-4 `IndentationError` came from the notebook generator indenting the embedded metadata-check program. The generator now preserves that program's contents, checks embedded Python syntax, and enables rendering only after both hashes and metadata pass. Use the updated complete notebook; existing weights in the same session are reused.
+
 ## How the rewrite prevents the observed decoder conflict
 
 The supplied diagnostic confirms that `VAEDecodeH3DualGPU` failed while fully loading its helper VAE on GPU 1: 14.36 GiB was already allocated and only 10.81 MiB remained free.
@@ -64,6 +66,8 @@ Four-step Turbo LoRA, native INT8 ConvRot kernels, protected FP16 and Comfy Kitc
 The uploaded Kaggle runs already establish that the pinned FP16 and ConvRot INT8 probes passed on both T4s. The rewrite additionally checks those probes on each actual session.
 
 Development checks exercise actual pinned ComfyUI graph validation for Ref2VA/FL2VA text and image workflows and the supported bridge workflow; terminal checkpoint execution and round-trip; non-finite latent rejection; process reaping after interruption; decoder failure followed by retry without resampling; complete error preservation; native temporal output geometry; and real H.264 MP4 export/readback with audio. Negative graph validation is also tested.
+
+The generated model-setup cell is also executed with small safetensors fixtures and a real metadata-reader subprocess. Tests cover successful validation, repeated execution without downloading again, rejection of incompatible metadata, and keeping rendering disabled on failure.
 
 **A full pretrained render of this rewrite on Kaggle T4 ×2 has not been executed in the CPU development environment.** Graph and controller tests do not establish final rendering time, visual quality or measured peak VRAM.
 

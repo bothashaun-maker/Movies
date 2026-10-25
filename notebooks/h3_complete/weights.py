@@ -44,10 +44,7 @@ for a in selected_assets:
     assert file_has_size(p,a) and (p.resolve() in verified_downloads or sha256_file(p)==a['sha256']),f'Invalid model file: {p}'
     print('Verified:',p.name)
 (ROOT/'model-manifest.json').write_text(json.dumps(selected_assets,indent=2))
-MODELS_READY=True
-print('All weights verified; rendering is enabled.')
-
-require_models_ready()
+print('Weight hashes verified; checking H3 quantization metadata...',flush=True)
 
 # Inspect the real checkpoint's quantization metadata before GPU model loading.
 metadata_probe="""import sys
@@ -78,3 +75,6 @@ if USE_BRIDGE:
         else:
             z.extractall(target)
     assert (folder/'__init__.py').is_file(), 'Unexpected bridge ZIP layout.'
+
+MODELS_READY=True
+print('All weights and metadata verified; rendering is enabled.')
