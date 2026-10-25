@@ -20,8 +20,9 @@ Kaggle notebook conversation, saved on 2026-10-25.
   continue through setup, weight verification and a Cloudflare link to ComfyUI without
   another manual cell start. The user explicitly rejects notebook video previews
   and download prompts. Do not automatically render; open persistent ComfyUI. Install the adapted
-  `MiniMax H3 - Kaggle T4` canvas in ComfyUI’s workflow menu, ready for the user
-  to press Run; browser access alone is insufficient. Avoid repeated setup and wasted GPU time.
+  `MiniMax H3 - Full T4 Workflow` canvas in ComfyUI’s workflow menu, ready for the user
+  to press Run; browser access alone is insufficient. The user requires a visible,
+  connected native node graph. Do not collapse it into one wrapper node. Avoid repeated setup and wasted GPU time.
 
 ## Current project
 

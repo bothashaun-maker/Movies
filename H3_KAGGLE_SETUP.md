@@ -1,6 +1,6 @@
 # Open ComfyUI through Cloudflare
 
-Import `minimax_h3_kaggle_complete.ipynb`, select T4 ×2 and Internet ON, and press its single Play button. It sets up the runtime and models, then displays **Your ComfyUI Cloudflare link**. Open that link, select **Workflows → MiniMax H3 - Kaggle T4**, edit the prompt and press **Run**. The notebook installs this adapted workflow automatically; no manual JSON import is required. No render, video preview or download copy runs automatically.
+Import `minimax_h3_kaggle_complete.ipynb`, select T4 ×2 and Internet ON, and press its single Play button. It sets up the runtime and models, then displays **Your ComfyUI Cloudflare link**. Open that link, select **Workflows → MiniMax H3 - Full T4 Workflow**, edit the prompt and press **Run**. The notebook installs this adapted workflow automatically; no manual JSON import is required. No render, video preview or download copy runs automatically.
 
 Keep Kaggle running. The URL is temporary and also saved to `minimax_h3_dual_t4/comfyui-cloudflare-url.txt`. Logs: `comfyui-ui.log` and `cloudflared.log`. Call `stop_comfyui_access()` to close the tunnel and owned UI server. Cloudflared 2026.10.3 is downloaded from its official release and SHA-256 verified.
 
@@ -8,11 +8,15 @@ The latest supplied Kaggle run completed the isolated renderer successfully: 124
 
 ## Installed workflow
 
-The canvas is installed at `ComfyUI/user/default/workflows/MiniMax H3 - Kaggle T4.json`. A copy is in [workflows/minimax_h3_kaggle_t4.json](workflows/minimax_h3_kaggle_t4.json). Its **MiniMax H3 — Kaggle T4** node exposes prompt, seed, megapixels, duration and aspect. For a reference image, add **Load Image** and connect its image output to the render node's image input.
+Select **MiniMax H3 - Full T4 Workflow**, not an already-open tab from the earlier one-node version. It is installed automatically under `ComfyUI/user/default/workflows/`. The old filename also receives the connected graph, but an existing unsaved browser tab may retain its previous contents.
 
-This is an adapted entry workflow for the isolated renderer, not the original unsupported sparse-attention canvas. The render node launches a controller on a separate port; sampling and decoding still run in separate processes. The browser server remains running. Results are shown inside ComfyUI and saved under its output directory. The notebook does not embed previews or copy video downloads. Matching saved checkpoints are reused after decode failure. Logs are under `minimax_h3_dual_t4/browser-jobs/` and `runs/`.
+The canvas has **17 nodes and 19 links**: diffusion and CLIP loaders, video/audio VAE loaders, Turbo LoRA, sigma shift, conditioning, noise, guider, sampler selection, scheduler, advanced sampler, video/audio decode, CreateVideo and isolated Save MP4. An optional Load Image node is included; upload an image and connect IMAGE to `first_frame` on the conditioning node to use it. Text generation works with that input disconnected.
 
-The workflow schema and generated installation/worker configuration passed CPU checks. The underlying isolated renderer succeeded in the uploaded Kaggle run; the new browser-node-to-GPU execution path has not been run on T4 hardware here.
+All visible settings and connections are used. The final isolated save node receives the submitted graph without executing the model nodes in the browser server. It partitions that graph into sampling and decoding worker processes, saving joint latents between them. This preserves the process boundary that resolved the original GPU-memory conflict. Results appear in ComfyUI, not in the Kaggle notebook.
+
+[Actual browser screenshot](docs/h3_full_workflow.png) · [Workflow JSON](workflows/minimax_h3_kaggle_t4.json)
+
+The canvas was loaded in the pinned ComfyUI browser interface with no page errors. Its actual exported API graph and both resulting worker graphs passed ComfyUI validation for text and image input. An executor test verifies that native model dependencies do not run in the UI process. These are browser/CPU checks; the revised full-canvas path has not yet completed a T4 render in this development environment.
 
 ## Storage and downloads
 

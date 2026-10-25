@@ -13,36 +13,31 @@ import comfy.model_management
 
 _RENDER_LOCK=threading.Lock()
 
-class H3KaggleRender:
+class H3IsolatedSaveVideo:
     @classmethod
     def INPUT_TYPES(cls):
-        return {'required':{
-            'prompt':('STRING',{'multiline':True,'default':'A cinematic scene. Audio: ambient sound.'}),
-            'seed':('INT',{'default':42,'min':0,'max':2**64-1,'control_after_generate':True}),
-            'megapixels':('FLOAT',{'default':0.4,'min':0.2,'max':0.4,'step':0.1}),
-            'duration':('FLOAT',{'default':5.0,'min':1.0,'max':5.0,'step':1.0}),
-            'aspect':(['portrait','landscape','square'],),
-        },'optional':{'image':('IMAGE',)}}
+        return {'required':{'video':('VIDEO',{'lazy':True}),
+                            'filename_prefix':('STRING',{'default':'kaggle_h3/clip'})},
+                'hidden':{'prompt':'PROMPT','unique_id':'UNIQUE_ID'}}
     RETURN_TYPES=()
     OUTPUT_NODE=True
     FUNCTION='render'
     CATEGORY='MiniMax H3/Kaggle'
-    DESCRIPTION='Four-step H3 with native audio. Sampling and decoding run in separate GPU processes; the browser server remains running.'
+    DESCRIPTION='Executes the connected native graph in isolated sampling and decode processes. Keeps the browser server free of model weights.'
 
-    def render(self,prompt,seed,megapixels,duration,aspect,image=None):
+    def check_lazy_status(self,video=None,filename_prefix=None,prompt=None,unique_id=None):
+        return []  # Dependencies execute in GPU workers, never in this UI server.
+
+    @classmethod
+    def IS_CHANGED(cls,**kwargs):
+        return float('nan')  # Worker fingerprint controls checkpoint/result reuse.
+
+    def render(self,filename_prefix,video=None,prompt=None,unique_id=None):
         config=json.loads(Path(__file__).with_name('config.json').read_text())
         root=Path(config['root']);job_id=uuid.uuid4().hex
         jobs=root/'browser-jobs';jobs.mkdir(parents=True,exist_ok=True)
         result=jobs/(job_id+'-result.json');log_path=jobs/(job_id+'.log')
-        job=dict(prompt=prompt,seed=seed,megapixels=megapixels,duration=duration,
-                 aspect={'portrait':[2,3],'landscape':[3,2],'square':[1,1]}[aspect],
-                 image_path='',result=str(result))
-        if image is not None:
-            from PIL import Image
-            if image.shape[0]!=1:raise ValueError('Use one reference image per clip.')
-            path=jobs/(job_id+'.png')
-            Image.fromarray((image[0].detach().cpu().clamp(0,1)*255).to(torch.uint8).numpy()).save(path)
-            job['image_path']=str(path)
+        job=dict(graph=prompt,output_id=str(unique_id),result=str(result))
         job_path=jobs/(job_id+'.json');job_path.write_text(json.dumps(job))
         with _RENDER_LOCK,log_path.open('w') as log:
             proc=subprocess.Popen([config['python'],config['worker'],str(job_path)],
@@ -66,5 +61,5 @@ class H3KaggleRender:
         return {'ui':{'images':[{'filename':path.name,'subfolder':str(path.parent.relative_to(output)),
                                 'type':'output','format':'video/mp4'}]}}
 
-NODE_CLASS_MAPPINGS={'H3KaggleRender':H3KaggleRender}
-NODE_DISPLAY_NAME_MAPPINGS={'H3KaggleRender':'MiniMax H3 — Kaggle T4'}
+NODE_CLASS_MAPPINGS={'H3IsolatedSaveVideo':H3IsolatedSaveVideo}
+NODE_DISPLAY_NAME_MAPPINGS={'H3IsolatedSaveVideo':'Save MP4 — isolated H3 render'}

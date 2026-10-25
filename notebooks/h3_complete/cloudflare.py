@@ -55,8 +55,8 @@ if not local_server_ready():
         time.sleep(2)
     else: raise TimeoutError('ComfyUI did not become ready:\n'+tail_log(SERVER_LOG))
 
-assert 'H3KaggleRender' in api_request('/object_info'), 'H3 workflow node did not load; inspect comfyui-ui.log.'
-print('In ComfyUI: Workflows → MiniMax H3 - Kaggle T4 → Run',flush=True)
+assert 'H3IsolatedSaveVideo' in api_request('/object_info'), 'H3 workflow node did not load; inspect comfyui-ui.log.'
+print('In ComfyUI: Workflows → MiniMax H3 - Full T4 Workflow → Run',flush=True)
 
 with TUNNEL_LOG.open('w') as log:
     _h3_ui_tunnel = subprocess.Popen(
