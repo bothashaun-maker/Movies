@@ -52,8 +52,7 @@ stages = {
     'install':install,
     'weights':weights,
     'workflow':read('graphs')+'\n'+read('runtime'),
-    'render':"RESULT_PATH = render_clip()\nprint('Finished:', RESULT_PATH)",
-    'result':"assert RESULT_PATH is not None and RESULT_PATH.is_file(), 'Render has not completed successfully.'\nfrom IPython.display import Video, FileLink, display\nexport = Path('/kaggle/working')/RESULT_PATH.name\nif export.resolve() != RESULT_PATH.resolve():\n    shutil.copy2(RESULT_PATH, export)\ndisplay(Video(str(export), embed=True))\ndisplay(FileLink(str(export)))\nprint('Download from Kaggle Output:', export.name)",
+    'access':read('cloudflare'),
 }
 for name, source in stages.items():
     code(source, name)  # Also validate embedded Python before packaging the stages.
@@ -63,40 +62,28 @@ entry += "\n# Embedded runtime below. Edit the settings above; no other cells ne
 entry += '_H3_PIPELINE_SOURCES = '+pformat(stages, sort_dicts=False, width=110)+'\n\n'
 entry += read('pipeline')+"\nrun_pipeline(_H3_PIPELINE_SOURCES, globals())\n"
 nb = nbformat.v4.new_notebook(cells=[
-    md('''# MiniMax H3 — one-click Kaggle T4 ×2 notebook
+    md('''# MiniMax H3 — open ComfyUI through Cloudflare
 
-Select **GPU T4 ×2** and **Internet ON**, edit the settings at the top of the single code cell, then press **that cell's ▶ button once**. **Run All** also works. Setup, weight verification, sampling, decoding and preview continue automatically in the same cell. There is no separate step 4 to start.
+Select **GPU T4 ×2** and **Internet ON**, then press the single code cell's **▶ button once**. It installs the pinned runtime, verifies existing or downloaded models, starts ComfyUI and prints **Your ComfyUI Cloudflare link**. Click **Open ComfyUI in browser**.
 
-The default makes one 512 × 768 clip with native audio, four Turbo LoRA steps and 124 frames at 24 fps (about 5.17 seconds). Sampling uses both T4s. Its process exits after saving joint video/audio latents; a fresh process performs native tiled decoding and MP4 export. The finished video's frame count, dimensions and audio are checked.
+This notebook does not queue a render, embed video previews, or copy video downloads. Work in ComfyUI through the link. Keep the Kaggle session running; the temporary public link expires when its tunnel or session stops.
 
-Rerun this same cell after fixing an error. Existing weights are reused and verified. A valid saved sampling checkpoint skips sampling; an identical completed job reuses its verified MP4. Change the prompt or seed to make another clip. **Save Version** retains working outputs; scratch model weights are temporary.
-
-Stage progress appears below the cell. A genuine failure stops execution and names the failed stage. Model loading and first kernel compilation can pause visible progress before sampling starts.''','intro'),
+Existing weights in the same session are reused. The first download is roughly 41.38 GiB and uses network, disk and CPU. Logs are saved as `comfyui-ui.log` and `cloudflared.log` under `/kaggle/working/minimax_h3_dual_t4`. The link is also saved as `comfyui-cloudflare-url.txt`.''','intro'),
     code(entry,'run'),
-    md('''## Runtime and storage
+    md('''## Runtime and workflow notes
 
-The embedded runtime uses isolated Python 3.12.12, PyTorch 2.10 / CUDA 13, pinned ComfyUI and the T4 tensor-parallel fork. It checks driver 580 or newer, FP16 operations, transfers between GPUs and native ConvRot INT8 kernels on both T4s before downloading missing weights. Older H3 processes are closed only when their Python executable and ComfyUI directory match this notebook.
+Uses Python 3.12.12, PyTorch 2.10 / CUDA 13, pinned ComfyUI and the dual-T4 tensor-parallel fork. Both GPU kernel probes run before missing weights download. CUDA 13 requires driver 580 or newer. Four-step Turbo LoRA weights are included; Semantic Bridge is optional for FL2VA. FastVideo VSA kernels are not enabled for T4.
 
-The first run downloads roughly 41.38 GiB of pinned weights unless attached or cached. It searches `/kaggle/input`, measures scratch storage and stages downloads on the selected model volume. Symlinks avoid copying weights. Downloading and SHA-256 verification use network/CPU/disk, so low GPU utilization during these stages is expected. No fixed download-time promise is made.
+The supplied workflow is retained for reference, not automatically queued. Browser workflows must use nodes compatible with this pinned stack. Avoid the old dual-helper VAE configuration that exhausted GPU memory. The existing isolated sampling/decoding controller remains available in the embedded runtime, but is not started automatically and may restart ComfyUI when explicitly invoked.
 
-Turbo LoRA is enabled. Semantic Bridge is optional for **FL2VA**, as its author excludes Ref2VA. FastVideo VSA sparse attention is excluded because its kernels are not a validated SM75 path in this stack. Comfy Kitchen attention and INT8 ConvRot are used instead.
+The uploaded run successfully completed a 124-frame, 512 × 768 video with audio using that controller. The new browser-access path has local lifecycle checks; a live Cloudflare connection from your Kaggle session still needs to be established there.
 
-Per-stage logs and graphs are in `minimax_h3_dual_t4/runs/`. The MP4 is also copied to the top of `/kaggle/working` and previewed automatically.''','details'),
-    md('''## Validation and references
-
-The source revision used for this notebook was checked against the pinned ComfyUI graph validator. CPU tests cover checkpoint persistence, graph execution at the checkpoint boundary, native temporal decode geometry, process cleanup and recovery, and real H.264 MP4 export with audio. **A full model render on Kaggle T4 ×2 has not been executed in the development environment.** The installation stage runs the GPU-specific kernel probes on your actual session before downloading missing weights.
-
-- [ComfyUI v0.37.0](https://github.com/comfyanonymous/ComfyUI/tree/73c9bad4d21e7addbe1d13bc92eee0f1431b017d)
-- [T4 tensor-parallel fork](https://github.com/MrKK4/ComfyUI-MultiGPU-Kaggle/tree/e0232dc1d1321e23ef308a0e6a30c39c8e062b46)
-- [Pinned MiniMax H3 weights](https://huggingface.co/Comfy-Org/MiniMax-H3/tree/e5eb578a89295337b8ff433a035929ce0279e0b6)
-- [Semantic Bridge](https://huggingface.co/speach1sdef178/MiniMax-H3-Semantic-Bridge)
-- [Notebook source and checks](https://github.com/bothashaun-maker/Movies/tree/main/notebooks/h3_complete)
-
-The notebook never asks for a Hugging Face token for public models. If an `HF_TOKEN` Kaggle Secret is already attached, it uses it without printing it.''','validation'),
+To close access without ending the Kaggle session, call `stop_comfyui_access()`. No stop cell is queued automatically by Run All.''','details'),
 ], metadata={'kernelspec':{'display_name':'Python 3','language':'python','name':'python3'},
              'language_info':{'name':'python','version':'3.12.12'},
              'kaggle':{'accelerator':'nvidiaTeslaT4','isGpuEnabled':True,'isInternetEnabled':True,'language':'python','sourceType':'notebook'}})
 nbformat.validate(nb)
-output=ROOT/'minimax_h3_kaggle_complete.ipynb'
-nbformat.write(nb, output)
-print(output)
+for filename in ('minimax_h3_kaggle_complete.ipynb','minimax_h3_cloudflare_fixed.ipynb'):
+    output=ROOT/filename
+    nbformat.write(nb, output)
+    print(output)

@@ -48,4 +48,4 @@ child_env.update(PIP_NO_CACHE_DIR='1', HF_HUB_DISABLE_XET='1', HF_HUB_DOWNLOAD_T
                  CUDA_VISIBLE_DEVICES='0,1', MMH3_H3_FP16='1', MMH3_TP_CHECK='1',
                  MMH3_TP_CHUNKS='4', MMH3_TP_COMPILE='1',
                  PIP_CACHE_DIR=str(ROOT/'pip-cache'), HF_HOME=str(ROOT/'hf-cache'))
-print('Settings loaded. One clip, four steps, native audio. No benchmark rerenders.')
+print('Settings loaded. Preparing ComfyUI browser access; no automatic rendering.')

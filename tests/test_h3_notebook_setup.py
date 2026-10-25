@@ -89,8 +89,7 @@ class GeneratedSetup(unittest.TestCase):
         fixture_keys=('ASSETS','MODEL_DATASET','MODEL_STORAGE','STACK_READY')
         stages['install']='\n'.join(f'{key} = {scope[key]!r}' for key in fixture_keys)
         stages['install']+=f"\nPY = Path({str(scope['PY'])!r})\nMGPU = Path({str(scope['MGPU'])!r})\n"
-        stages['render']="RESULT_PATH = ROOT/'controller-fixture.mp4'\nRESULT_PATH.write_bytes(b'controller fixture; GPU render replaced in test')"
-        stages['result']="assert RESULT_PATH.is_file()\npreview_reached = True"
+        stages['access']="browser_reached = True"
         for key in stages:
             stages[key]=f'events.append({key!r})\n'+stages[key]
         cells=[cell for cell in self.nb['cells'] if cell['cell_type']=='code']
@@ -100,7 +99,7 @@ class GeneratedSetup(unittest.TestCase):
         package=next(node for node in tree.body if isinstance(node,ast.Assign)
                      and any(isinstance(t,ast.Name) and t.id=='_H3_PIPELINE_SOURCES' for t in node.targets))
         package.value=ast.parse(repr(stages),mode='eval').body
-        scope.update(events=[],preview_reached=False)
+        scope.update(events=[],browser_reached=False)
         output=io.StringIO()
         try:
             with redirect_stdout(output):exec(compile(ast.fix_missing_locations(tree),'single_notebook_cell','exec'),scope)
@@ -112,19 +111,19 @@ class GeneratedSetup(unittest.TestCase):
 
     def test_single_cell_advances_through_all_stages_without_another_click(self):
         scope,output=self.execute_single_cell(valid=True)
-        self.assertEqual(scope['events'],['catalog','install','weights','workflow','render','result'])
-        self.assertTrue(scope['preview_reached'])
+        self.assertEqual(scope['events'],['catalog','install','weights','workflow','access'])
+        self.assertTrue(scope['browser_reached'])
         self.assertTrue(scope['MODELS_READY'])
-        self.assertIn('Complete. The video preview and download are above.',output)
+        self.assertIn('ComfyUI is running. Open the Cloudflare link above.',output)
         self.assertEqual(len(self.results),1)
 
     def test_single_cell_stops_on_real_metadata_error_before_rendering(self):
         scope,output=self.execute_single_cell(valid=False)
         self.assertEqual(scope['events'],['catalog','install','weights'])
-        self.assertFalse(scope['preview_reached'])
+        self.assertFalse(scope['browser_reached'])
         self.assertFalse(scope['MODELS_READY'])
         self.assertIn('Stopped during Prepare and verify weights: CalledProcessError',output)
-        self.assertNotIn('Complete. The video preview',output)
+        self.assertNotIn('ComfyUI is running.',output)
 
     def test_generated_cell_runs_real_metadata_subprocess_and_reuses_weights(self):
         scope,source_file=self.prepare_scope(valid=True)

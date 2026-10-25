@@ -5,8 +5,7 @@ def run_pipeline(stages, namespace):
         'install':'Install and test the T4 runtime',
         'weights':'Prepare and verify weights',
         'workflow':'Load the render workflow',
-        'render':'Sample, decode and verify one clip',
-        'result':'Preview and download',
+        'access':'Open ComfyUI through Cloudflare',
     }
     namespace['RESULT_PATH'] = None
     for index, (name, source) in enumerate(stages.items(), start=1):
@@ -19,4 +18,4 @@ def run_pipeline(stages, namespace):
             print('Later stages were not run. Existing model files and saved latents are retained.', flush=True)
             raise
         print(f'Completed: {label}', flush=True)
-    print('\nComplete. The video preview and download are above.', flush=True)
+    print('\nComfyUI is running. Open the Cloudflare link above.', flush=True)
