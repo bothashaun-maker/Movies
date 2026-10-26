@@ -37,6 +37,8 @@ class BrowserWorkflow(unittest.TestCase):
             self.assertIn("MODEL_FAMILY='fl2va'",worker)
             self.assertIn(repr(str(root)),worker)
             self.assertTrue((comfy/'custom_nodes/H3KaggleBrowser/__init__.py').is_file())
+            self.assertEqual(json.loads((comfy/'custom_nodes/H3KaggleBrowser/web/full-workflow.json').read_text()),canvas)
+            self.assertTrue((comfy/'custom_nodes/H3KaggleBrowser/web/open_workflow.js').is_file())
 
     def test_edited_browser_graph_is_split_without_hidden_presets(self):
         scope={};exec((ROOT/'notebooks/h3_complete/browser_job.py').read_text(),scope)

@@ -29,7 +29,7 @@ Kaggle notebook conversation, saved on 2026-10-25.
 - Target: Kaggle with two NVIDIA T4 GPUs, four-step MiniMax H3 Turbo LoRA video
   generation, and native audio. Act as the user's engineering collaborator and
   carry fixes through implementation, validation and publication.
-- Current notebook: `minimax_h3_kaggle_complete.ipynb`.
+- Current notebook: `minimax_h3_full_workflow.ipynb` (FULL-GRAPH-v1). The complete and cloudflare_fixed filenames remain identical aliases. GitHub updates do not update an already-imported Kaggle copy; give the current distinctly named notebook. Its Cloudflare link must open the full graph directly.
 - Edit its sources in `notebooks/h3_complete/`, then regenerate it with
   `python notebooks/build_h3_complete.py`. Keep source and generated notebook in
   the same commit.

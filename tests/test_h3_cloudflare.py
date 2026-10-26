@@ -42,6 +42,7 @@ class BrowserAccess(unittest.TestCase):
             self.assertIsNone(children[0].poll())
             self.assertIn('https://fixture-test.trycloudflare.com',(root/'comfyui-cloudflare-url.txt').read_text())
             display.assert_called_once()
+            self.assertIn('/?h3_workflow=full-v1',display.call_args.args[0].data)
             scope['stop_comfyui_access']()
             self.assertIsNotNone(children[0].poll())
 

@@ -63,3 +63,5 @@ class H3IsolatedSaveVideo:
 
 NODE_CLASS_MAPPINGS={'H3IsolatedSaveVideo':H3IsolatedSaveVideo}
 NODE_DISPLAY_NAME_MAPPINGS={'H3IsolatedSaveVideo':'Save MP4 — isolated H3 render'}
+
+WEB_DIRECTORY="./web"

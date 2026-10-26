@@ -1,6 +1,10 @@
+# Current notebook: FULL-GRAPH-v1
+
+Import `minimax_h3_full_workflow.ipynb` into Kaggle. A previous Kaggle import is a separate copy and does not update when GitHub changes. The title must show **FULL-GRAPH-v1 · 17 nodes · 19 links**. Run its single cell in the existing session to reuse available weights. Its **Open full H3 workflow in ComfyUI** link loads the graph directly, even when ComfyUI previously showed the one-node canvas. Save edits with ComfyUI’s Save command before refreshing; the link’s template parameter is removed after opening so refresh does not reload the template. No render is queued automatically.
+
 # Open ComfyUI through Cloudflare
 
-Import `minimax_h3_kaggle_complete.ipynb`, select T4 ×2 and Internet ON, and press its single Play button. It sets up the runtime and models, then displays **Your ComfyUI Cloudflare link**. Open that link, select **Workflows → MiniMax H3 - Full T4 Workflow**, edit the prompt and press **Run**. The notebook installs this adapted workflow automatically; no manual JSON import is required. No render, video preview or download copy runs automatically.
+Import `minimax_h3_kaggle_complete.ipynb`, select T4 ×2 and Internet ON, and press its single Play button. It sets up the runtime and models, then displays **Your full H3 workflow link**. Open that link, select **Workflows → MiniMax H3 - Full T4 Workflow**, edit the prompt and press **Run**. The notebook installs this adapted workflow automatically; no manual JSON import is required. No render, video preview or download copy runs automatically.
 
 Keep Kaggle running. The URL is temporary and also saved to `minimax_h3_dual_t4/comfyui-cloudflare-url.txt`. Logs: `comfyui-ui.log` and `cloudflared.log`. Call `stop_comfyui_access()` to close the tunnel and owned UI server. Cloudflared 2026.10.3 is downloaded from its official release and SHA-256 verified.
 

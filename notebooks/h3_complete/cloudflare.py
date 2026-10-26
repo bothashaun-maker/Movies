@@ -75,11 +75,12 @@ for _ in range(90):
     time.sleep(1)
 if not cloudflare_url:
     raise TimeoutError('No Cloudflare URL found. Check '+str(TUNNEL_LOG)+'\n'+tail_log(TUNNEL_LOG))
-print('Your ComfyUI Cloudflare link:',cloudflare_url)
-display(HTML('<a href="'+cloudflare_url+'" target="_blank" rel="noopener noreferrer">Open ComfyUI in browser</a>'))
+workflow_url=cloudflare_url+'/?h3_workflow=full-v1'
+print('Your full H3 workflow link:',workflow_url)
+display(HTML('<a href="'+workflow_url+'" target="_blank" rel="noopener noreferrer">Open full H3 workflow in ComfyUI</a>'))
 print('Keep this Kaggle session running while using ComfyUI. The temporary link grants public access.')
 
-(ROOT/'comfyui-cloudflare-url.txt').write_text(cloudflare_url+'\n')
+(ROOT/'comfyui-cloudflare-url.txt').write_text(workflow_url+'\n')
 
 def stop_comfyui_access():
     for name in ('_h3_ui_tunnel','_h3_ui_server'):

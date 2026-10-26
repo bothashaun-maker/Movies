@@ -47,6 +47,7 @@ Path(job['result']).write_text(json.dumps({'file':str(path)}))
 compile(worker,'browser_worker','exec')
 install += '\nbrowser_node_source = '+repr(read('browser_node'))+'\n'
 install += 'browser_worker_source = '+repr(worker)+'\n'
+install += 'browser_extension_source = '+repr((SOURCE/'open_workflow.js').read_text())+'\n'
 install += read('browser_workflow')
 install += '''
 browser_plugin=COMFY/'custom_nodes/H3KaggleBrowser'
@@ -63,7 +64,10 @@ workflow_dir.mkdir(parents=True,exist_ok=True)
 canvas=browser_workflow(PROMPT,SEED,MEGAPIXELS,DURATION,MODEL_FAMILY,USE_BRIDGE,BRIDGE_ALPHA)
 for workflow_name in ('MiniMax H3 - Kaggle T4.json','MiniMax H3 - Full T4 Workflow.json'):
     (workflow_dir/workflow_name).write_text(json.dumps(canvas,indent=2))
-print('Installed ComfyUI workflow: MiniMax H3 - Full T4 Workflow')
+web_dir=browser_plugin/'web';web_dir.mkdir(exist_ok=True)
+(web_dir/'open_workflow.js').write_text(browser_extension_source)
+(web_dir/'full-workflow.json').write_text(json.dumps(canvas))
+print('Installed FULL-GRAPH-v1: 17 nodes, 19 links — MiniMax H3 - Full T4 Workflow')
 '''
 # Wrap statements, not text lines: indenting a multiline string changes the
 # program passed to Python -c even though the enclosing notebook still compiles.
@@ -98,9 +102,9 @@ entry += "\n# Embedded runtime below. Edit the settings above; no other cells ne
 entry += '_H3_PIPELINE_SOURCES = '+pformat(stages, sort_dicts=False, width=110)+'\n\n'
 entry += read('pipeline')+"\nrun_pipeline(_H3_PIPELINE_SOURCES, globals())\n"
 nb = nbformat.v4.new_notebook(cells=[
-    md('''# MiniMax H3 — open ComfyUI through Cloudflare
+    md('''# MiniMax H3 — FULL-GRAPH-v1 · 17 nodes · 19 links
 
-Select **GPU T4 ×2** and **Internet ON**, then press the single code cell's **▶ button once**. It installs the pinned runtime, verifies existing or downloaded models, starts ComfyUI and prints **Your ComfyUI Cloudflare link**. Click **Open ComfyUI in browser**, then open **Workflows → MiniMax H3 - Full T4 Workflow** and press **Run**. The workflow is installed automatically; no JSON download is needed.
+Select **GPU T4 ×2** and **Internet ON**, then press the single code cell's **▶ button once**. It installs the pinned runtime, verifies existing or downloaded models, starts ComfyUI and prints **Your full H3 workflow link**. Click **Open full H3 workflow in ComfyUI**. The link loads the connected graph directly; edit it and press **Run**. The workflow is installed automatically; no JSON download is needed.
 
 This notebook does not queue a render, embed video previews, or copy video downloads. Work in ComfyUI through the link. Keep the Kaggle session running; the temporary public link expires when its tunnel or session stops.
 
@@ -119,7 +123,7 @@ To close access without ending the Kaggle session, call `stop_comfyui_access()`.
              'language_info':{'name':'python','version':'3.12.12'},
              'kaggle':{'accelerator':'nvidiaTeslaT4','isGpuEnabled':True,'isInternetEnabled':True,'language':'python','sourceType':'notebook'}})
 nbformat.validate(nb)
-for filename in ('minimax_h3_kaggle_complete.ipynb','minimax_h3_cloudflare_fixed.ipynb'):
+for filename in ('minimax_h3_kaggle_complete.ipynb','minimax_h3_cloudflare_fixed.ipynb','minimax_h3_full_workflow.ipynb'):
     output=ROOT/filename
     nbformat.write(nb, output)
     print(output)
