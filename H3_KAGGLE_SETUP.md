@@ -51,3 +51,11 @@ Four-step Turbo LoRA, native INT8 ConvRot kernels, protected FP16 and Comfy Kitc
 Tests cover the one-cell controller, real metadata subprocess, ComfyUI graphs, checkpoint handling, MP4/audio export, and tunnel link extraction/lifetime using a simulated tunnel process. Cloudflared was downloaded from the official release, its digest recorded and its version command executed. A live Cloudflare connection from Kaggle is not verified here.
 
 Run `python notebooks/build_h3_complete.py` to regenerate the notebook, then `python -m unittest discover -s tests -v`. Runtime tests require the pinned ComfyUI dependencies and COMFY_ROOT/H3_MGPU_ROOT; H3_BRIDGE_ROOT enables bridge schema validation.
+
+## GPU use and diagnostics
+
+The sampling graph uses `UNETLoaderH3TensorParallel` for both T4s. Text encoding is assigned to cuda:1; video VAE to cuda:0 and audio VAE to cuda:1. The decode graph executes these decoders sequentially, so one busy GPU during that stage is expected. A single utilization screenshot cannot establish whether tensor-parallel sampling ran correctly.
+
+The Cloudflare output includes **Open render diagnostics**, a read-only text page at `/h3/diagnostics` containing the two most recent controller logs and recent sampling/decoding log tails. Controller logs now record GPU index/utilization/memory every 30 seconds during each graph. The report never starts inference. Logs from before this change remain readable, but do not acquire historical GPU telemetry.
+
+The supplied `clip_00002_.mp4` is 73 frames at 24 fps, 512×768 with stereo audio; its embedded decode graph identifies run `h3_c7db1e5b58c9ba443c04930c`. It confirms video VAE cuda:0 and audio VAE cuda:1, but does not include the sampling graph or stage timings. Poor detail and reported four-minute latency are still under investigation; this diagnostic update is not a verified speed or quality fix.

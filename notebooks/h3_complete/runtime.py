@@ -118,6 +118,12 @@ def execute_graph(graph, process, log_path, directory, phase):
                 return entry
         if time.monotonic() >= next_report:
             print(f'{phase.capitalize()}: {(time.monotonic()-started)/60:.1f} min elapsed', flush=True)
+            try:
+                gpu = subprocess.run(['nvidia-smi','--query-gpu=index,name,utilization.gpu,memory.used,memory.total',
+                                      '--format=csv,noheader'],capture_output=True,text=True,timeout=5)
+                print('GPU snapshot during '+phase+':\n'+(gpu.stdout.strip() or gpu.stderr.strip()),flush=True)
+            except (OSError,subprocess.TimeoutExpired) as error:
+                print('GPU snapshot unavailable: '+str(error),flush=True)
             with log_path.open('rb') as stream:
                 stream.seek(log_offset)
                 recent = stream.read()

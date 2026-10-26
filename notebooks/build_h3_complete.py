@@ -45,7 +45,7 @@ path=run_browser_job(job)
 Path(job['result']).write_text(json.dumps({'file':str(path)}))
 '''
 compile(worker,'browser_worker','exec')
-install += '\nbrowser_node_source = '+repr(read('browser_node'))+'\n'
+install += '\nbrowser_node_source = '+repr(read('diagnostics')+'\n'+read('browser_node'))+'\n'
 install += 'browser_worker_source = '+repr(worker)+'\n'
 install += 'browser_extension_source = '+repr((SOURCE/'open_workflow.js').read_text())+'\n'
 install += read('browser_workflow')
@@ -106,7 +106,7 @@ nb = nbformat.v4.new_notebook(cells=[
 
 Select **GPU T4 ×2** and **Internet ON**, then press the single code cell's **▶ button once**. It installs the pinned runtime, verifies existing or downloaded models, starts ComfyUI and prints **Your full H3 workflow link**. Click **Open full H3 workflow in ComfyUI**. The link loads the connected graph directly; edit it and press **Run**. The workflow is installed automatically; no JSON download is needed.
 
-This notebook does not queue a render, embed video previews, or copy video downloads. Work in ComfyUI through the link. Keep the Kaggle session running; the temporary public link expires when its tunnel or session stops.
+This notebook does not queue a render, embed video previews, or copy video downloads. Work in ComfyUI through the link. The **Open render diagnostics** link displays recent sampling/decoding logs as selectable text. Keep the Kaggle session running; the temporary public link expires when its tunnel or session stops.
 
 Existing weights in the same session are reused. The first download is roughly 41.38 GiB and uses network, disk and CPU. Logs are saved as `comfyui-ui.log` and `cloudflared.log` under `/kaggle/working/minimax_h3_dual_t4`. The link is also saved as `comfyui-cloudflare-url.txt`.''','intro'),
     code(entry,'run'),

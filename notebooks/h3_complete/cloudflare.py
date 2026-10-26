@@ -77,7 +77,7 @@ if not cloudflare_url:
     raise TimeoutError('No Cloudflare URL found. Check '+str(TUNNEL_LOG)+'\n'+tail_log(TUNNEL_LOG))
 workflow_url=cloudflare_url+'/?h3_workflow=full-v1'
 print('Your full H3 workflow link:',workflow_url)
-display(HTML('<a href="'+workflow_url+'" target="_blank" rel="noopener noreferrer">Open full H3 workflow in ComfyUI</a>'))
+display(HTML('<a href="'+workflow_url+'" target="_blank" rel="noopener noreferrer">Open full H3 workflow in ComfyUI</a><br><a href="'+cloudflare_url+'/h3/diagnostics" target="_blank" rel="noopener noreferrer">Open render diagnostics</a>'))
 print('Keep this Kaggle session running while using ComfyUI. The temporary link grants public access.')
 
 (ROOT/'comfyui-cloudflare-url.txt').write_text(workflow_url+'\n')

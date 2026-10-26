@@ -65,3 +65,14 @@ NODE_CLASS_MAPPINGS={'H3IsolatedSaveVideo':H3IsolatedSaveVideo}
 NODE_DISPLAY_NAME_MAPPINGS={'H3IsolatedSaveVideo':'Save MP4 — isolated H3 render'}
 
 WEB_DIRECTORY="./web"
+
+# Read-only report; it never queues a render or reads arbitrary requested paths.
+from aiohttp import web
+from server import PromptServer
+if getattr(PromptServer, 'instance', None) is not None:
+    @PromptServer.instance.routes.get('/h3/diagnostics')
+    async def h3_diagnostics(request):
+        import asyncio
+        config=json.loads(Path(__file__).with_name('config.json').read_text())
+        report=await asyncio.to_thread(render_diagnostics,config['root'])
+        return web.Response(text=report,content_type='text/plain',headers={'Cache-Control':'no-store'})
