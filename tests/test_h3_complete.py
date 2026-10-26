@@ -104,6 +104,8 @@ http.server.HTTPServer(('127.0.0.1',int(sys.argv[1])),Handler).serve_forever()
         popen=subprocess.Popen
         children=[]
         def launch(*args,**kwargs):
+            command=args[0]
+            self.assertEqual(command[command.index('--database-url')+1], 'sqlite:///:memory:')
             child=popen([sys.executable,str(fake),str(port)],**kwargs)
             children.append(child);return child
         with patch.object(subprocess,'Popen',side_effect=launch):

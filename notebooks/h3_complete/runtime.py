@@ -49,7 +49,8 @@ def comfy_process(phase, directory, graphs):
             raise RuntimeError(f'Port {PORT} is used by another service. Change PORT in settings.')
     log_path = directory/(phase+'.log')
     flags = ['--cuda-device','all','--vram-headroom',str(VRAM_HEADROOM_GB),
-             '--preview-method','none','--disable-auto-launch']
+             '--preview-method','none','--disable-auto-launch',
+             '--database-url','sqlite:///:memory:']  # Workers must not lock the browser database.
     flags += ['--use-ck-attention'] if USE_KITCHEN_ATTENTION else ['--use-pytorch-cross-attention']
     with log_path.open('a', buffering=1) as log:
         log.write(f'\n--- {phase} started {time.strftime("%Y-%m-%d %H:%M:%S UTC",time.gmtime())} ---\n')
