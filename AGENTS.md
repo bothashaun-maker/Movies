@@ -57,3 +57,14 @@ chat transcript. Update it when the user changes these instructions.
 - `minimax_h3_taomate3_experimental.ipynb` adds TaoMate 3-step + INT8 VAE as an optional comparison; baseline aliases remain four-step FP16.
 - Do not call this the full Director workflow: it adapts sampling/VAE into the existing first-frame graph, without Director timeline/multi-reference controls or RTX upscaling.
 - Model hashes and manual sigmas are verified; actual GPU render compatibility/performance remain unverified. See `docs/H3_DIRECTOR_WORKFLOW_REVIEW.md`.
+
+## User decisions and pending Director work (2026-10-27)
+
+- The user explicitly wants the Director included. Omitting its timeline and multi-reference interface from the experimental adaptation was an incomplete scope decision, not a demonstrated T4 limitation. Full Director integration remains outstanding; do not describe the current first-frame canvas as equivalent or completed.
+- The user will handle upscaling in CapCut. Do not add RTX upscaling to the required Kaggle pipeline.
+- The uploaded Tensor Alchemist three-step and PDD8 workflows contain `MiniMaxH3DirectorCS`. Preserve their reference/timeline intent when adapting conditioning to isolated GPU workers.
+- The subsequently uploaded `Ep32 Workflows.zip` (Pixaroma) was inspected directly. It contains five workflows: text-to-video, first-frame image, first/last-frame images, reference image + speech audio, and reference image + singing audio. It does NOT contain the Director timeline node.
+- Pixaroma's speech/singing graphs use `MiniMaxH3ReferenceToVideo` and `PixaromaH3AudioSync`, which are useful candidates for true reference conditioning and supplied-audio synchronization. These features have not yet been integrated into our notebooks.
+- Pixaroma selects the FL2V four-step v1.1 LoRA and FP16 video VAE. Its saved dropdown state selects eight steps for text/first-frame/first-last-frame workflows (four-step options available), and four steps for speech/singing. Follow linked dropdown controls rather than stale KSampler widget values when auditing these graphs.
+- Creator benchmark claims are not measured Kaggle T4 results. Existing diagnostic evidence confirms both T4s were used in our earlier run; sampling including initialization took 193.09 seconds and decode/export took 43.38 seconds. Speed and quality remain optimization goals, not resolved outcomes.
+- User asked to remember these decisions. These repository instructions preserve actionable continuity; do not claim guaranteed permanent recall of the full chat.
