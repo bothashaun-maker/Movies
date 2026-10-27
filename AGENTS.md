@@ -78,3 +78,5 @@ chat transcript. Update it when the user changes these instructions.
 - Select weights from the reachable graph, including Director's active reference branch. Family switches may require downloads. Reclaim only verified, notebook-owned model caches when measured space requires it; never remove inputs, outputs, or checkpoints.
 - The uploaded Pixa archive has two unreadable media entries. Intact examples are bundled; Speaking Audio requires the user's recording. Do not invent a speech sample.
 - See `docs/H3_NOTEBOOK_COLLECTIONS.md` for menus, verification and remaining GPU limits. 47 tests passed; all seven new canvases loaded in real ComfyUI Chromium and validated as browser/sample/decode graphs. This is not proof of T4 speed or quality.
+
+- `H3_Model_Packs.ipynb` prepares all four notebooks’ default weights as four CPU-only reusable outputs (`ref2va`, `fl2va`, `encoder`, `support`). Regenerate with `python notebooks/build_h3_model_packs.py` when catalogs change. Each pack is below 20 GiB; combined storage is about 73 GiB. Attach saved outputs through Add Input; temporary renderer files/symlinks are not durable datasets.

@@ -34,3 +34,9 @@ Additional packages are pinned to Pixaroma `88260de112af70a25f82edcd6ee2d31dccff
 All 47 automated tests passed, including exact supplied-audio roundtrips, lazy UI execution, graph partitioning and restricted cache eviction. All five Pixa and both Director canvases loaded in the real pinned ComfyUI browser with no missing nodes or browser errors. Their exported browser, sampling and decoding graphs passed ComfyUI validation. Screenshots: [Director](director_collection.png), [Pixa](pixa_collection.png).
 
 These are browser and CPU checks. The new collections have not been rendered on Kaggle T4s in this development environment; speed, quality, and end-to-end GPU compatibility remain unverified. Existing successful baseline Kaggle renders do not establish those results for the new workflows.
+
+## Save reusable model inputs
+
+Use [H3 Model Packs](../H3_Model_Packs.ipynb) with Accelerator None and Internet ON. Create four separately named copies, setting `PACK` to `ref2va`, `fl2va`, `encoder`, and `support`. Each pack is below 20 GiB; the combined saved weights occupy about 73 GiB. Check account storage limits. Save each completed version with its output files, then attach all four saved notebook outputs to any renderer through Add Input / Your Work. Keep outputs private. Leave `MODEL_DATASET=''` for automatic discovery. A separately created Dataset is optional: saved notebook outputs already work as model inputs.
+
+The preparation notebook includes every pinned model used by the four default notebooks, including the new Pixa/Director/three-step weights. It does not include optional Semantic Bridge/VSA. Saving the renderer alone does not preserve temporary model storage or dereference its ComfyUI symlinks. Runtime installation and SHA checks still run even when model downloads are avoided. Regenerate this helper using `python notebooks/build_h3_model_packs.py` after changing model catalogs.
