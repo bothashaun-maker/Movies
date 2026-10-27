@@ -63,30 +63,32 @@ class CompleteRuntime(unittest.TestCase):
             folder_paths.set_output_directory(str(scope['COMFY']/'output'))
             from PIL import Image
             image=temp/'reference.png';Image.new('RGB',(80,120)).save(image)
-            for family in ('ref2va','fl2va'):
-                for mode in ('text','image'):
-                    scope.update(MODEL_FAMILY=family,MODE=mode,IMAGE_PATH=str(image))
-                    key,directory,sample,decode=scope['prepare_job']()
-                    catalog={}
-                    for node in [*sample.values(),*decode.values()]:
-                        kind=node['class_type'];cls=nodes.NODE_CLASS_MAPPINGS[kind]
-                        catalog[kind]=cls.GET_NODE_INFO_V1() if hasattr(cls,'GET_NODE_INFO_V1') else {'input':cls.INPUT_TYPES()}
-                    scope['check_node_catalog'](catalog,[sample,decode])
-                    valid=asyncio.run(execution.validate_prompt('sample',sample,None))
-                    self.assertTrue(valid[0],valid)
-                    self.assertEqual(valid[2],['19'])
-                    self.cp.H3CheckpointBeforeDecode().save({'samples':NestedTensor([
-                        torch.zeros(1,24,37,48,32),torch.zeros(1,32,2,200)])},key)
-                    valid=asyncio.run(execution.validate_prompt('decode',decode,None))
-                    self.assertTrue(valid[0],valid)
-                    self.assertEqual(valid[2],['16'])
-                    print('Validated separate sampling/decode graphs:',family,mode)
+            for preset in ('turbo4','taomate3'):
+                scope.update(SAMPLING_PRESET=preset,VIDEO_VAE='int8_convrot' if preset=='taomate3' else 'fp16',STEPS=3 if preset=='taomate3' else 4)
+                for family in ('ref2va','fl2va'):
+                    for mode in ('text','image'):
+                        scope.update(MODEL_FAMILY=family,MODE=mode,IMAGE_PATH=str(image))
+                        key,directory,sample,decode=scope['prepare_job']()
+                        catalog={}
+                        for node in [*sample.values(),*decode.values()]:
+                            kind=node['class_type'];cls=nodes.NODE_CLASS_MAPPINGS[kind]
+                            catalog[kind]=cls.GET_NODE_INFO_V1() if hasattr(cls,'GET_NODE_INFO_V1') else {'input':cls.INPUT_TYPES()}
+                        scope['check_node_catalog'](catalog,[sample,decode])
+                        valid=asyncio.run(execution.validate_prompt('sample',sample,None))
+                        self.assertTrue(valid[0],valid)
+                        self.assertEqual(valid[2],['19'])
+                        self.cp.H3CheckpointBeforeDecode().save({'samples':NestedTensor([
+                            torch.zeros(1,24,37,48,32),torch.zeros(1,32,2,200)])},key)
+                        valid=asyncio.run(execution.validate_prompt('decode',decode,None))
+                        self.assertTrue(valid[0],valid)
+                        self.assertEqual(valid[2],['16'])
+                        print('Validated separate sampling/decode graphs:',family,mode)
             # Optional bridge schema checked against its pinned, verified source.
             bridge=os.environ.get('H3_BRIDGE_ROOT')
             if bridge:
                 module=load(Path(bridge)/'__init__.py','h3_complete_bridge',True)
                 nodes.NODE_CLASS_MAPPINGS.update(module.NODE_CLASS_MAPPINGS)
-                scope.update(USE_BRIDGE=True,MODEL_FAMILY='fl2va')
+                scope.update(USE_BRIDGE=True,MODEL_FAMILY='fl2va',SAMPLING_PRESET='turbo4',VIDEO_VAE='fp16',STEPS=4)
                 key,directory,sample,decode=scope['prepare_job']()
                 valid=asyncio.run(execution.validate_prompt('bridge',sample,None))
                 self.assertTrue(valid[0],valid)

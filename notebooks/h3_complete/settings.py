@@ -11,6 +11,8 @@ SEED = 42
 MEGAPIXELS = 0.4                    # default canvas: 512 x 768
 ASPECT = (2, 3)
 DURATION = 5.0                      # snaps to the H3 frame grid: 124 frames at 24 fps
+SAMPLING_PRESET = 'turbo4'          # 'turbo4' or experimental 'taomate3'
+VIDEO_VAE = 'fp16'                  # 'fp16' or experimental 'int8_convrot'
 MODEL_FAMILY = 'ref2va'             # 'ref2va' or 'fl2va'; matching Turbo LoRA selected
 USE_BRIDGE = False                 # optional Semantic Bridge: requires MODEL_FAMILY='fl2va'
 BRIDGE_ALPHA = 0.10
@@ -27,15 +29,17 @@ PORT = 8188
 API = f'http://127.0.0.1:{PORT}'
 COMFY_COMMIT = '73c9bad4d21e7addbe1d13bc92eee0f1431b017d'  # v0.37.0
 MGPU_COMMIT = 'e0232dc1d1321e23ef308a0e6a30c39c8e062b46'   # kaggle-ok-64
-STEPS = 4
+STEPS = 3 if SAMPLING_PRESET == 'taomate3' else 4
 USE_KITCHEN_ATTENTION = True
 VRAM_HEADROOM_GB = 2.0
 TIMEOUT_MINUTES = 90
 MODELS_READY = False
 STACK_READY = False
 ROOT.mkdir(parents=True, exist_ok=True)
+assert SAMPLING_PRESET in {'turbo4','taomate3'} and VIDEO_VAE in {'fp16','int8_convrot'}
+assert not (USE_BRIDGE and SAMPLING_PRESET=='taomate3'), 'TaoMate + Semantic Bridge is not validated.'
 assert MODEL_FAMILY in {'ref2va','fl2va'} and MODE in {'text','image'}
-assert 0.2 <= MEGAPIXELS <= 0.4 and 1 <= DURATION <= 5 and STEPS == 4
+assert 0.2 <= MEGAPIXELS <= 0.4 and 1 <= DURATION <= 5 and STEPS in (3,4)
 assert len(ASPECT) == 2 and min(ASPECT) > 0 and PROMPT.strip()
 assert 0 <= SEED < 2**64
 assert not USE_BRIDGE or MODEL_FAMILY == 'fl2va', 'Semantic Bridge requires FL2VA; its author excludes Ref2VA.'

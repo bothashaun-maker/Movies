@@ -7,9 +7,29 @@ assert hashlib.sha256(original_canvas).hexdigest() == '34bccd59d74e667c5057f974c
 
 ASSETS = [{'repo': 'Comfy-Org/MiniMax-H3', 'revision': 'e5eb578a89295337b8ff433a035929ce0279e0b6', 'file': 'diffusion_models/minimax_h3_ref2va_pruned_int8_convrot.safetensors', 'family': 'ref2va', 'size': 20970379616, 'sha256': '9255f52b6677845ad238f20dfaafa94727053694127ab7f255c048f0f9365779'}, {'repo': 'Comfy-Org/MiniMax-H3', 'revision': 'e5eb578a89295337b8ff433a035929ce0279e0b6', 'file': 'loras/minimax_h3_ref2v_turbo_4step_v0.1_comfyui_bf16.safetensors', 'family': 'ref2va', 'size': 1956193000, 'sha256': '5b9ab5ade15d0775676d01a907268a69a1468dc6033b3b0d3ded5502f3ebb84c'}, {'repo': 'Comfy-Org/MiniMax-H3', 'revision': 'e5eb578a89295337b8ff433a035929ce0279e0b6', 'file': 'diffusion_models/minimax_h3_fl2va_pruned_int8_convrot.safetensors', 'family': 'fl2va', 'size': 20970379616, 'sha256': 'e889202c41dafb67b10d67b97f0d8541508036a6090af23425a5c2615d03c47a'}, {'repo': 'Comfy-Org/MiniMax-H3', 'revision': 'e5eb578a89295337b8ff433a035929ce0279e0b6', 'file': 'loras/minimax_h3_fl2v_turbo_4step_v1.0_768p_comfyui_bf16.safetensors', 'family': 'fl2va', 'size': 1956192992, 'sha256': 'c396a9a06f58399e9df9754b18299818d84a2ddd371724ba48fe4a41221437dc'}, {'repo': 'Comfy-Org/MiniMax-H3', 'revision': 'e5eb578a89295337b8ff433a035929ce0279e0b6', 'file': 'text_encoders/qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors', 'size': 15687142551, 'sha256': '35a88d51044231fe332301d7a62aa81e3f2cba62febeb446e2c1e3e0ef76f2c6'}, {'repo': 'Comfy-Org/MiniMax-H3', 'revision': 'e5eb578a89295337b8ff433a035929ce0279e0b6', 'file': 'vae/minimax_h3_video_vae_fp16.safetensors', 'size': 5207808496, 'sha256': '7c1f131492e7eddacaac9069a61b81bdd39de5cc96561e677c5eab1cdce5e522'}, {'repo': 'Comfy-Org/MiniMax-H3', 'revision': 'e5eb578a89295337b8ff433a035929ce0279e0b6', 'file': 'vae/minimax_h3_audio_vae_fp32.safetensors', 'size': 605254808, 'sha256': '8e505d95dd1561d47abd43d4238fd40d9bb1ae9e147ed0a4cba778d76ae4db48'}, {'repo': 'speach1sdef178/MiniMax-H3-Semantic-Bridge', 'revision': 'b9fe58ba6f428d990a59f20f09f719c8fbc67f7d', 'file': 'MiniMaxH3_SemanticBridge_v1.safetensors', 'dest': 'semantic_bridge/MiniMaxH3_SemanticBridge_v1.safetensors', 'size': 11023032, 'sha256': 'ac0dc8ac05f545ebdee12e2fcebe4515b049f9cfd9558eb4887a9bf3fd6d562e'}, {'repo': 'speach1sdef178/MiniMax-H3-Semantic-Bridge', 'revision': 'b9fe58ba6f428d990a59f20f09f719c8fbc67f7d', 'file': 'MiniMax_H3_Semantic_Bridge_v1.0.zip', 'dest': None, 'size': 4406, 'sha256': 'c4866a0cc554237046814c9cb827a5960caecbd2214d5a5a04b0e43716b437bb'}, {'repo': 'barelymining/ComfyUI-MiniMax-H3-FastVideo', 'revision': 'aa554050fe27ec3c62e20e57519beb46741c9000', 'file': 'fasth3_vsa_gate.safetensors', 'dest': 'loras/fasth3_vsa_gate.safetensors', 'size': 3853522616, 'sha256': 'bf95408e335c4b0d6a1a44946a428a3e12849e6eab2de9566ecedae4a0043420', 'vsa': True}]
 
+# Experimental files verified against the publishers' immutable model revisions.
+ASSETS.extend([
+    dict(repo='drbaph/MiniMax-H3-Turbo-Lora-ComfyUI',revision='633e6c48cd05f7800e2cb2c007b5c9023b92c576',
+         file='experimental/minimax_h3_taomate_fl2va_3step_ema_comfyui.safetensors',
+         dest='loras/minimax_h3_taomate_fl2va_3step_ema_comfyui.safetensors',
+         size=2480997424,sha256='6b119983683b265ad65224a9a643eea1714efe5b8bcb93799999635ccc455c73',preset='taomate3'),
+    dict(repo='Comfy-Org/MiniMax-H3',revision='e5eb578a89295337b8ff433a035929ce0279e0b6',
+         file='vae/minimax_h3_video_vae_int8_convrot.safetensors',size=2811065184,
+         sha256='52a2c8c73583c86e4f41cdcce3a6ad0ea562987bc0bf3d60a0cef5f5c8e60c0e',video_vae='int8_convrot')])
+
 def selected_model_assets():
-    return [a for a in ASSETS if (not a.get('family') or a['family']==MODEL_FAMILY)
-            and not a.get('vsa') and (USE_BRIDGE or a['repo']!='speach1sdef178/MiniMax-H3-Semantic-Bridge')]
+    preset=globals().get('SAMPLING_PRESET','turbo4')
+    video_vae=globals().get('VIDEO_VAE','fp16')
+    selected=[]
+    for a in ASSETS:
+        if a.get('family') and a['family']!=MODEL_FAMILY:continue
+        if a.get('vsa') or (not USE_BRIDGE and a['repo']=='speach1sdef178/MiniMax-H3-Semantic-Bridge'):continue
+        if a.get('preset') and a['preset']!=preset:continue
+        if a['file'].startswith('loras/') and preset!='turbo4':continue
+        if a.get('video_vae') and a['video_vae']!=video_vae:continue
+        if a['file']=='vae/minimax_h3_video_vae_fp16.safetensors' and video_vae!='fp16':continue
+        selected.append(a)
+    return selected
 
 def asset_target(a):
     if a['file'].endswith('.zip'):return ROOT/'downloads'/a['file']

@@ -1,7 +1,7 @@
 """Visible native ComfyUI nodes, with an isolated output stage for T4 memory."""
 import math
 
-def browser_workflow(prompt,seed=42,megapixels=0.4,duration=5.0,family='ref2va',bridge=False,alpha=.1):
+def browser_workflow(prompt,seed=42,megapixels=0.4,duration=5.0,family='ref2va',bridge=False,alpha=.1,preset='turbo4',video_vae='fp16'):
     width=round(math.sqrt(megapixels*1e6*2/3)/32)*32
     height=round(math.sqrt(megapixels*1e6*3/2)/32)*32
     length=round(duration*24);length+=(5-length%17)%17
@@ -15,7 +15,7 @@ def browser_workflow(prompt,seed=42,megapixels=0.4,duration=5.0,family='ref2va',
         nodes.append(n);return n
     node(1,'UNETLoaderH3TensorParallel',(40,70),[],[('MODEL','MODEL')],[f'minimax_h3_{family}_pruned_int8_convrot.safetensors'],title='H3 diffusion · tensor parallel T4 ×2')
     node(2,'CLIPLoaderMultiGPU',(40,290),[],[('CLIP','CLIP')],['qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors','minimax','cuda:1'])
-    node(3,'VAELoaderMultiGPU',(40,520),[],[('VAE','VAE')],['minimax_h3_video_vae_fp16.safetensors','cuda:0'])
+    node(3,'VAELoaderMultiGPU',(40,520),[],[('VAE','VAE')],[f'minimax_h3_video_vae_{video_vae}.safetensors','cuda:0'])
     node(4,'VAELoaderMultiGPU',(40,720),[],[('VAE','VAE')],['minimax_h3_audio_vae_fp32.safetensors','cuda:1'])
     lora='minimax_h3_ref2v_turbo_4step_v0.1_comfyui_bf16.safetensors' if family=='ref2va' else 'minimax_h3_fl2v_turbo_4step_v1.0_768p_comfyui_bf16.safetensors'
     node(5,'LoraLoaderModelOnly',(410,70),[('model','MODEL')],[('MODEL','MODEL')],[lora,1.0],title='Turbo LoRA · four steps')
@@ -40,5 +40,20 @@ def browser_workflow(prompt,seed=42,megapixels=0.4,duration=5.0,family='ref2va',
         ident=len(links)+1;typ=src['outputs'][out]['type']
         links.append([ident,a,out,b,slot,typ]);src['outputs'][out]['links'].append(ident);dst['inputs'][slot]['link']=ident
     for a,o,b,k in [(1,0,5,'model'),(5,0,6,'model'),(2,0,7,'clip'),(3,0,7,'vae'),(6,0,9,'model'),(7,0,9,'conditioning'),(6,0,11,'model'),(8,0,12,'noise'),(9,0,12,'guider'),(10,0,12,'sampler'),(11,0,12,'sigmas'),(7,1,12,'latent_image'),(12,0,13,'samples'),(3,0,13,'vae'),(12,0,14,'samples'),(4,0,14,'vae'),(13,0,15,'images'),(14,0,15,'audio'),(15,0,16,'video')]:link(a,o,b,k)
+    if preset=='taomate3':
+        nodes.remove(lookup[6])
+        lookup[5]['widgets_values']=['minimax_h3_taomate_fl2va_3step_ema_comfyui.safetensors',1.0]
+        lookup[5]['title']='TaoMate LoRA · experimental three steps'
+        lookup[10]['widgets_values']=['res_multistep']
+        lookup[11].update(type='ManualSigmas',inputs=[],widgets_values=['1.0, 0.961165, 0.853333, 0.0'],properties={'Node name for S&R':'ManualSigmas'})
+        links[:]=[l for l in links if l[1]!=6 and l[3]!=6]
+        # Rebuild link IDs and per-slot references after removing the old shift/scheduler connections.
+        links.append([0,5,0,9,0,'MODEL'])
+        for n in nodes:
+            for inp in n['inputs']:inp['link']=None
+            for out in n['outputs']:out['links']=[]
+        for ident,l in enumerate(links,1):
+            l[0]=ident;lookup[l[1]]['outputs'][l[2]]['links'].append(ident)
+            lookup[l[3]]['inputs'][l[4]]['link']=ident
     return {'last_node_id':18,'last_link_id':len(links),'nodes':nodes,'links':links,'groups':[],
             'config':{},'extra':{'ds':{'scale':0.65,'offset':[100,190]}},'version':0.4}

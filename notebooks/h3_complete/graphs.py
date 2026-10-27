@@ -21,7 +21,7 @@ def sampling_graph(checkpoint_id):
     def add(n, kind, **inputs): graph[str(n)] = {'class_type':kind, 'inputs':inputs}
     add(1, 'UNETLoaderH3TensorParallel', unet_name=f'minimax_h3_{MODEL_FAMILY}_pruned_int8_convrot.safetensors')
     add(2, 'CLIPLoaderMultiGPU', clip_name='qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors', type='minimax', device='cuda:1')
-    add(3, 'VAELoaderMultiGPU', vae_name='minimax_h3_video_vae_fp16.safetensors',device='cuda:0')
+    add(3, 'VAELoaderMultiGPU', vae_name=f'minimax_h3_video_vae_{VIDEO_VAE}.safetensors',device='cuda:0')
     add(5, 'LoraLoaderModelOnly', model=['1',0],
         lora_name=('minimax_h3_ref2v_turbo_4step_v0.1_comfyui_bf16.safetensors' if MODEL_FAMILY=='ref2va' else 'minimax_h3_fl2v_turbo_4step_v1.0_768p_comfyui_bf16.safetensors'), strength_model=1.0)
     add(6, 'MiniMaxH3SigmaShift', model=['5',0], shift_video=6.0, shift_audio=3.0)
@@ -40,6 +40,12 @@ def sampling_graph(checkpoint_id):
     add(10, 'KSamplerSelect', sampler_name='er_sde')
     add(11, 'BasicScheduler', model=model, scheduler='sgm_uniform', steps=STEPS, denoise=1.0)
     add(12, 'SamplerCustomAdvanced', noise=['8',0], guider=['9',0], sampler=['10',0], sigmas=['11',0], latent_image=['7',1])
+    if SAMPLING_PRESET=='taomate3':
+        graph['5']['inputs']['lora_name']='minimax_h3_taomate_fl2va_3step_ema_comfyui.safetensors'
+        del graph['6']
+        graph['9']['inputs']['model']=['5',0]
+        graph['10']['inputs']['sampler_name']='res_multistep'
+        graph['11']={'class_type':'ManualSigmas','inputs':{'sigmas':'1.0, 0.961165, 0.853333, 0.0'}}
     add(19,'H3CheckpointBeforeDecode',samples=['12',0],checkpoint_id=checkpoint_id)
     return graph
 
@@ -47,7 +53,7 @@ def decode_graph(checkpoint_id):
     return {
         '19': {'class_type':'H3LoadDecodeCheckpoint', 'inputs':{'checkpoint_id':checkpoint_id}},
         '3': {'class_type':'VAELoaderMultiGPU', 'inputs':{
-            'vae_name':'minimax_h3_video_vae_fp16.safetensors','device':'cuda:0'}},
+            'vae_name':f'minimax_h3_video_vae_{VIDEO_VAE}.safetensors','device':'cuda:0'}},
         '4': {'class_type':'VAELoaderMultiGPU', 'inputs':{
             'vae_name':'minimax_h3_audio_vae_fp32.safetensors','device':'cuda:1'}},
         '13': {'class_type':'VAEDecode', 'inputs':{'samples':['19',0],'vae':['3',0]}},

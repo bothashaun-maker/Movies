@@ -51,3 +51,9 @@ Kaggle notebook conversation, saved on 2026-10-25.
 
 This file preserves actionable project context and preferences, not the full
 chat transcript. Update it when the user changes these instructions.
+
+## Experimental preset (2026-10-27)
+
+- `minimax_h3_taomate3_experimental.ipynb` adds TaoMate 3-step + INT8 VAE as an optional comparison; baseline aliases remain four-step FP16.
+- Do not call this the full Director workflow: it adapts sampling/VAE into the existing first-frame graph, without Director timeline/multi-reference controls or RTX upscaling.
+- Model hashes and manual sigmas are verified; actual GPU render compatibility/performance remain unverified. See `docs/H3_DIRECTOR_WORKFLOW_REVIEW.md`.

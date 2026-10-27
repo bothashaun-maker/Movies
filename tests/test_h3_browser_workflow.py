@@ -18,7 +18,7 @@ class BrowserWorkflow(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             root=Path(tmp);comfy=root/'ComfyUI'
             scope=dict(ROOT=root,COMFY=comfy,PY=Path(sys.executable),PORT=9190,json=json,
-                       MODEL_FAMILY='fl2va',USE_BRIDGE=True,BRIDGE_ALPHA=.1,
+                       SAMPLING_PRESET='turbo4',VIDEO_VAE='fp16',STEPS=4,MODEL_FAMILY='fl2va',USE_BRIDGE=True,BRIDGE_ALPHA=.1,
                        PROMPT='Fixture prompt',SEED=7,MEGAPIXELS=.4,DURATION=5)
             exec(compile(ast.Module(body=tree.body[first:],type_ignores=[]),'install_browser','exec'),scope)
             canvas=json.loads((comfy/'user/default/workflows/MiniMax H3 - Kaggle T4.json').read_text())
@@ -39,6 +39,20 @@ class BrowserWorkflow(unittest.TestCase):
             self.assertTrue((comfy/'custom_nodes/H3KaggleBrowser/__init__.py').is_file())
             self.assertEqual(json.loads((comfy/'custom_nodes/H3KaggleBrowser/web/full-workflow.json').read_text()),canvas)
             self.assertTrue((comfy/'custom_nodes/H3KaggleBrowser/web/open_workflow.js').is_file())
+
+    def test_taomate_canvas_uses_manual_schedule_without_turbo_shift(self):
+        scope={};exec((ROOT/'notebooks/h3_complete/browser_workflow.py').read_text(),scope)
+        canvas=scope['browser_workflow']('Fixture',preset='taomate3',video_vae='int8_convrot')
+        byid={n['id']:n for n in canvas['nodes']}
+        self.assertEqual((len(byid),len(canvas['links'])),(16,17))
+        self.assertNotIn(6,byid)
+        self.assertEqual(byid[11]['type'],'ManualSigmas')
+        self.assertEqual(byid[11]['widgets_values'],['1.0, 0.961165, 0.853333, 0.0'])
+        self.assertEqual(byid[10]['widgets_values'],['res_multistep'])
+        for ident,src,out,dst,inp,typ in canvas['links']:
+            self.assertIn(ident,byid[src]['outputs'][out]['links'])
+            self.assertEqual(byid[dst]['inputs'][inp]['link'],ident)
+        self.assertIn('int8_convrot',byid[3]['widgets_values'][0])
 
     def test_edited_browser_graph_is_split_without_hidden_presets(self):
         scope={};exec((ROOT/'notebooks/h3_complete/browser_job.py').read_text(),scope)

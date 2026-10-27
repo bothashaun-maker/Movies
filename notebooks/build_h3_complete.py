@@ -55,19 +55,20 @@ browser_plugin.mkdir(parents=True,exist_ok=True)
 (browser_plugin/'__init__.py').write_text(browser_node_source)
 # Carry the selected family/bridge into the isolated controller at runtime.
 browser_worker_source=browser_worker_source.replace("Path('/kaggle/working/minimax_h3_dual_t4')",f'Path({str(ROOT)!r})')
-worker_settings = f"PORT={PORT!r};MODEL_FAMILY={MODEL_FAMILY!r};USE_BRIDGE={USE_BRIDGE!r};BRIDGE_ALPHA={BRIDGE_ALPHA!r};"
+worker_settings = f"PORT={PORT!r};MODEL_FAMILY={MODEL_FAMILY!r};USE_BRIDGE={USE_BRIDGE!r};BRIDGE_ALPHA={BRIDGE_ALPHA!r};SAMPLING_PRESET={SAMPLING_PRESET!r};VIDEO_VAE={VIDEO_VAE!r};STEPS={STEPS!r};"
 browser_worker_source=browser_worker_source.replace("job=json.loads(Path(sys.argv[1]).read_text())",worker_settings+"job=json.loads(Path(sys.argv[1]).read_text())")
 worker_path=ROOT/'h3_browser_worker.py';worker_path.write_text(browser_worker_source)
 (browser_plugin/'config.json').write_text(json.dumps({'root':str(ROOT),'python':str(PY),'worker':str(worker_path)}))
 workflow_dir=COMFY/'user/default/workflows'
 workflow_dir.mkdir(parents=True,exist_ok=True)
-canvas=browser_workflow(PROMPT,SEED,MEGAPIXELS,DURATION,MODEL_FAMILY,USE_BRIDGE,BRIDGE_ALPHA)
-for workflow_name in ('MiniMax H3 - Kaggle T4.json','MiniMax H3 - Full T4 Workflow.json'):
+canvas=browser_workflow(PROMPT,SEED,MEGAPIXELS,DURATION,MODEL_FAMILY,USE_BRIDGE,BRIDGE_ALPHA,globals().get('SAMPLING_PRESET','turbo4'),globals().get('VIDEO_VAE','fp16'))
+canvas['extra']['h3_title']='MiniMax H3 - Experimental TaoMate 3 Step' if SAMPLING_PRESET=='taomate3' else 'MiniMax H3 - Full T4 Workflow'
+for workflow_name in ('MiniMax H3 - Kaggle T4.json','MiniMax H3 - Full T4 Workflow.json',canvas['extra']['h3_title']+'.json'):
     (workflow_dir/workflow_name).write_text(json.dumps(canvas,indent=2))
 web_dir=browser_plugin/'web';web_dir.mkdir(exist_ok=True)
 (web_dir/'open_workflow.js').write_text(browser_extension_source)
 (web_dir/'full-workflow.json').write_text(json.dumps(canvas))
-print('Installed FULL-GRAPH-v1: 17 nodes, 19 links — MiniMax H3 - Full T4 Workflow')
+print(f"Installed full workflow: {len(canvas['nodes'])} nodes, {len(canvas['links'])} links")
 '''
 # Wrap statements, not text lines: indenting a multiline string changes the
 # program passed to Python -c even though the enclosing notebook still compiles.
@@ -136,3 +137,26 @@ import json
 workflow_path=ROOT/'workflows/minimax_h3_kaggle_t4.json'
 workflow_path.parent.mkdir(exist_ok=True)
 workflow_path.write_text(json.dumps(workflow_scope['browser_workflow'](prompt),indent=2)+'\n')
+
+# A distinct, clearly experimental entry point; baseline aliases retain four-step FP16 defaults.
+import copy
+experimental=copy.deepcopy(nb)
+experimental.cells[0].source="""# MiniMax H3 — EXPERIMENTAL TaoMate 3-step + INT8 VAE · T4 ×2
+
+Adapted from the supplied TA three-step workflow: TaoMate LoRA at strength 1, RES Multistep and manual sigmas `1.0, 0.961165, 0.853333, 0.0`. Uses the INT8 video VAE. This is a 16-node connected sampler adaptation, **not the Director multi-reference/timeline interface**. It retains the first-frame image input, native audio and isolated GPU workers.
+
+Select T4 ×2 and Internet ON; run the single code cell, then click **Open full H3 workflow in ComfyUI**. No render is queued automatically. Existing compatible model files are reused; the two new files total about **4.93 GiB**, and available storage is checked before downloads. Old weights are not deleted.
+
+**Experimental: no measured T4 render speed or quality improvement yet.** The supplied creator workflow applies the FL2VA-named LoRA to Ref2VA too; that cross-family use remains experimental here. Retain the four-step notebook for comparison. Keep 512×768 and short clips for the first controlled comparison. The RTX upscaler and PDD8 workflow are not installed by this notebook.
+"""
+experimental.cells[1].source=experimental.cells[1].source.replace("SAMPLING_PRESET = 'turbo4'", "SAMPLING_PRESET = 'taomate3'",1).replace("VIDEO_VAE = 'fp16'", "VIDEO_VAE = 'int8_convrot'",1)
+experimental.cells[2].source="""## Experimental validation limits
+
+The notebook preserves the existing pinned T4 runtime. Three-step sampler settings and model hashes were checked against the supplied workflow and publisher metadata. CPU graph checks cannot establish INT8 VAE speed, peak GPU memory, LoRA quality or actual dual-T4 numerical behavior. The full Director UI and RTX Super Resolution require separate compatibility work. Use **Open render diagnostics** to inspect each run.
+
+Set `VIDEO_VAE='fp16'` to isolate the sampler change, or `SAMPLING_PRESET='turbo4'` to isolate the INT8 VAE change. Do not combine Semantic Bridge with this experimental sampler.
+"""
+nbformat.validate(experimental)
+nbformat.write(experimental,ROOT/'minimax_h3_taomate3_experimental.ipynb')
+
+(ROOT/'workflows/minimax_h3_taomate3_experimental.json').write_text(json.dumps(workflow_scope['browser_workflow'](prompt,preset='taomate3',video_vae='int8_convrot'),indent=2)+'\n')
