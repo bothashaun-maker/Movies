@@ -1,0 +1,287 @@
+{
+  "1": {
+    "inputs": {
+      "unet_name": "minimax_h3_fl2va_pruned_int8_convrot.safetensors"
+    },
+    "class_type": "H3SuiteUNETLoader",
+    "_meta": {
+      "title": "FL2VA Model"
+    }
+  },
+  "2": {
+    "inputs": {
+      "clip_name": "qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors",
+      "type": "minimax",
+      "device": "cuda:1"
+    },
+    "class_type": "H3SuiteCLIPLoader",
+    "_meta": {
+      "title": "Qwen3-VL Text Encoder"
+    }
+  },
+  "3": {
+    "inputs": {
+      "vae_name": "minimax_h3_video_vae_fp16.safetensors",
+      "device": "cuda:0"
+    },
+    "class_type": "H3SuiteVAELoader",
+    "_meta": {
+      "title": "Video VAE"
+    }
+  },
+  "4": {
+    "inputs": {
+      "vae_name": "minimax_h3_audio_vae_fp32.safetensors",
+      "device": "cuda:1"
+    },
+    "class_type": "H3SuiteVAELoader",
+    "_meta": {
+      "title": "Audio VAE"
+    }
+  },
+  "5": {
+    "inputs": {
+      "start_second": 0,
+      "end_second": 5,
+      "duration_seconds": 5,
+      "start_frame": 0,
+      "end_frame": 120,
+      "duration_frames": 120,
+      "timeline_data": "{\"mainTrackEnabled\":true,\"audioTrackEnabled\":true,\"motionTrackEnabled\":true,\"propHeight\":230,\"globalPropHeight\":301,\"showFilenames\":true,\"showPromptZones\":true,\"overrideAudio\":false,\"inpaint_audio\":true,\"global_prompt\":\"A calm cinematic landscape at sunrise.\",\"retake_global_prompt\":\"\",\"overall_soundscape\":\"Gentle natural ambience.\",\"non_diegetic_music\":\"\",\"prompt_override\":\"\",\"prompt_override_on\":false,\"retakeMode\":false,\"retakeStart\":45,\"retakeLength\":45,\"retakePrompt\":\"\",\"retakeStrength\":1,\"retakeVideo\":null,\"normalStartFrame\":0,\"normalDurationFrames\":120,\"reference_mode\":\"OFF\",\"prompt_format\":\"minimax\",\"analyzeProvider\":\"ollama\",\"analyzeBaseUrl\":\"\",\"analyzeModel\":\"\",\"summary\":\"A five-second landscape shot.\",\"task_type_override\":\"\",\"subjectSlotCount\":6,\"subjects\":[{\"images\":[],\"description\":\"\",\"shortName\":\"\",\"kind\":\"person\",\"retention\":\"fully_preserved\",\"retentionNote\":\"\"},{\"images\":[],\"description\":\"\",\"shortName\":\"\",\"kind\":\"person\",\"retention\":\"fully_preserved\",\"retentionNote\":\"\"},{\"images\":[],\"description\":\"\",\"shortName\":\"\",\"kind\":\"person\",\"retention\":\"fully_preserved\",\"retentionNote\":\"\"},{\"images\":[],\"description\":\"\",\"shortName\":\"\",\"kind\":\"person\",\"retention\":\"fully_preserved\",\"retentionNote\":\"\"},{\"images\":[],\"description\":\"\",\"shortName\":\"\",\"kind\":\"person\",\"retention\":\"fully_preserved\",\"retentionNote\":\"\"},{\"images\":[],\"description\":\"\",\"shortName\":\"\",\"kind\":\"person\",\"retention\":\"fully_preserved\",\"retentionNote\":\"\"}],\"segments\":[{\"id\":\"h3-t4-start\",\"start\":0,\"length\":120,\"prompt\":\"A slow camera move across the landscape.\",\"isEndFrame\":false}],\"motionSegments\":[],\"audioSegments\":[]}",
+      "local_prompts": "A slow camera move across the landscape.",
+      "segment_lengths": "120",
+      "guide_strength": "1.00",
+      "use_custom_audio": true,
+      "use_custom_motion": true,
+      "inpaint_audio": true,
+      "frame_rate": 24,
+      "display_mode": "seconds",
+      "custom_width": 512,
+      "custom_height": 768,
+      "resize_method": "crop",
+      "divisible_by": 32,
+      "img_compression": 0,
+      "override_audio": false,
+      "ref_image_size": "match",
+      "shift_video": 12,
+      "shift_audio": 3,
+      "ref_image_notes": "",
+      "minimax_settings_ui": "",
+      "timeline_ui": "",
+      "minimax_prompt_preview": "",
+      "clip": [
+        "2",
+        0
+      ],
+      "vae": [
+        "3",
+        0
+      ],
+      "model": [
+        "386",
+        0
+      ],
+      "model_ref2va": [
+        "387",
+        0
+      ],
+      "audio_vae": [
+        "4",
+        0
+      ]
+    },
+    "class_type": "MiniMaxH3DirectorCS",
+    "_meta": {
+      "title": "MiniMax H3 Director",
+      "cnr_id": "minimaxh3-director",
+      "aux_id": "seesee75-commits/ComfyUI-MiniMaxH3-Director",
+      "ver": "0.2.2"
+    }
+  },
+  "16": {
+    "inputs": {
+      "unet_name": "minimax_h3_ref2va_pruned_int8_convrot.safetensors"
+    },
+    "class_type": "H3SuiteUNETLoader",
+    "_meta": {
+      "title": "Ref2VA Model"
+    }
+  },
+  "386": {
+    "inputs": {
+      "pdd_file": "minimax_h3_fl2va_pdd_acc_8step_comfyui.safetensors",
+      "nfe": "8",
+      "lora_strength": 1,
+      "head_strength": 1,
+      "on_off_grid": "error",
+      "partition": "",
+      "enabled": true,
+      "partition_check": "error",
+      "model": [
+        "1",
+        0
+      ]
+    },
+    "class_type": "H3SuitePDDApply",
+    "_meta": {
+      "title": "FL2VA PDD 8-Step"
+    }
+  },
+  "387": {
+    "inputs": {
+      "pdd_file": "minimax_h3_ref2va_pdd_acc_8step_comfyui.safetensors",
+      "nfe": "8",
+      "lora_strength": 1,
+      "head_strength": 1,
+      "on_off_grid": "error",
+      "partition": "",
+      "enabled": true,
+      "partition_check": "error",
+      "model": [
+        "16",
+        0
+      ]
+    },
+    "class_type": "H3SuitePDDApply",
+    "_meta": {
+      "title": "Ref2VA PDD 8-Step"
+    }
+  },
+  "388": {
+    "inputs": {
+      "noise_seed": 8675309
+    },
+    "class_type": "RandomNoise",
+    "_meta": {
+      "title": "Video Seed",
+      "cnr_id": "comfy-core",
+      "ver": "0.30.0"
+    }
+  },
+  "389": {
+    "inputs": {
+      "sampler_name": "euler"
+    },
+    "class_type": "KSamplerSelect",
+    "_meta": {
+      "title": "Video Sampler",
+      "cnr_id": "comfy-core",
+      "ver": "0.30.0"
+    }
+  },
+  "390": {
+    "inputs": {
+      "nfe": "8",
+      "denoise": 1,
+      "partition": ""
+    },
+    "class_type": "MiniMaxH3PDDAccScheduler",
+    "_meta": {
+      "title": "PDD Schedule",
+      "aux_id": "Jalen-Brunson/ComfyUI-MiniMax-H3-PDD-Acc",
+      "ver": "311a65dd53832d8a5f8177a9d5fb923c09e35a90"
+    }
+  },
+  "391": {
+    "inputs": {
+      "model": [
+        "5",
+        0
+      ],
+      "conditioning": [
+        "5",
+        1
+      ]
+    },
+    "class_type": "BasicGuider",
+    "_meta": {
+      "title": "Video Guider",
+      "cnr_id": "comfy-core",
+      "ver": "0.30.0"
+    }
+  },
+  "392": {
+    "inputs": {
+      "noise": [
+        "388",
+        0
+      ],
+      "guider": [
+        "391",
+        0
+      ],
+      "sampler": [
+        "389",
+        0
+      ],
+      "sigmas": [
+        "390",
+        0
+      ],
+      "latent_image": [
+        "5",
+        2
+      ]
+    },
+    "class_type": "SamplerCustomAdvanced",
+    "_meta": {
+      "title": "Video Sampling",
+      "cnr_id": "comfy-core",
+      "ver": "0.30.0"
+    }
+  },
+  "401": {
+    "inputs": {
+      "samples": [
+        "392",
+        0
+      ],
+      "vae": [
+        "4",
+        0
+      ]
+    },
+    "class_type": "VAEDecodeAudio",
+    "_meta": {
+      "title": "Decode Audio",
+      "cnr_id": "comfy-core",
+      "ver": "0.30.0"
+    }
+  },
+  "402": {
+    "inputs": {
+      "samples": [
+        "392",
+        0
+      ],
+      "vae": [
+        "3",
+        0
+      ]
+    },
+    "class_type": "VAEDecode",
+    "_meta": {
+      "title": "Decode Video",
+      "cnr_id": "comfy-core",
+      "ver": "0.30.0"
+    }
+  },
+  "403": {
+    "inputs": {
+      "filename_prefix": "Director_-_PDD_Eight_Step/clip",
+      "fps": 24,
+      "images": [
+        "402",
+        0
+      ],
+      "audio": [
+        "401",
+        0
+      ]
+    },
+    "class_type": "H3SuiteSaveVideo",
+    "_meta": {
+      "title": "Save MP4 \u00b7 isolated T4 workers"
+    }
+  }
+}

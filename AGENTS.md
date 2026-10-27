@@ -58,13 +58,23 @@ chat transcript. Update it when the user changes these instructions.
 - Do not call this the full Director workflow: it adapts sampling/VAE into the existing first-frame graph, without Director timeline/multi-reference controls or RTX upscaling.
 - Model hashes and manual sigmas are verified; actual GPU render compatibility/performance remain unverified. See `docs/H3_DIRECTOR_WORKFLOW_REVIEW.md`.
 
-## User decisions and pending Director work (2026-10-27)
+## User decisions and workflow collections (2026-10-27)
 
-- The user explicitly wants the Director included. Omitting its timeline and multi-reference interface from the experimental adaptation was an incomplete scope decision, not a demonstrated T4 limitation. Full Director integration remains outstanding; do not describe the current first-frame canvas as equivalent or completed.
+- The user explicitly wants the Director included. Omitting its timeline and multi-reference interface from the experimental adaptation was an incomplete scope decision, not a demonstrated T4 limitation. The new `Director.ipynb` integrates both real Director canvases and their timeline/multi-reference interface. Browser and CPU validation passed; GPU execution remains unverified.
 - The user will handle upscaling in CapCut. Do not add RTX upscaling to the required Kaggle pipeline.
 - The uploaded Tensor Alchemist three-step and PDD8 workflows contain `MiniMaxH3DirectorCS`. Preserve their reference/timeline intent when adapting conditioning to isolated GPU workers.
 - The subsequently uploaded `Ep32 Workflows.zip` (Pixaroma) was inspected directly. It contains five workflows: text-to-video, first-frame image, first/last-frame images, reference image + speech audio, and reference image + singing audio. It does NOT contain the Director timeline node.
-- Pixaroma's speech/singing graphs use `MiniMaxH3ReferenceToVideo` and `PixaromaH3AudioSync`, which are useful candidates for true reference conditioning and supplied-audio synchronization. These features have not yet been integrated into our notebooks.
+- Pixaroma's speech/singing graphs use `MiniMaxH3ReferenceToVideo` and `PixaromaH3AudioSync`, which are useful candidates for true reference conditioning and supplied-audio synchronization. These features are now integrated in `Pixa_5_Workflows.ipynb`, including preservation of supplied audio across isolated decoding.
 - Pixaroma selects the FL2V four-step v1.1 LoRA and FP16 video VAE. Its saved dropdown state selects eight steps for text/first-frame/first-last-frame workflows (four-step options available), and four steps for speech/singing. Follow linked dropdown controls rather than stale KSampler widget values when auditing these graphs.
 - Creator benchmark claims are not measured Kaggle T4 results. Existing diagnostic evidence confirms both T4s were used in our earlier run; sampling including initialization took 193.09 seconds and decode/export took 43.38 seconds. Speed and quality remain optimization goals, not resolved outcomes.
 - User asked to remember these decisions. These repository instructions preserve actionable continuity; do not claim guaranteed permanent recall of the full chat.
+
+## Four separate notebooks (latest request, 2026-10-27)
+
+- User superseded the combined-notebook request with four named notebooks: `Current_Working_Workflow.ipynb`, `Pixa_5_Workflows.ipynb`, `Director.ipynb`, and `Three_Step_Workflow.ipynb`.
+- Regenerate all four using `python notebooks/build_h3_collections.py`. It also runs the baseline builder. Collection code lives in `notebooks/h3_suite/`; original uploaded JSON is retained in `workflows/sources/`.
+- Pixa installs all five visible graphs. Director installs the actual three-step and PDD eight-step Director graphs. Three-Step is the simpler experimental first-frame graph, not a substitute for Director.
+- Preserve the lazy output boundary, separate GPU sampling/decode processes, external-audio sidecar, and pre-download geometry checks. Default collection size is about 0.4 MP and five seconds; caps are 430,000 pixels and 124 decoded frames.
+- Select weights from the reachable graph, including Director's active reference branch. Family switches may require downloads. Reclaim only verified, notebook-owned model caches when measured space requires it; never remove inputs, outputs, or checkpoints.
+- The uploaded Pixa archive has two unreadable media entries. Intact examples are bundled; Speaking Audio requires the user's recording. Do not invent a speech sample.
+- See `docs/H3_NOTEBOOK_COLLECTIONS.md` for menus, verification and remaining GPU limits. 47 tests passed; all seven new canvases loaded in real ComfyUI Chromium and validated as browser/sample/decode graphs. This is not proof of T4 speed or quality.

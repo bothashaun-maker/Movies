@@ -1,3 +1,9 @@
+# Four named notebooks
+
+Use the separate notebooks listed in [Notebook collections](docs/H3_NOTEBOOK_COLLECTIONS.md): **Current Working Workflow**, **Pixa — 5 Workflows**, **Director**, and **Three-Step Workflow**. Each starts with one executable cell and opens ComfyUI through Cloudflare. The Pixa notebook installs all five workflows; Director includes both actual Director variants. Import a fresh GitHub copy into Kaggle to receive updates.
+
+The following sections describe the baseline runtime shared by these notebooks. Collection-specific model selection and storage behavior are documented in the link above.
+
 # Current notebook: FULL-GRAPH-v1
 
 Import `minimax_h3_full_workflow.ipynb` into Kaggle. A previous Kaggle import is a separate copy and does not update when GitHub changes. The title must show **FULL-GRAPH-v1 · 17 nodes · 19 links**. Run its single cell in the existing session to reuse available weights. Its **Open full H3 workflow in ComfyUI** link loads the graph directly, even when ComfyUI previously showed the one-node canvas. Save edits with ComfyUI’s Save command before refreshing; the link’s template parameter is removed after opening so refresh does not reload the template. No render is queued automatically.

@@ -1,0 +1,294 @@
+{
+  "194": {
+    "inputs": {
+      "unet_name": "minimax_h3_fl2va_pruned_int8_convrot.safetensors"
+    },
+    "class_type": "H3SuiteUNETLoader",
+    "_meta": {
+      "title": "H3SuiteUNETLoader"
+    }
+  },
+  "195": {
+    "inputs": {
+      "clip_name": "qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors",
+      "type": "minimax",
+      "device": "cuda:1"
+    },
+    "class_type": "H3SuiteCLIPLoader",
+    "_meta": {
+      "title": "H3SuiteCLIPLoader"
+    }
+  },
+  "196": {
+    "inputs": {
+      "vae_name": "minimax_h3_video_vae_fp16.safetensors",
+      "device": "cuda:0"
+    },
+    "class_type": "H3SuiteVAELoader",
+    "_meta": {
+      "title": "H3SuiteVAELoader"
+    }
+  },
+  "198": {
+    "inputs": {
+      "label_json": "{\"text\":\"Minimax H3 - Text to Video + Speed Lora\",\"fontSize\":31,\"fontFamily\":\"Arial\",\"fontColor\":\"#ffffff\",\"textAlign\":\"left\",\"backgroundColor\":\"#f66744\",\"padding\":10,\"borderRadius\":0,\"opacity\":1,\"fontWeight\":\"normal\",\"lineHeight\":1}"
+    },
+    "class_type": "PixaromaLabel",
+    "_meta": {
+      "title": "Label Pixaroma",
+      "cnr_id": "ComfyUI-Pixaroma",
+      "aux_id": "pixaroma/ComfyUI-Pixaroma",
+      "ver": "80b307e8d1882fd933959cb0ea94a26d143557b5"
+    }
+  },
+  "212": {
+    "inputs": {
+      "note_json": "{\"version\":1,\"content\":\"<h1>MODELS AND NODES USED IN THIS WORKFLOW</h1><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><hr class=\\\"pix-note-hr-solid\\\" style=\\\"color: #b8b8b8\\\"><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><h2><span data-ic=\\\"model-v1\\\" class=\\\"pix-note-ic\\\" contenteditable=\\\"false\\\" style=\\\"color: #f66744\\\"></span>&nbsp;Load Diffusion Model</h2><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n<span class=\\\"pix-note-btnblock\\\">\\n  <a class=\\\"pix-note-dl\\\" style=\\\"background-color: #f66744\\\" href=\\\"https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/diffusion_models/minimax_h3_fl2va_pruned_int8_convrot.safetensors\\\" target=\\\"_blank\\\" rel=\\\"noopener noreferrer\\\">Download minimax_h3_fl2va_pruned_int8_convrot.safetensors<span class=\\\"pix-note-btnsize\\\">19.5 GB</span></a>\\n</span>&nbsp;\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><div class=\\\"pix-note-folderhint\\\" style=\\\"color: #f66744\\\">Place in: ComfyUI/models/diffusion_models/h3</div><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>Create the <code>h3</code> folder if it does not exist.</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n<span class=\\\"pix-note-btnblock\\\">\\n  <a class=\\\"pix-note-rm\\\" style=\\\"background-color: #f66744\\\" href=\\\"https://huggingface.co/Comfy-Org/MiniMax-H3/tree/main/diffusion_models\\\" target=\\\"_blank\\\" rel=\\\"noopener noreferrer\\\">More versions</a>\\n</span>&nbsp;<span class=\\\"pix-note-btnblock\\\"><a class=\\\"pix-note-rm\\\" style=\\\"background-color: #f66744\\\" href=\\\"https://huggingface.co/MiniMaxAI/MiniMax-H3/blob/main/LICENSE\\\" target=\\\"_blank\\\" rel=\\\"noopener noreferrer\\\">READ LICENSE</a></span>&nbsp;<span class=\\\"pix-note-btnblock\\\"><a class=\\\"pix-note-rm\\\" style=\\\"background-color: #f66744\\\" href=\\\"https://huggingface.co/MiniMaxAI/MiniMax-H3/blob/main/docs/QA-about-License.md\\\" target=\\\"_blank\\\" rel=\\\"noopener noreferrer\\\">More About LICENSE</a></span>&nbsp;\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><hr class=\\\"pix-note-hr-solid\\\" style=\\\"color: #b8b8b8\\\"><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><h2><span data-ic=\\\"CLIP\\\" class=\\\"pix-note-ic\\\" contenteditable=\\\"false\\\" style=\\\"color: #f66744\\\"></span>&nbsp;Load CLIP</h2><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n<span class=\\\"pix-note-btnblock\\\">\\n  <a class=\\\"pix-note-dl\\\" style=\\\"background-color: #f66744\\\" href=\\\"https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/text_encoders/qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors\\\" target=\\\"_blank\\\" rel=\\\"noopener noreferrer\\\">Download qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors<span class=\\\"pix-note-btnsize\\\">14.6 GB</span></a>\\n</span>&nbsp;\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><div class=\\\"pix-note-folderhint\\\" style=\\\"color: #f66744\\\">Place in: ComfyUI/models/text_encoders</div><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><hr class=\\\"pix-note-hr-solid\\\" style=\\\"color: #b8b8b8\\\"><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><h2><span data-ic=\\\"VAE\\\" class=\\\"pix-note-ic\\\" contenteditable=\\\"false\\\" style=\\\"color: #f66744\\\"></span>&nbsp;Load VAE</h2><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n<span class=\\\"pix-note-btnblock\\\">\\n  <a class=\\\"pix-note-dl\\\" style=\\\"background-color: #f66744\\\" href=\\\"https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/vae/minimax_h3_video_vae_fp16.safetensors\\\" target=\\\"_blank\\\" rel=\\\"noopener noreferrer\\\">Download minimax_h3_video_vae_fp16.safetensors<span class=\\\"pix-note-btnsize\\\">4.9 GB</span></a>\\n</span>&nbsp;\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n<span class=\\\"pix-note-btnblock\\\">\\n  <a class=\\\"pix-note-dl\\\" style=\\\"background-color: #f66744\\\" href=\\\"https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/vae/minimax_h3_audio_vae_fp32.safetensors\\\" target=\\\"_blank\\\" rel=\\\"noopener noreferrer\\\">Download minimax_h3_audio_vae_fp32.safetensors<span class=\\\"pix-note-btnsize\\\">577 MB</span></a>\\n</span>&nbsp;\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><div class=\\\"pix-note-folderhint\\\" style=\\\"color: #f66744\\\">Place in: ComfyUI/models/vae</div><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><hr class=\\\"pix-note-hr-solid\\\" style=\\\"color: #b8b8b8\\\"><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><h2><span data-ic=\\\"LORA\\\" class=\\\"pix-note-ic\\\" contenteditable=\\\"false\\\" style=\\\"color: #f66744\\\"></span>&nbsp;LoRA Loader Pixaroma</h2><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n<span class=\\\"pix-note-btnblock\\\">\\n  <a class=\\\"pix-note-dl\\\" style=\\\"background-color: #f66744\\\" href=\\\"https://huggingface.co/lightx2v/Minimax-h3-Turbo/resolve/main/minimax_h3_fl2v_turbo_4step_v1.1_768p_comfyui_bf16.safetensors\\\" target=\\\"_blank\\\" rel=\\\"noopener noreferrer\\\">Download minimax_h3_fl2v_turbo_4step_v1.1_768p_comfyui_bf16.safetensors<span class=\\\"pix-note-btnsize\\\">1.82 GB</span></a>\\n</span>&nbsp;\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><div class=\\\"pix-note-folderhint\\\" style=\\\"color: #f66744\\\">Place in: ComfyUI/models/loras/h3</div><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n<span class=\\\"pix-note-btnblock\\\">\\n  <a class=\\\"pix-note-rm\\\" style=\\\"background-color: #f66744\\\" href=\\\"https://huggingface.co/lightx2v/Minimax-h3-Turbo/tree/main\\\" target=\\\"_blank\\\" rel=\\\"noopener noreferrer\\\">More Info</a>\\n</span>&nbsp;\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><hr class=\\\"pix-note-hr-solid\\\" style=\\\"color: #ffffff\\\"><p>\\n\\n</p><h3>Custom Chat GPT</h3><p>\\n\\n</p><p>\\n<span class=\\\"pix-note-btnblock\\\">\\n  <a class=\\\"pix-note-rm\\\" style=\\\"background-color: #f66744\\\" href=\\\"https://chatgpt.com/g/g-6a70726c663c81919ff3199d41c73f0e-minimax-h3-prompts\\\" target=\\\"_blank\\\" rel=\\\"noopener noreferrer\\\">Custom ChatGPT for H3 Prompting (Beta)</a>\\n</span>&nbsp;\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><h3>Gemini</h3><p>\\n\\n</p><p>\\n<span class=\\\"pix-note-btnblock\\\">\\n  <a class=\\\"pix-note-rm\\\" style=\\\"background-color: #f66744\\\" href=\\\"https://gemini.google.com/gem/1wJbalJRr3jZx3WV0Jg4zFatpv8XLUWXn?usp=sharing\\\" target=\\\"_blank\\\" rel=\\\"noopener noreferrer\\\">Gemini for H3 Prompting</a>\\n</span>&nbsp;\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><hr class=\\\"pix-note-hr-solid\\\" style=\\\"color: #b8b8b8\\\"><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p><span data-ic=\\\"warning-v1\\\" class=\\\"pix-note-ic\\\" contenteditable=\\\"false\\\" style=\\\"color: #f66744\\\"></span>&nbsp;After placing the files, restart ComfyUI or refresh model lists using the <b>R</b> shortcut.</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><hr class=\\\"pix-note-hr-solid\\\" style=\\\"color: #b8b8b8\\\"><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><h2><span data-ic=\\\"nodes-installed\\\" class=\\\"pix-note-ic\\\" contenteditable=\\\"false\\\" style=\\\"color: #f66744\\\"></span>&nbsp;Nodes Installed from Manager</h2><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><ul>\\n  <li>Pixaroma</li>\\n</ul><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><hr class=\\\"pix-note-hr-solid\\\" style=\\\"color: #b8b8b8\\\"><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><h2><span data-ic=\\\"pixaroma\\\" class=\\\"pix-note-ic\\\" contenteditable=\\\"false\\\" style=\\\"color: #f66744\\\"></span>&nbsp;Resources</h2><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n\\n</p><p>\\n  <a class=\\\"pix-note-discord\\\" href=\\\"https://discord.com/invite/gggpkVgBf3\\\" target=\\\"_blank\\\" rel=\\\"noopener noreferrer\\\">Join Discord</a>&nbsp;\\n  <a class=\\\"pix-note-yt\\\" href=\\\"https://www.youtube.com/@pixaroma\\\" target=\\\"_blank\\\" rel=\\\"noopener noreferrer\\\">Pixaroma YouTube Channel</a>&nbsp;\\n</p>\",\"buttonColor\":\"#f66744\",\"lineColor\":\"#f66744\",\"width\":557.7842690472798,\"height\":965.2153787414321,\"backgroundColor\":\"#2a2a2a\"}"
+    },
+    "class_type": "PixaromaNote",
+    "_meta": {
+      "title": "Note Pixaroma",
+      "cnr_id": "ComfyUI-Pixaroma",
+      "ver": "1227d9898f9d5137533df750611ca97e8c738f3d"
+    }
+  },
+  "213": {
+    "inputs": {
+      "vae_name": "minimax_h3_audio_vae_fp32.safetensors",
+      "device": "cuda:1"
+    },
+    "class_type": "H3SuiteVAELoader",
+    "_meta": {
+      "title": "H3SuiteVAELoader"
+    }
+  },
+  "222": {
+    "inputs": {
+      "prompt": [
+        "236",
+        0
+      ],
+      "width": [
+        "223",
+        0
+      ],
+      "height": [
+        "223",
+        1
+      ],
+      "length": [
+        "234",
+        0
+      ],
+      "clip": [
+        "195",
+        0
+      ],
+      "vae": [
+        "196",
+        0
+      ]
+    },
+    "class_type": "MiniMaxH3ImageToVideo",
+    "_meta": {
+      "title": "MiniMax H3 Image to Video",
+      "cnr_id": "comfy-core",
+      "ver": "0.30.1"
+    }
+  },
+  "223": {
+    "inputs": {
+      "SizesState": "{\"version\":1,\"sizes\":[[608,352],[736,416],[864,480],[960,544],[1056,608],[1152,640],[1216,672],[1280,736],[1344,768],[1376,768],[1504,832],[1664,928],[1824,1024],[1920,1088]],\"selected\":2,\"orientation\":\"portrait\",\"snap\":32,\"accent\":null,\"collapsed\":false,\"starred\":[\"480x864\",\"768x1344\",\"672x1216\"],\"w\":480,\"h\":864}"
+    },
+    "class_type": "PixaromaSizes",
+    "_meta": {
+      "title": "1. Pick Orientation and Size",
+      "cnr_id": "ComfyUI-Pixaroma",
+      "ver": "a13e16f26ce1b1de096fe97ded9b95ec3d2b62ab"
+    }
+  },
+  "224": {
+    "inputs": {
+      "conditioning": [
+        "222",
+        0
+      ]
+    },
+    "class_type": "ConditioningZeroOut",
+    "_meta": {
+      "title": "Conditioning Zero Out",
+      "cnr_id": "comfy-core",
+      "ver": "0.30.1"
+    }
+  },
+  "225": {
+    "inputs": {
+      "seed": 1061562127456779,
+      "steps": [
+        "247",
+        2
+      ],
+      "cfg": 1,
+      "sampler_name": [
+        "247",
+        0
+      ],
+      "scheduler": [
+        "247",
+        1
+      ],
+      "denoise": 1,
+      "model": [
+        "245",
+        0
+      ],
+      "positive": [
+        "222",
+        0
+      ],
+      "negative": [
+        "224",
+        0
+      ],
+      "latent_image": [
+        "222",
+        1
+      ]
+    },
+    "class_type": "KSampler",
+    "_meta": {
+      "title": "KSampler",
+      "cnr_id": "comfy-core",
+      "ver": "0.30.1"
+    }
+  },
+  "226": {
+    "inputs": {
+      "samples": [
+        "225",
+        0
+      ],
+      "vae": [
+        "196",
+        0
+      ]
+    },
+    "class_type": "VAEDecode",
+    "_meta": {
+      "title": "VAE Decode",
+      "cnr_id": "comfy-core",
+      "ver": "0.30.1"
+    }
+  },
+  "227": {
+    "inputs": {
+      "samples": [
+        "225",
+        0
+      ],
+      "vae": [
+        "213",
+        0
+      ]
+    },
+    "class_type": "VAEDecodeAudio",
+    "_meta": {
+      "title": "VAE Decode Audio",
+      "cnr_id": "comfy-core",
+      "ver": "0.30.1"
+    }
+  },
+  "228": {
+    "inputs": {
+      "filename_prefix": "Pixa_-_Text_to_Video/clip",
+      "fps": 24,
+      "images": [
+        "226",
+        0
+      ],
+      "audio": [
+        "227",
+        0
+      ]
+    },
+    "class_type": "H3SuiteSaveVideo",
+    "_meta": {
+      "title": "Save MP4 \u00b7 isolated T4 workers"
+    }
+  },
+  "234": {
+    "inputs": {
+      "DurationState": "{\"seconds\":5,\"fps\":24,\"step\":17,\"plus\":5,\"minFrames\":5,\"mode\":\"recipe\",\"formula\":\"\"}"
+    },
+    "class_type": "PixaromaDuration",
+    "_meta": {
+      "title": "2. Select Duration",
+      "cnr_id": "ComfyUI-Pixaroma",
+      "ver": "c6efed39bfc2e566fc5542044d728cca7d2e1a62"
+    }
+  },
+  "236": {
+    "inputs": {
+      "PromptState": "{\"text\":\"integrated_multimodal_description: [Shot 1] Live-action, modern vlog style, a handheld medium close-up frames a beautiful 20-year-old Romanian model with voluminous black curly hair and a red dress in a bright morning kitchen. She holds the camera out in one hand at arm's length while holding a black ceramic mug with clear orange text reading \\\"PIXA\\\" in her other hand. She smiles toward the lens, her lips part, and the young woman with a clear, melodic voice and a subtle Eastern European accent (S1) says: <d>[English] I really enjoy my morning coffee.</d> Her jaw and lips move clearly through every word. She then closes her lips into a soft smile, brings the mug toward her chest, and the handheld camera sways slightly with small amplitude at slow speed as steam rises faintly from the cup.\\n\\noverall_soundscape: Quiet morning kitchen room tone with a distant soft refrigerator hum and faint movement of fabric.\\n\\nnon_diegetic_music: A gentle, upbeat acoustic guitar melody at a relaxed tempo with light percussion, playing softly underneath.\",\"order\":\"mine\",\"sep\":\", \"}"
+    },
+    "class_type": "PixaromaPrompt",
+    "_meta": {
+      "title": "3. Add a prompt",
+      "cnr_id": "ComfyUI-Pixaroma",
+      "ver": "f9c6df78d613ea11ca28b641a50160e251cc00e6"
+    }
+  },
+  "238": {
+    "inputs": {
+      "model": [
+        "194",
+        0
+      ],
+      "LoraLoaderState": "{\"version\":1,\"sep\":\", \",\"cacheMode\":\"last\",\"loras\":[{\"name\":\"h3\\\\minimax_h3_fl2v_turbo_4step_v1.1_768p_comfyui_bf16.safetensors\",\"on\":true,\"sm\":1,\"sc\":1,\"triggers\":[]}]}"
+    },
+    "class_type": "PixaromaLoraLoader",
+    "_meta": {
+      "title": "LoRA Loader Pixaroma",
+      "cnr_id": "ComfyUI-Pixaroma",
+      "ver": "efaead7740547f171d5caa53d47845ecf5fbf863"
+    }
+  },
+  "245": {
+    "inputs": {
+      "shift_video": 6,
+      "shift_audio": 3,
+      "model": [
+        "238",
+        0
+      ]
+    },
+    "class_type": "MiniMaxH3SigmaShift",
+    "_meta": {
+      "title": "Shift 6 (for the Speed LoRA)",
+      "cnr_id": "comfy-core",
+      "ver": "0.33.4"
+    }
+  },
+  "246": {
+    "inputs": {
+      "note_json": "{\"version\": 1, \"content\": \"<h1>SAMPLER SETTINGS FOR THE SPEED LORA</h1><p>Tested on this exact workflow: <strong>54 renders</strong>. Six sampler and scheduler pairings, each rendered with <strong>3 different prompts</strong> (action close-up, slow snowy portrait, wide aerial city) and <strong>3 different seeds</strong>, so a winner had to win repeatedly and not just get lucky once.</p><p>The score is out of 10. It rewards a steady picture that does not shimmer, a clean picture without grain, and a small file (a big file at the same size and length means the model spent the bits on noise).</p><hr class=\\\"pix-note-hr-solid\\\" style=\\\"color: #f66744\\\"><h2>PICK ONE FROM THE DROPDOWN</h2><table class=\\\"pix-note-grid\\\" style=\\\"--pix-note-grid-border: #f66744; --pix-note-grid-header-bg: #1a1a1a\\\"><thead><tr><th>Combination</th><th>Score</th><th>Worst run</th><th>What it is good for</th></tr></thead><tbody><tr><td><strong>euler + simple</strong></td><td><strong>9.5</strong></td><td>8.0</td><td>The default here. Won more individual renders outright than anything else.</td></tr><tr><td><strong>euler + sgm_uniform</strong></td><td><strong>9.5</strong></td><td><strong>8.5</strong></td><td>Tied on average and the most reliable: its worst render is the best worst render. Try it if a clip comes out shimmery.</td></tr><tr><td>euler + beta</td><td>8.5</td><td>6.5</td><td>Good. Slightly softer look.</td></tr><tr><td>dpmpp_sde_gpu + sgm_uniform</td><td>8.0</td><td>6.5</td><td>Good, a bit livelier, slower to render.</td></tr><tr><td>res_multistep + simple</td><td>7.5</td><td>4.0</td><td>Fine on people. Weakest on wide landscapes, where it goes hazy and grainy.</td></tr></tbody></table><p><br></p><h2>DO NOT USE ddim_uniform</h2><p>It scored <strong>1.5 out of 10</strong> and it fails in a different way in every kind of shot:</p><ul><li><strong>Action shot:</strong> ignores a request for a close-up and sits back wide, so printed text on clothing comes out small and garbled.</li><li><strong>Portrait:</strong> produced a split frame with the same man twice, plus junk lettering over the picture.</li><li><strong>Aerial:</strong> flew far too low, oversaturated, with a pale artifact stuck in the middle of the shot.</li></ul><p>It also makes files about twice the size at the same resolution and length, which is grain, not detail.</p><p><br></p><h2>WHY THE POPULAR BENCHMARK DISAGREES</h2><p>The widely shared sampler benchmark puts ddim_uniform pairings in its top three. It is not lying, it is measuring something else: its rating categories are picture quality, motion smoothness, sound and music, and <strong>none of them ask whether you got the shot you asked for</strong>. A beautiful, smooth video of the wrong thing scores well there. That same post's large sample scheduler ranking agrees with this table and recommends sgm_uniform, simple or beta.</p><p><br></p><p><br></p><h2>STEPS: USE 8, NOT 4</h2><p>The LoRA is called a 4 step LoRA and 4 steps is enough for the <strong>picture</strong>. It is not enough for the <strong>sound</strong>. Found by blind listening: four clips, same seed, only the step count different, names shuffled and the volume matched so loudness could not give it away. Ranked best to worst, twice, with different seeds:</p><p><strong>12 &gt; 8 &gt; 6 &gt; 4</strong> both times. The odds of that happening twice by chance are about 1 in 576.</p><table class=\\\"pix-note-grid\\\" style=\\\"--pix-note-grid-border: #f66744; --pix-note-grid-header-bg: #1a1a1a\\\"><thead><tr><th>Steps</th><th>Sound</th><th>Picture</th><th>Time</th><th></th></tr></thead><tbody><tr><td>4</td><td>Worst, both rounds</td><td>3.30</td><td>28s</td><td>What the LoRA is named after</td></tr><tr><td>6</td><td>Third</td><td>3.29</td><td>34s</td><td></td></tr><tr><td><strong>8</strong></td><td><strong>Second</strong></td><td><strong>3.30</strong></td><td><strong>38s</strong></td><td><strong>Use this. Same picture as 4, better sound, 10 seconds more.</strong></td></tr><tr><td>12</td><td>Best</td><td>4.29</td><td>52s</td><td>Sounds best but the picture drifts from your input, on every seed tested</td></tr></tbody></table><p>The picture column is how closely the first frame still matches the starting image, lower is better. Notice it is flat from 4 to 8 and then gets worse at 12: the LoRA was distilled for a small number of steps, and 12 pushes it outside what it was trained for.</p><p>Measuring tools could NOT find this. Harshness, noisiness and echo were all measured across 54 clips and found nothing, and on echo they pointed the wrong way. Only listening found it.</p><h2>THE OTHER SETTING THAT MATTERS</h2><p>The <strong>Shift 6</strong> node above the sampler. This LoRA was trained for shift 6, while the model defaults to 12. Leave it at 6.</p>\\n\", \"buttonColor\": \"#f66744\", \"lineColor\": \"#f66744\", \"width\": 672.0309176488522, \"height\": 969.9199423489785, \"backgroundColor\": \"#2a2a2a\"}"
+    },
+    "class_type": "PixaromaNote",
+    "_meta": {
+      "title": "Sampler settings (tested)",
+      "cnr_id": "ComfyUI-Pixaroma",
+      "ver": "818855ad05d31c41d9401aee72fa75b631b4e903"
+    }
+  },
+  "247": {
+    "inputs": {
+      "DropdownState": "{\"version\":1,\"types\":[\"text\",\"text\",\"int\"],\"values\":[\"euler\",\"simple\",\"4\"]}"
+    },
+    "class_type": "PixaromaDropdown",
+    "_meta": {
+      "title": "Sampler + Scheduler (tested)",
+      "cnr_id": "ComfyUI-Pixaroma",
+      "ver": "a494a702be0658940b914367a804e96721873cbd"
+    }
+  }
+}
