@@ -54,4 +54,47 @@ class AssetChecks(unittest.TestCase):
             with self.assertRaises(urllib.error.URLError):a.build_pack(self.root/'out',self.root/'input')
         self.assertFalse((self.root/'out/manifest.json').exists())
 
+class DatasetChecks(unittest.TestCase):
+    setUp=AssetChecks.setUp
+    tearDown=AssetChecks.tearDown
+    def ready(self):
+        root=self.root/'pack'; model=root/'models/fixture.bin'
+        model.parent.mkdir(parents=True);model.write_bytes(self.data)
+        (root/'manifest.json').write_text(json.dumps({'complete':True,'assets':[self.asset]}))
+        return root
+    def test_automatic_private_upload_contains_real_flat_files(self):
+        root=self.ready()
+        class API:
+            config_values={'username':'test-user'}
+            calls=[]
+            def dataset_create_new(api,folder,**kwargs):
+                api.calls.append(kwargs)
+                self.assertEqual((Path(folder)/'fixture.bin').read_bytes(),self.data)
+                self.assertFalse((Path(folder)/'fixture.bin').is_symlink())
+                self.assertEqual((Path(folder)/'fixture.bin').stat().st_ino,(root/'models/fixture.bin').stat().st_ino)
+                return {'error':None}
+        api=API()
+        with mock.patch.object(a,'ASSETS',[self.asset]):
+            url=a.save_private_dataset(root,api=api)
+            self.assertEqual(a.save_private_dataset(root,api=api),url)
+        self.assertEqual(len(api.calls),1)
+        self.assertIs(api.calls[0]['public'],False)
+        self.assertEqual(api.calls[0]['dir_mode'],'skip')
+        self.assertTrue((root/'dataset-upload.json').exists())
+    def test_upload_failure_keeps_models_without_success_receipt(self):
+        root=self.ready()
+        class API:
+            config_values={'username':'test-user'}
+            def dataset_create_new(self,*args,**kwargs):return {'error':'failed'}
+        with mock.patch.object(a,'ASSETS',[self.asset]):
+            with self.assertRaisesRegex(RuntimeError,'not confirmed'):a.save_private_dataset(root,api=API())
+        self.assertEqual((root/'models/fixture.bin').read_bytes(),self.data)
+        self.assertFalse((root/'dataset-upload.json').exists())
+    def test_corrupt_model_is_not_uploaded(self):
+        root=self.ready();(root/'models/fixture.bin').write_bytes(b'bad')
+        api=mock.Mock()
+        with mock.patch.object(a,'ASSETS',[self.asset]):
+            with self.assertRaisesRegex(RuntimeError,'verification'):a.save_private_dataset(root,owner='test-user',api=api)
+        api.dataset_create_new.assert_not_called()
+
 if __name__=='__main__':unittest.main(verbosity=2)

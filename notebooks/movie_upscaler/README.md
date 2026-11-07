@@ -9,10 +9,24 @@ It does not change the four H3 generation notebooks or Image Studio.
 
 ## Start
 
-Run the model-pack notebook with **Accelerator: None** and Internet enabled.
-**Save Version with output files**. Attach that saved version in the upscaler via
-**Add Input → Notebook Outputs**. This uses saved notebook outputs, not the Dataset API;
-no Kaggle API token is needed. The pack is approximately 3.94 GiB.
+Run the model-pack notebook with **Accelerator: None**, Internet enabled and
+private Kaggle API authentication (`KAGGLE_API_TOKEN` in Kaggle Secrets).
+`AUTO_CREATE_DATASET=True` is now the default: after verification it automatically
+creates/uploads a **private named Kaggle Dataset** and prints its link. Set
+`DATASET_OWNER` to your Kaggle username if authentication cannot detect it.
+Wait for processing, then attach it through **Add Input → Your Datasets**.
+No manual Save Version is required to submit the Dataset. The model payload is
+approximately 3.94 GiB. Repeated runs reuse a recorded submission; existing
+Datasets are never overwritten or made public. Changed model catalogs use a new
+content-derived Dataset name. This matches the automatic private saver in
+`notebooks/image_studio/asset_builder.py`.
+
+`AUTO_CREATE_DATASET=False` retains the optional Save Version with output files →
+attach Notebook Outputs approach. Dataset uploads use flat hardlinks to the
+verified nested model files, avoiding another multi-gigabyte working-storage copy.
+Credentials never enter the pack metadata, upload receipts or generated notebook.
+The upload-staging hardlinks remain locally for retries; saving notebook outputs
+as well may store those model paths twice. Live Dataset upload is unverified here.
 
 Import a fresh upscaler notebook, enable **T4 GPU** and Internet, and run its one
 startup cell. The temporary URL opens the connected SeedVR2 graph. Attach your
@@ -104,9 +118,9 @@ Completed locally:
   pause/reopen, corruption preservation, geometry/disk preflight, fractional frame
   rates, silent files, VFR rejection, nonzero source timestamps, audio timing,
   byte-identical copied audio packets, multiple audio tracks and MKV subtitles.
-- **5 model-pack tests:** HTTP Range resume, server restart fallback, corrupt-file
+- **8 model-pack/Dataset tests:** HTTP Range resume, server restart fallback, corrupt-file
   preservation, copying actual attached files into a completed pack, failed-pack
-  handling. These use small synthetic model files and mocked HTTP responses.
+  handling; private Dataset creation, flat upload contents, repeat-submission reuse, and failed/corrupt upload rejection. These use small synthetic model files and mocked HTTP/API responses.
 - Both notebooks compile and pass notebook-v4 schema validation; embedded source
   and graph payloads match their checked-in sources.
 - Both real connected graphs loaded in Chromium; the exported API confirms actual

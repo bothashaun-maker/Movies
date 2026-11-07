@@ -67,7 +67,7 @@ try:
         if candidate:
             found[asset['name']] = candidate
         elif REQUIRE_ATTACHED_MODELS:
-            raise RuntimeError('Missing verified model '+asset['name']+'. Attach the saved Movie Upscaler Model Packs output via Add Input → Notebook Outputs. No model downloads started.')
+            raise RuntimeError('Missing verified model '+asset['name']+'. Attach the automatically created Movie Upscaler Dataset via Add Input → Your Datasets, or attach saved Notebook Outputs. No model downloads started.')
     if not shutil.which('ffmpeg') or not shutil.which('ffprobe'):
         if os.geteuid() == 0 and shutil.which('apt-get'):
             run(['apt-get', '-qq', 'update'])

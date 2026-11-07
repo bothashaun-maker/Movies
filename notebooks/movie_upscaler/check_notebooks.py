@@ -25,4 +25,6 @@ for name in ['Movie_Upscaler_Kaggle_v1.ipynb','Movie_Upscaler_Model_Packs.ipynb'
         assert assignments['FILES']['web/open.js']==(ROOT/'open.js').read_text()
     else:
         assert 'import torch' not in code[0]
+        assert assignments['AUTO_CREATE_DATASET'] is True
+        assert isinstance(tree.body[-1],ast.Expr) and tree.body[-1].value.func.id=='build_and_save'
     print('Validated schema, code and embedded payload:',name)

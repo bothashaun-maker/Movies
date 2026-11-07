@@ -3,8 +3,8 @@
 Two visible connected workflows: **SeedVR2 temporal restoration** and **Real-ESRGAN fast enlargement**.
 Single-cell startup; no movie runs automatically. Uses **GPU 0** (one T4), leaving the second GPU unused.
 
-1. Run **Movie_Upscaler_Model_Packs.ipynb** with **Accelerator: None**, Internet ON. Save Version with output files.
-2. Import this notebook; select **T4 GPU**, Internet ON. Attach the saved pack via **Add Input → Notebook Outputs**.
+1. Run **Movie_Upscaler_Model_Packs.ipynb** with **Accelerator: None**, Internet ON and private Kaggle API authentication. It automatically uploads a private Dataset and prints its link.
+2. Import this notebook; select **T4 GPU**, Internet ON. After Dataset processing, attach it via **Add Input → Your Datasets**. Saved Notebook Outputs also remain supported.
 3. Attach your source video (or copy an H3 output to accessible Kaggle storage). Set `source_path` in the leftmost ComfyUI node to its full path.
 4. Run this single startup cell and open the printed **MOVIE STUDIO** link. It loads SeedVR2's graph directly.
 5. Press **Run once** in ComfyUI. Keep frontend **Auto Queue OFF** and queue count **1**. The save node queues one next chunk until finished.
@@ -26,7 +26,7 @@ Frame count, rational frame rate, dimensions and audio-stream count are checked.
 
 Lossless FFV1 chunk files cost disk space. Startup checks measured free space against a conservative full-job checkpoint estimate and reserve. Nothing automatically deletes source files, other jobs or completed checkpoints. Chunk decoding seeks with a short preroll and selects validated source timestamps, avoiding a full prefix decode for every chunk. Full-length films may exceed Kaggle time/disk quotas; start with a short representative clip.
 
-Same-session interruptions resume automatically. Across sessions, restore the saved `movie-jobs` directory to the configured working output path before Run. Models are reused separately through saved Notebook Outputs. Software and tunnel setup still need Internet. Keep the startup cell running; anyone with its temporary URL can access the studio.
+Same-session interruptions resume automatically. Across sessions, restore the saved `movie-jobs` directory to the configured working output path before Run. Models are reused through the automatically created Dataset or saved Notebook Outputs. Software and tunnel setup still need Internet. Keep the startup cell running; anyone with its temporary URL can access the studio.
 
 ## Validation status
 

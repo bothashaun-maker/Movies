@@ -91,4 +91,96 @@ def build_pack(root, input_root='/kaggle/input'):
     temp = marker.with_suffix('.partial')
     temp.write_text(json.dumps({'complete': True, 'assets': ASSETS}, indent=2))
     temp.replace(marker)
-    print('Model pack complete. Save Version with output files; attach this saved output to Movie Upscaler.', flush=True)
+    print('Local model pack complete and verified.', flush=True)
+
+def dataset_api():
+    """Use private Kaggle credentials; never embed or print their values."""
+    if not os.environ.get('KAGGLE_API_TOKEN') and not os.environ.get('KAGGLE_KEY'):
+        try:
+            from kaggle_secrets import UserSecretsClient
+            os.environ['KAGGLE_API_TOKEN'] = UserSecretsClient().get_secret('KAGGLE_API_TOKEN')
+        except Exception:
+            pass
+    try:
+        from kaggle.api.kaggle_api_extended import KaggleApi
+    except ModuleNotFoundError:
+        import subprocess
+        import sys
+        subprocess.run([sys.executable, '-m', 'pip', 'install', '--quiet', 'kaggle'], check=True)
+        from kaggle.api.kaggle_api_extended import KaggleApi
+    api = KaggleApi()
+    api.authenticate()
+    return api
+
+def save_private_dataset(pack_root, owner='', api=None):
+    """Automatically create a private named Dataset, following Image Studio's saver.
+
+    Flat hardlinks expose nested weights to Kaggle's uploader without copying or
+    archiving gigabytes. A successful submission is recorded; processing is remote.
+    Existing Datasets are never overwritten or made public.
+    """
+    import re
+    root = Path(pack_root)
+    manifest = json.loads((root/'manifest.json').read_text())
+    if not manifest.get('complete') or manifest.get('assets') != ASSETS:
+        raise RuntimeError('Refusing to upload an incomplete or different model pack.')
+    for asset in ASSETS:
+        path = root/asset['folder']/asset['name']
+        if path.is_symlink() or not valid(path, asset):
+            raise RuntimeError('Model failed verification before Dataset upload: '+asset['name'])
+    api = api if api is not None else dataset_api()
+    owner = owner or getattr(api, 'config_values', {}).get('username', '') or os.environ.get('KAGGLE_USERNAME', '')
+    if not re.fullmatch(r'[A-Za-z0-9_-]+', owner):
+        raise RuntimeError('Set DATASET_OWNER to your Kaggle username. Keep API credentials in Kaggle Secrets, never in the notebook.')
+    fingerprint = hashlib.sha256(json.dumps(ASSETS, sort_keys=True).encode()).hexdigest()[:12]
+    handle = owner+'/movie-upscaler-models-'+fingerprint
+    url = 'https://www.kaggle.com/datasets/'+handle
+    receipt = root/'dataset-upload.json'
+    if receipt.exists() and json.loads(receipt.read_text()).get('handle') == handle:
+        print('Previously submitted private Dataset:', url, flush=True)
+        return url
+    stage = root/'dataset-files'
+    stage.mkdir(exist_ok=True)
+    expected = {a['name'] for a in ASSETS} | {'manifest.json', 'dataset-metadata.json'}
+    if any(p.name not in expected for p in stage.iterdir()):
+        raise RuntimeError('Unexpected upload-staging file preserved; inspect dataset-files before retrying.')
+    for asset in ASSETS:
+        source = root/asset['folder']/asset['name']
+        target = stage/asset['name']
+        if target.exists():
+            if target.is_symlink() or not valid(target, asset):
+                raise RuntimeError('Existing upload-staging file failed verification; preserved: '+target.name)
+        else:
+            os.link(source, target)
+    (stage/'manifest.json').write_text(json.dumps(manifest, indent=2))
+    (stage/'dataset-metadata.json').write_text(json.dumps({
+        'id': handle, 'title': 'Movie Upscaler Models '+fingerprint,
+        'licenses': [{'name': 'other'}],
+        'description': 'Private verified SeedVR2 and Real-ESRGAN model pack. Original weight licenses apply; no relicensing. See manifest.json for sources and SHA256 values.'
+    }, indent=2))
+    result = api.dataset_create_new(str(stage), public=False, quiet=False, convert_to_csv=False, dir_mode='skip')
+    error = result.get('error') if isinstance(result, dict) else getattr(result, 'error', None)
+    if result is None or error:
+        raise RuntimeError('Dataset upload was not confirmed. Verified files are retained; no success receipt was written.')
+    temp = receipt.with_suffix('.partial')
+    temp.write_text(json.dumps({'handle': handle, 'url': url, 'submitted': True, 'requested_private': True,
+                                'manifest_fingerprint': fingerprint}, indent=2))
+    temp.replace(receipt)
+    print('PRIVATE DATASET SUBMITTED:', url, flush=True)
+    print('Wait for Kaggle processing, then attach it through Add Input → Your Datasets. No PC download or manual upload is needed.', flush=True)
+    return url
+
+def build_and_save(root, owner='', auto_create_dataset=True, input_root='/kaggle/input', api=None):
+    # Fail authentication before spending time downloading the full model pack.
+    if auto_create_dataset:
+        import re
+        if api is None:
+            api = dataset_api()
+        owner = owner or getattr(api, 'config_values', {}).get('username', '') or os.environ.get('KAGGLE_USERNAME', '')
+        if not re.fullmatch(r'[A-Za-z0-9_-]+', owner):
+            raise RuntimeError('Set DATASET_OWNER to your Kaggle username before building. No model downloads started.')
+    build_pack(root, input_root)
+    if auto_create_dataset:
+        return save_private_dataset(root, owner, api)
+    print('Save Version with output files, then attach through Add Input → Notebook Outputs.', flush=True)
+    return None

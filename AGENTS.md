@@ -102,3 +102,10 @@ chat transcript. Update it when the user changes these instructions.
 - `H3_Next_Model_Packs.ipynb` prepares four reusable CPU-only saved outputs: singularity, denomix, molmo, support; combined about 62 GiB, each below 20 GiB. These differ from the older H3 packs. Use Save Version → Save & Run All with outputs; no separate manual run is needed first.
 - All three canvases loaded in actual ComfyUI Chromium; browser/preparation/sample/decode schemas passed for text and image; conditioning/reference safetensors round-trip and native reference geometry passed CPU checks. Full new-model GPU rendering, actual memory use, speed and quality remain unverified. Do not describe preset names as benchmark results.
 - Read `docs/H3_NEXT_T4.md` for simple import/use/storage instructions and limitations. Existing notebooks must remain unchanged when updating this experiment.
+
+- Movie model-pack correction: user explicitly requested the automatic Dataset
+  creator/saver already present in `notebooks/image_studio/asset_builder.py`.
+  `Movie_Upscaler_Model_Packs.ipynb` now defaults to automatic private Dataset
+  submission, using private Kaggle API credentials. Saved notebook outputs are
+  an optional fallback, not the default persistence instruction. Never claim
+  live Kaggle upload success from mocked API checks.

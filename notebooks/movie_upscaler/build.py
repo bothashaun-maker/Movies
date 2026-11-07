@@ -63,18 +63,28 @@ def build():
     code = assets+'\n'+(ROOT/'launcher.py').read_text().replace('EMBEDDED_PAYLOAD = None', payload)
     nb = notebook('Movie Upscaler', (ROOT/'intro.md').read_text(), code)
     (REPO/'Movie_Upscaler_Kaggle_v1.ipynb').write_text(json.dumps(nb, indent=1)+'\n')
-    guide = '''# Movie Upscaler — reusable model packs
+    guide = '''# Movie Upscaler — automatic private Dataset creator
 
-Select **Accelerator: None**, **Internet ON**, then run the single cell.
-It prepares about **3.94 GiB** of models, verifies SHA-256, and reuses matching attached weights.
-No Kaggle token or Dataset API is required.
+Select **Accelerator: None**, **Internet ON**. Enable a private Kaggle Secret named
+**KAGGLE_API_TOKEN** with your Kaggle API token, and enter your Kaggle username in
+`DATASET_OWNER` if authentication does not supply it. Never paste the token into the notebook.
 
-After completion, **Save Version with output files**. In Movie Upscaler select
-**Add Input → Notebook Outputs**, then attach this saved version.
-The pack contains actual files and a completion manifest. It does not include software or generated movies.
-A saved output is reusable storage; it is not an automatically published named Kaggle Dataset.
+Run the single cell. It downloads/reuses and verifies approximately **3.94 GiB** of
+weights, then **automatically creates and uploads a private Kaggle Dataset** and prints
+its link. Wait for Kaggle processing, then attach it to Movie Upscaler through
+**Add Input → Your Datasets**. No manual Save Version is needed to submit the Dataset.
+
+This follows `save_private_dataset()` in the repository's Image Studio builder.
+Repeated runs reuse verified files and a recorded successful submission; they never
+replace existing Datasets or change their visibility. Failed uploads retain verified
+files and raise an error. Live Kaggle submission/processing remains unverified here.
+
+Set `AUTO_CREATE_DATASET=False` only if you prefer the original Save Version with
+output files → attach Notebook Outputs method. Save Version is also useful for
+preserving the notebook and logs, separately from the automatically uploaded Dataset.
 '''
-    pack = notebook('Movie model packs', guide, assets+"\nbuild_pack('/kaggle/working/movie-upscaler-model-pack')\n")
+    options = "AUTO_CREATE_DATASET = True\nDATASET_OWNER = ''  # Your Kaggle username; auto-detected when available.\n"
+    pack = notebook('Movie model packs', guide, options+assets+"\nbuild_and_save('/kaggle/working/movie-upscaler-model-pack', DATASET_OWNER, AUTO_CREATE_DATASET)\n")
     (REPO/'Movie_Upscaler_Model_Packs.ipynb').write_text(json.dumps(pack, indent=1)+'\n')
     (ROOT/'workflows.json').write_text(json.dumps(workflows, indent=2)+'\n')
     print('Built Movie_Upscaler_Kaggle_v1.ipynb and Movie_Upscaler_Model_Packs.ipynb')
