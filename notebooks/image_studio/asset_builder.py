@@ -1,7 +1,7 @@
 # CPU-only model pack builder. Run once and save the outputs on Kaggle.
-AUTO_CREATE_DATASET = False  # Optional; default matches your uploaded H3 model-pack workflow.
+AUTO_CREATE_DATASET = True  # Uses your existing Kaggle authentication to create a private Dataset.
 DATASET_OWNER = ''  # Usually detected from authenticated Kaggle API credentials.
-PACK = 'standard'  # 'standard' = SDXL + RealESRGAN + SeedVR2 (~11.1 GB); 'flux3' = optional FLUX3 (~17.75 GB)
+PACK = 'faceswap'  # faceswap ~843 MB; standard ~11.1 GB; flux3 ~17.75 GB
 from pathlib import Path
 import os, json, hashlib, shutil, time, urllib.request, urllib.error, fcntl
 ASSET_CATALOG_SOURCE = None
@@ -13,9 +13,10 @@ def file_sha(path):
  return h.hexdigest()
 
 def selected_assets(pack):
+ if pack=='faceswap':return [a for a in model_assets(False,False,False,True) if a[0]=='insightface']
  if pack=='standard':return model_assets(True,True,False)
  if pack=='flux3':return [a for a in model_assets(False,False,True) if 'black-forest-labs' in a[2]]
- raise ValueError("PACK must be 'standard' or 'flux3'")
+ raise ValueError("PACK must be 'standard', 'flux3', or 'faceswap'")
 
 def transfer(url,target,digest,size):
  target=Path(target);target.parent.mkdir(parents=True,exist_ok=True)
@@ -86,7 +87,7 @@ def build_pack(pack,output_root=Path('/kaggle/working/image-studio-model-packs')
   data={'schema':1,'pack':pack,'complete':True,'model_bytes':sum(a[4] for a in assets),'files':records}
   tmp=manifest.with_suffix('.json.partial');tmp.write_text(json.dumps(data,indent=2));tmp.replace(manifest)
   print('\nPACK COMPLETE:',root,flush=True)
-  print('Save Version with outputs. In Image Studio v3: Add Input → Notebook Output Files → select this saved version.',flush=True)
+  print('Save Version with outputs. In Image Studio v4: Add Input → Notebook Output Files → select this saved version.',flush=True)
   print('No GPU or image generation was used. Keep model packs private and follow model licenses.',flush=True)
   return data
  finally:fcntl.flock(lock,fcntl.LOCK_UN);lock.close()
@@ -124,7 +125,7 @@ def save_private_dataset(pack_root,owner='',api=None):
  if error:raise RuntimeError('Dataset creation was not confirmed: '+str(error)+'. Model files remain saved; existing datasets were not changed.')
  receipt.write_text(json.dumps({'handle':handle,'url':url,'submitted':True,'requested_private':True,'manifest_fingerprint':fingerprint},indent=2))
  print('PRIVATE DATASET SUBMITTED:',url,flush=True)
- print('Wait for Kaggle processing, then Image Studio v3 → Add Input → Your Datasets. No PC download needed.',flush=True)
+ print('Wait for Kaggle processing, then Image Studio v4 → Add Input → Your Datasets. No PC download needed.',flush=True)
  return url
 
 if __name__=='__main__':

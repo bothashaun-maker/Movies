@@ -11,6 +11,19 @@ def workflow(mode):
   nodes.append(n);return i
  def link(a,slot,b,inp):
   idx=len(links)+1; typ=nodes[a-1]['outputs'][slot]['type'];links.append([idx,a,slot,b,inp,typ]);nodes[a-1]['outputs'][slot]['links'].append(idx);nodes[b-1]['inputs'][inp]['link']=idx
+ if mode=='Face Swap':
+  source=node('LoadImage',[0,100],['','image'],[],[('IMAGE','IMAGE'),('MASK','MASK')],'SOURCE — the face identity to use')
+  target=node('LoadImage',[0,500],['','image'],[],[('IMAGE','IMAGE'),('MASK','MASK')],'TARGET — photo to change')
+  sd=node('StudioFaceDetect',[380,100],[],[('image','IMAGE')],[('faces','STUDIO_FACES'),('detected_faces','STRING')],'Detect source faces — left to right')
+  td=node('StudioFaceDetect',[380,500],[],[('image','IMAGE')],[('faces','STUDIO_FACES'),('detected_faces','STRING')],'Detect target faces — left to right')
+  link(source,0,sd,0);link(target,0,td,0)
+  sp=node('PreviewAny',[780,50],[],[('source','*')],[('STRING','STRING')],'Detected source faces')
+  tp=node('PreviewAny',[780,500],[],[('source','*')],[('STRING','STRING')],'Detected target faces')
+  link(sd,1,sp,0);link(td,1,tp,0)
+  swap=node('StudioFaceSwap',[1180,200],[0,0],[('source_faces','STUDIO_FACES'),('target_faces','STUDIO_FACES')],[('IMAGE','IMAGE')],'Select source and target face indices (0 = leftmost)')
+  link(sd,0,swap,0);link(td,0,swap,1)
+  save=node('SaveImage',[1580,200],['ImageStudio/FaceSwap'],[('images','IMAGE')],[]);link(swap,0,save,0)
+  return dict(last_node_id=len(nodes),last_link_id=len(links),nodes=nodes,links=links,groups=[],config={},extra={'ds':{'scale':0.65,'offset':[180,180]}},version=0.4)
  if mode in ['Upscale 2x','Upscale 4x','Restore SeedVR2']:
   im=node('LoadImage',[0,100],['','image'],[],[('IMAGE','IMAGE'),('MASK','MASK')],'Upload an image to enlarge')
   if mode=='Restore SeedVR2':
@@ -61,7 +74,7 @@ def workflow(mode):
  dec=node('VAEDecodeTiled',[1900 if mode=='Detail' else 1130,350],[512,64,64,8],[('samples','LATENT'),('vae','VAE')],[('IMAGE','IMAGE')]);link(s,0,dec,0);link(c,2,dec,1)
  save=node('SaveImage',[2260 if mode=='Detail' else 1490,350],['ImageStudio/'+mode],[('images','IMAGE')],[]);link(dec,0,save,0)
  return dict(last_node_id=len(nodes),last_link_id=len(links),nodes=nodes,links=links,groups=[],config={},extra={'ds':{'scale':0.65,'offset':[180,180]}},version=0.4)
-workflows={m:workflow(m) for m in ['Create','Restyle','Inpaint','Detail','Upscale 2x','Upscale 4x','Upscale Creative','Restore SeedVR2']}
+workflows={m:workflow(m) for m in ['Create','Restyle','Inpaint','Detail','Upscale 2x','Upscale 4x','Upscale Creative','Restore SeedVR2','Face Swap']}
 # Expand the official template into ordinary visible nodes; retain its prompt upsampler.
 flux=json.loads((ROOT/'flux3_template.json').read_text())
 keep={1,2,3,4,5,6,7,8,11,12,13,14,17}
@@ -93,7 +106,8 @@ for lid,a,slot,b,inp,typ in flinks:
 workflows['Create FLUX3']=dict(last_node_id=30,last_link_id=91,nodes=fnodes,links=flinks,groups=[],config={},extra={'ds':{'scale':0.5,'offset':[750,1000]}},version=0.4)
 (ROOT/'workflows.json').write_text(json.dumps(workflows,indent=2))
 source=(ROOT/'launcher.py').read_text().replace('WORKFLOW_PAYLOAD = {}','WORKFLOW_PAYLOAD = '+repr(workflows))
+source=source.replace('FACE_NODE_SOURCE = None','FACE_NODE_SOURCE = '+repr((ROOT/'face_nodes.py').read_text()))
 source=source.replace('ASSET_CATALOG_SOURCE = None',(ROOT/'assets.py').read_text())
 nb={'nbformat':4,'nbformat_minor':5,'metadata':{'kernelspec':{'display_name':'Python 3','language':'python','name':'python3'},'language_info':{'name':'python','version':'3.11'},'accelerator':'GPU'},'cells':[{'cell_type':'markdown','id':'image-studio-guide','metadata':{},'source':(ROOT/'intro.md').read_text().splitlines(True)},{'cell_type':'code','id':'image-studio-start','metadata':{},'execution_count':None,'outputs':[],'source':source.splitlines(True)}]}
-(args.output or ROOT/'Image_Studio_Kaggle_v3.ipynb').write_text(json.dumps(nb,indent=1))
+(args.output or ROOT/'Image_Studio_Kaggle_v4.ipynb').write_text(json.dumps(nb,indent=1))
 print('Built notebook',len(source),'characters')

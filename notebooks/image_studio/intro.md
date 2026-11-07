@@ -1,4 +1,16 @@
-# Reusable model packs — v3 startup
+# Face Swap added — Image Studio v4
+
+Attach your existing **standard** pack plus the new **faceswap** pack. The Model Packs builder now starts with `PACK = 'faceswap'` (about **843 MB**) and `AUTO_CREATE_DATASET = True`, using your already configured Kaggle authentication to submit a private Dataset. No standard-pack rebuild is required. Saved notebook outputs remain supported.
+
+Open **Image Studio - Face Swap**, upload **SOURCE** (identity) and **TARGET** (photo to change), choose source/target indices (0 = leftmost face), then press Run. It saves a PNG at the target photo's original dimensions. This photo-only pipeline runs on CPU, leaving T4 memory for generation. Use the existing upscaling workflows separately if desired. No face restoration is applied automatically.
+
+InsightFace model weights are restricted to **non-commercial research**. Only use photos you own or have permission to use. InSwapper's 128px internal crop limits face detail; likeness is not guaranteed. Missing faces and invalid indices cause explicit errors.
+
+The source includes separate detection and swap nodes; it is fully embedded in this notebook. Set `ENABLE_FACESWAP = False` if running without the face pack. All v3 generation/upscaling workflows and their existing model packs remain available.
+
+---
+
+# Reusable model packs — v4 startup
 
 Use the same approach as your uploaded **H3_Model_Packs Data Sets.ipynb**:
 
@@ -6,7 +18,7 @@ Use the same approach as your uploaded **H3_Model_Packs Data Sets.ipynb**:
 2. Wait for **PACK COMPLETE**, then **Save Version with output files** and keep it private.
 3. Here, choose **Add Input → Your Work / Notebook Output Files** and attach that saved version. Enable **Internet + T4 GPU**, then run the studio cell.
 
-No named Dataset or Kaggle API token is needed for this saved-output approach. `REQUIRE_ATTACHED_MODELS = True` stops startup if weights are missing. Attached files are checksum-verified and read directly without another full model copy. Software setup and the studio tunnel still use Internet.
+For the saved-output route, disable AUTO_CREATE_DATASET in the builder; that route requires no named Dataset API call. `REQUIRE_ATTACHED_MODELS = True` stops startup if weights are missing. Attached files are checksum-verified and read directly without another full model copy. Software setup and the studio tunnel still use Internet.
 
 For FLUX3, build a separate **flux3** pack with accepted Hugging Face terms and Kaggle Secret HF_TOKEN, attach its saved output alongside the standard pack, and enable `ENABLE_FLUX3`. The renderer needs no Hugging Face token once the complete weights are attached.
 

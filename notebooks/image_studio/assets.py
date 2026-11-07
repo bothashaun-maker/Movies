@@ -3,7 +3,7 @@ import hashlib
 MODEL='Juggernaut-XL_v9_RunDiffusionPhoto_v2.safetensors'
 MODEL_SHA='c9e3e68f89b8e38689e1097d4be4573cf308de4e3fd044c64ca697bdb4aa8bca'
 MODEL_SIZE=7105348188
-def model_assets(load_sdxl=True, enable_seedvr2=True, enable_flux3=False):
+def model_assets(load_sdxl=True, enable_seedvr2=True, enable_flux3=False, enable_faceswap=False):
  assets=[('upscale_models','RealESRGAN_x4plus.pth','https://github.com/xinntao/Real-ESRGAN/releases/download/v0.1.0/RealESRGAN_x4plus.pth','4fa0d38905f75ac06eb49a7951b426670021be3018265fd191d2125df9d682f1',67040989)]
  if load_sdxl:assets.append(('checkpoints',MODEL,'https://huggingface.co/RunDiffusion/Juggernaut-XL-v9/resolve/main/'+MODEL,MODEL_SHA,MODEL_SIZE))
  if enable_seedvr2:
@@ -18,4 +18,9 @@ def model_assets(load_sdxl=True, enable_seedvr2=True, enable_flux3=False):
    ('text_encoders','qwen3vl_4b_int8_convrot.safetensors',prefix+'text_encoders/qwen3vl_4b_int8_convrot.safetensors','32de113cbf8282b02cbff0794b637b9d6676da09314a1db5a30bcea9bf4ee01c',4858559240),
    ('vae','flux2-vae.safetensors',prefix+'vae/flux2-vae.safetensors','868fe7b343cc8f3a19dbcfcafbc3d5f888802be3f89bd81b65b3621a066ce8f3',336211292),
    ('text_encoders','qwen3.5_9b_flux3_prompt_upsampler_w4a8.safetensors',prefix+'text_encoders/qwen3.5_9b_flux3_prompt_upsampler_w4a8.safetensors','e5d85a7421d197bf5a12474511936ecabce19a833252f16e9310a983194a4458',6724090780)])
+ if enable_faceswap:
+  prefix='https://huggingface.co/datasets/Gourieff/ReActor/resolve/079e0e459cd4261bbcba8c71d47df54a4ded7642/models/'
+  assets.extend([
+   ('insightface','inswapper_128.onnx',prefix+'inswapper_128.onnx','e4a3f08c753cb72d04e10aa0f7dbe3deebbf39567d4ead6dce08e98aa49e16af',554253681),
+   ('insightface','buffalo_l.zip',prefix+'buffalo_l.zip','80ffe37d8a5940d59a7384c201a2a38d4741f2f3c51eef46ebb28218a7b0ca2f',288621354)])
  return assets

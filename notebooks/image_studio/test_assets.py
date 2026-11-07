@@ -54,11 +54,12 @@ class Tests(unittest.TestCase):
  def test_catalog_and_notebooks(self):
   cat={};exec((R/'assets.py').read_text(),cat)
   self.assertEqual(len(cat['model_assets']()),4)
+  self.assertEqual(len([a for a in cat['model_assets'](False,False,False,True) if a[0]=='insightface']),2)
   self.assertEqual(len(cat['model_assets'](False,False,True)),5)
-  for n in ['Image_Studio_Model_Packs.ipynb','Image_Studio_Kaggle_v3.ipynb']:
+  for n in ['Image_Studio_Model_Packs.ipynb','Image_Studio_Kaggle_v4.ipynb']:
    nb=json.loads((R/n).read_text());cells=[c for c in nb['cells'] if c['cell_type']=='code'];self.assertEqual(len(cells),1)
    code=''.join(cells[0]['source']);compile(code,n,'exec');self.assertIn('def model_assets(',code)
    self.assertEqual(cells[0]['outputs'],[])
-  render=''.join(json.loads((R/'Image_Studio_Kaggle_v3.ipynb').read_text())['cells'][1]['source'])
+  render=''.join(json.loads((R/'Image_Studio_Kaggle_v4.ipynb').read_text())['cells'][1]['source'])
   self.assertIn('REQUIRE_ATTACHED_MODELS = True',render)
 if __name__=='__main__':unittest.main()
