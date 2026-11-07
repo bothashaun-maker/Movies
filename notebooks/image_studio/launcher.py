@@ -1,18 +1,30 @@
 # Single-cell startup. No image generation starts automatically.
 from pathlib import Path
 import sys, os, subprocess, json, time, urllib.request, hashlib, shutil, re, signal, fcntl
+# Turn off SDXL to run only the upscalers without its 7.1 GB checkpoint.
+LOAD_SDXL = True
+ENABLE_SEEDVR2 = True
+# Optional gated model: accept its terms on Hugging Face and add Kaggle Secret HF_TOKEN.
+ENABLE_FLUX3 = False
 WORKFLOW_PAYLOAD = {}
-COMFY_REV='72212fef660bcd7d9702fa52011d089c027a64d8'
+COMFY_REV='1332fabfcc507aa7c548cd5152071ed494c207e8'
 MODEL='Juggernaut-XL_v9_RunDiffusionPhoto_v2.safetensors'
 MODEL_SHA='c9e3e68f89b8e38689e1097d4be4573cf308de4e3fd044c64ca697bdb4aa8bca'
 MODEL_SIZE=7105348188
 CF_SHA='1f99fb518b83dec2ba8d870a7cc991d82a77e6196295a3d2754ba17ab9f91872'
-BASE=Path('/kaggle/temp/image-studio-v1'); BASE.mkdir(parents=True,exist_ok=True)
+BASE=Path('/kaggle/temp/image-studio-v2'); BASE.mkdir(parents=True,exist_ok=True)
 OUT=Path('/kaggle/working/image-studio'); OUT.mkdir(parents=True,exist_ok=True)
 lock=open(BASE/'startup.lock','w')
 try: fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
 except BlockingIOError: raise RuntimeError('Image Studio is already running. Stop its startup cell before starting again.')
 children=[]
+# Fail before downloading if the previous studio still owns this port.
+import socket
+probe=socket.socket()
+try: probe.bind(('127.0.0.1',8188))
+except OSError: raise RuntimeError('Port 8188 is occupied. Stop the earlier studio cell before starting v2.')
+finally: probe.close()
+
 def run(args,**kw):subprocess.run(list(map(str,args)),check=True,**kw)
 def sha(path):
  h=hashlib.sha256()
@@ -49,7 +61,7 @@ try:
  protected=['torch','torchvision','torchaudio','numpy','scipy']
  constraints.write_text('\n'.join(f'{p}=={meta.version(p)}' for p in protected))
  requirements=BASE/'requirements.txt'
- requirements.write_text('\n'.join(x for x in (comfy/'requirements.txt').read_text().splitlines() if x.strip() not in protected)+'\ntransformers==4.57.6\nhuggingface-hub==0.36.2\n')
+ requirements.write_text('\n'.join(x for x in (comfy/'requirements.txt').read_text().splitlines() if x.strip() not in protected)+'\ntransformers==5.22.2\nhuggingface-hub==2.4.0\n')
  fingerprint=hashlib.sha256((requirements.read_text()+constraints.read_text()+sys.version).encode()).hexdigest()
  marker=BASE/'setup.complete'
  if not marker.exists() or marker.read_text()!=fingerprint:
@@ -57,25 +69,56 @@ try:
   run([python,'-c','import torch, torchvision, transformers, aiohttp, safetensors; assert torch.cuda.is_available()'])
   marker.write_text(fingerprint)
  run([sys.executable,'-m','pip','--python',python,'freeze'],stdout=open(OUT/'packages.txt','w'))
- checkpoints=comfy/'models/checkpoints';checkpoints.mkdir(parents=True,exist_ok=True)
- # Reuse a checksum-verified checkpoint from any attached Kaggle input.
- attached=list(Path('/kaggle/input').rglob(MODEL)) if Path('/kaggle/input').exists() else []
- model_path=checkpoints/MODEL
- if not model_path.exists():
-  for candidate in attached:
-   if candidate.stat().st_size==MODEL_SIZE and sha(candidate)==MODEL_SHA:
-    model_path.symlink_to(candidate);print('Reusing attached model:',candidate);break
- if not model_path.exists():
-  download('https://huggingface.co/RunDiffusion/Juggernaut-XL-v9/resolve/main/'+MODEL,model_path,MODEL_SHA,MODEL_SIZE)
- if sha(model_path)!=MODEL_SHA:raise RuntimeError('Model verification failed.')
+ ultimate=comfy/'custom_nodes/ComfyUI_UltimateSDUpscale'
+ if LOAD_SDXL:
+  if not ultimate.exists():
+   run(['git','clone','--no-checkout','https://github.com/ssitu/ComfyUI_UltimateSDUpscale.git',ultimate])
+   run(['git','-C',ultimate,'checkout','--detach','a5547db9e1d07d3318bb21e9e9c474f4c1e9c8df'])
+  if subprocess.check_output(['git','-C',str(ultimate),'rev-parse','HEAD'],text=True).strip()!='a5547db9e1d07d3318bb21e9e9c474f4c1e9c8df':raise RuntimeError('Unexpected Ultimate SD Upscale revision.')
+  run(['git','-C',ultimate,'submodule','update','--init','--recursive'])
+ assets=[('upscale_models','RealESRGAN_x4plus.pth','https://github.com/xinntao/Real-ESRGAN/releases/download/v0.1.0/RealESRGAN_x4plus.pth','4fa0d38905f75ac06eb49a7951b426670021be3018265fd191d2125df9d682f1',67040989)]
+ if LOAD_SDXL:assets.append(('checkpoints',MODEL,'https://huggingface.co/RunDiffusion/Juggernaut-XL-v9/resolve/main/'+MODEL,MODEL_SHA,MODEL_SIZE))
+ if ENABLE_SEEDVR2:
+  prefix='https://huggingface.co/Comfy-Org/SeedVR2/resolve/df48879708206a403d2a61acd55578c2e80fd233/'
+  assets.extend([
+   ('diffusion_models','seedvr2_3b_int8_convrot.safetensors',prefix+'diffusion_models/seedvr2_3b_int8_convrot.safetensors','c3dec8bcc5916843a8a858572970597462e1f2dc598d6dfd818f6cd40f53a157',3458259704),
+   ('vae','seedvr2_ema_vae_fp16.safetensors',prefix+'vae/seedvr2_ema_vae_fp16.safetensors','20678548f420d98d26f11442d3528f8b8c94e57ee046ef93dbb7633da8612ca1',501324814)])
+ if ENABLE_FLUX3:
+  prefix='https://huggingface.co/black-forest-labs/flux-3-image-klein-comfy/resolve/9d36114cf7a2e03a45c28f5cc4987d20ebfdb6c1/'
+  assets.extend([
+   ('diffusion_models','flux3-image-klein-int8-convrot.safetensors',prefix+'diffusion_models/flux3-image-klein-int8-convrot.safetensors','847d8933548afd93df4af2cac2498e70891bf28d9dae06d695f536992e168fe2',5827874779),
+   ('text_encoders','qwen3vl_4b_int8_convrot.safetensors',prefix+'text_encoders/qwen3vl_4b_int8_convrot.safetensors','32de113cbf8282b02cbff0794b637b9d6676da09314a1db5a30bcea9bf4ee01c',4858559240),
+   ('vae','flux2-vae.safetensors',prefix+'vae/flux2-vae.safetensors','868fe7b343cc8f3a19dbcfcafbc3d5f888802be3f89bd81b65b3621a066ce8f3',336211292),
+   ('text_encoders','qwen3.5_9b_flux3_prompt_upsampler_w4a8.safetensors',prefix+'text_encoders/qwen3.5_9b_flux3_prompt_upsampler_w4a8.safetensors','e5d85a7421d197bf5a12474511936ecabce19a833252f16e9310a983194a4458',6724090780)])
+ for folder,filename,url,digest,size in assets:
+  dest=comfy/'models'/folder/filename;dest.parent.mkdir(parents=True,exist_ok=True)
+  if not dest.exists():
+   candidates=list(Path('/kaggle/input').rglob(filename)) if Path('/kaggle/input').exists() else []
+   candidates.append(Path('/kaggle/temp/image-studio-v1/ComfyUI/models')/folder/filename)
+   for candidate in candidates:
+    if candidate.is_file() and candidate.stat().st_size==size and sha(candidate)==digest:
+     dest.symlink_to(candidate);print('Reusing verified model:',candidate,flush=True);break
+  if ENABLE_FLUX3 and 'black-forest-labs' in url and not dest.exists():
+   if shutil.disk_usage(dest.parent).free<size+2*1024**3:raise RuntimeError('Insufficient disk space for selected FLUX3 assets.')
+   from kaggle_secrets import UserSecretsClient
+   try: token=UserSecretsClient().get_secret('HF_TOKEN')
+   except Exception: raise RuntimeError('Enable Kaggle Secret HF_TOKEN with access to the accepted FLUX 3 model terms.') from None
+   env=os.environ.copy();env['HF_TOKEN']=token
+   try:
+    code="import os;from huggingface_hub import hf_hub_download;hf_hub_download(repo_id='black-forest-labs/flux-3-image-klein-comfy',filename="+repr(folder+'/'+filename)+",revision='9d36114cf7a2e03a45c28f5cc4987d20ebfdb6c1',local_dir="+repr(str(comfy/'models'))+",token=os.environ['HF_TOKEN'])"
+    run([python,'-c',code],env=env)
+   finally:env.pop('HF_TOKEN',None);del token
+  download(url,dest,digest,size)
+ # Only install workflows for enabled model families.
+ WORKFLOW_PAYLOAD={k:v for k,v in WORKFLOW_PAYLOAD.items() if (LOAD_SDXL or k in ['Upscale 2x','Upscale 4x','Restore SeedVR2','Create FLUX3']) and (ENABLE_FLUX3 or k!='Create FLUX3') and (ENABLE_SEEDVR2 or k!='Restore SeedVR2')}
  workflow_dir=comfy/'user/default/workflows';workflow_dir.mkdir(parents=True,exist_ok=True)
  for name,wf in WORKFLOW_PAYLOAD.items():(workflow_dir/f'Image Studio - {name}.json').write_text(json.dumps(wf,indent=2))
  # Stable output destination: PNGs retain the actual graph, prompt, seed and settings.
- (OUT/'provenance.json').write_text(json.dumps({'comfy_revision':COMFY_REV,'model':MODEL,'sha256':MODEL_SHA,'torch':torch.__version__},indent=2))
+ (OUT/'provenance.json').write_text(json.dumps({'comfy_revision':COMFY_REV,'model':MODEL,'sha256':MODEL_SHA,'assets':[{'file':f,'sha256':d,'bytes':z} for _,f,_,d,z in assets],'torch':torch.__version__},indent=2))
  cf=BASE/'cloudflared'
  download('https://github.com/cloudflare/cloudflared/releases/download/2026.10.7/cloudflared-linux-amd64',cf,CF_SHA)
  cf.chmod(0o700)
- server=spawn([python,comfy/'main.py','--listen','127.0.0.1','--port','8188','--lowvram','--preview-method','none','--output-directory',OUT/'images','--disable-auto-launch'],OUT/'comfy.log')
+ server=spawn([python,comfy/'main.py','--listen','127.0.0.1','--port','8188','--lowvram','--force-fp16','--preview-method','none','--output-directory',OUT/'images','--disable-auto-launch'],OUT/'comfy.log')
  deadline=time.monotonic()+180
  while True:
   if server.poll() is not None:raise RuntimeError('ComfyUI stopped. See comfy.log in Kaggle outputs.')
@@ -100,7 +143,7 @@ try:
   time.sleep(1)
  if not url:raise RuntimeError('No Cloudflare URL received; inspect tunnel.log.')
  print('\nOPEN IMAGE STUDIO:',url,flush=True)
- print('Workflow menu → Image Studio - Create / Restyle / Inpaint / Detail. Edit prompt, then press Run.')
+ print('Workflow menu → Image Studio: '+', '.join(WORKFLOW_PAYLOAD)+'. Select a workflow, then press Run.')
  print('No generation has started. Keep this cell running. Anyone with this session URL can access the studio.')
  print('Save Version with outputs before ending Kaggle. Images:',OUT/'images',flush=True)
  while server.poll() is None and tunnel.poll() is None:time.sleep(2)
