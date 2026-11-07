@@ -1,4 +1,20 @@
-# Image Studio — Kaggle v2
+# Reusable model packs — v3 startup
+
+Use the same approach as your uploaded **H3_Model_Packs Data Sets.ipynb**:
+
+1. Run **Image_Studio_Model_Packs.ipynb** once with **Internet ON** and **Accelerator: None**, leaving `PACK = 'standard'`.
+2. Wait for **PACK COMPLETE**, then **Save Version with output files** and keep it private.
+3. Here, choose **Add Input → Your Work / Notebook Output Files** and attach that saved version. Enable **Internet + T4 GPU**, then run the studio cell.
+
+No named Dataset or Kaggle API token is needed for this saved-output approach. `REQUIRE_ATTACHED_MODELS = True` stops startup if weights are missing. Attached files are checksum-verified and read directly without another full model copy. Software setup and the studio tunnel still use Internet.
+
+For FLUX3, build a separate **flux3** pack with accepted Hugging Face terms and Kaggle Secret HF_TOKEN, attach its saved output alongside the standard pack, and enable `ENABLE_FLUX3`. The renderer needs no Hugging Face token once the complete weights are attached.
+
+The generation/upscaling workflows are unchanged from v2. Earlier notebooks remain available.
+
+---
+
+# Image Studio — Kaggle v3
 
 Single-cell ComfyUI image studio, built for Shaun's Kaggle T4 workflow.
 
@@ -15,7 +31,7 @@ Single-cell ComfyUI image studio, built for Shaun's Kaggle T4 workflow.
 
 **Model:** [Juggernaut XL v9](https://huggingface.co/RunDiffusion/Juggernaut-XL-v9), about 7.1 GB, verified with the model file's published SHA256. Read its model card and underlying SDXL license before commercial use. This is a practical SDXL quality option for T4, not a claim to be the best model for every image. One T4 runs the graph; a second T4 is not pooled VRAM. No paid image API is used.
 
-The checkpoint is reused during the session. To avoid future downloads, save it separately as a private Kaggle model/input with its original filename; attached inputs are discovered and checksum-verified. Model weights/runtime live in `/kaggle/temp`, not in saved image outputs. Dependencies require Internet even with an attached checkpoint. ComfyUI and cloudflared are pinned; Kaggle's Torch stack is preserved with constraints. Future Kaggle image changes may need a compatibility update.
+The checkpoint is reused during the session. Use the CPU model pack builder to save it once; attached inputs are discovered and checksum-verified. Model weights/runtime live in `/kaggle/temp`, not in saved image outputs. Dependencies require Internet even with an attached checkpoint. ComfyUI and cloudflared are pinned; Kaggle's Torch stack is preserved with constraints. Future Kaggle image changes may need a compatibility update.
 
 **Validation limit:** see the research and validation report linked beside the notebook for completed local checks. Kaggle GPU generation, output quality, T4 speed, and public tunnel reliability remain unverified. If setup fails, retain `comfy.log` and `tunnel.log`. Keep the startup cell running; stopping it stops its own server and tunnel. Quick Tunnel URLs grant access to anyone holding the URL.
 
@@ -27,7 +43,7 @@ The checkpoint is reused during the session. To avoid future downloads, save it 
 
 **Restore SeedVR2:** native ComfyUI SeedVR2 3B INT8 workflow with FP16 compute, tiled VAE encoding/decoding, one sampling step and a 2x starting size. This is generative restoration and can change detail. The diffusion transformer is not spatially tiled: VAE tiling alone does not guarantee a large target fits in VRAM. Start with a source at 1024px or below. Increase the multiplier only after a successful run. No automatic render or hidden resolution reduction.
 
-All three model families are enabled by default (about 11.1 GB of model files). Set `LOAD_SDXL = False` to skip the 7.1 GB SDXL download and show only the enlargement/restoration workflows; set `ENABLE_SEEDVR2 = False` to skip its approximately 4.0 GB. RealESRGAN adds about 67 MB. First setup needs additional dependency space. Attached Kaggle inputs with matching filenames and SHA256 values are reused. An existing v1 checkpoint is also reused within the same session.
+The standard model pack contains about 11.1 GB of model files. Set `LOAD_SDXL = False` to skip the 7.1 GB SDXL download and show only the enlargement/restoration workflows; set `ENABLE_SEEDVR2 = False` to skip its approximately 4.0 GB. RealESRGAN adds about 67 MB. First setup needs additional dependency space. Attached Kaggle inputs with matching filenames and SHA256 values are reused. An existing v1 checkpoint is also reused within the same session.
 
 Stop the older studio cell before starting v2. The new notebook has a separate runtime, current pinned ComfyUI, and model-specific workflows. Earlier v1 remains available. Keep your original images; upscaling cannot recover unknowable ground truth.
 

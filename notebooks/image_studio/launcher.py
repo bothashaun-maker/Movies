@@ -6,13 +6,16 @@ LOAD_SDXL = True
 ENABLE_SEEDVR2 = True
 # Optional gated model: accept its terms on Hugging Face and add Kaggle Secret HF_TOKEN.
 ENABLE_FLUX3 = False
+REQUIRE_ATTACHED_MODELS = True
+# The builder embeds the shared asset catalog here.
+ASSET_CATALOG_SOURCE = None
 WORKFLOW_PAYLOAD = {}
 COMFY_REV='1332fabfcc507aa7c548cd5152071ed494c207e8'
 MODEL='Juggernaut-XL_v9_RunDiffusionPhoto_v2.safetensors'
 MODEL_SHA='c9e3e68f89b8e38689e1097d4be4573cf308de4e3fd044c64ca697bdb4aa8bca'
 MODEL_SIZE=7105348188
 CF_SHA='1f99fb518b83dec2ba8d870a7cc991d82a77e6196295a3d2754ba17ab9f91872'
-BASE=Path('/kaggle/temp/image-studio-v2'); BASE.mkdir(parents=True,exist_ok=True)
+BASE=Path('/kaggle/temp/image-studio-v3'); BASE.mkdir(parents=True,exist_ok=True)
 OUT=Path('/kaggle/working/image-studio'); OUT.mkdir(parents=True,exist_ok=True)
 lock=open(BASE/'startup.lock','w')
 try: fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
@@ -22,7 +25,7 @@ children=[]
 import socket
 probe=socket.socket()
 try: probe.bind(('127.0.0.1',8188))
-except OSError: raise RuntimeError('Port 8188 is occupied. Stop the earlier studio cell before starting v2.')
+except OSError: raise RuntimeError('Port 8188 is occupied. Stop the earlier studio cell before starting v3.')
 finally: probe.close()
 
 def run(args,**kw):subprocess.run(list(map(str,args)),check=True,**kw)
@@ -42,6 +45,14 @@ def download(url,path,expected,size=None):
  temp.replace(path)
 def spawn(args,log):
  f=open(log,'w');p=subprocess.Popen(list(map(str,args)),stdout=f,stderr=subprocess.STDOUT,start_new_session=True);f.close();children.append(p);return p
+# Check all required names before package setup or GPU initialization.
+if REQUIRE_ATTACHED_MODELS:
+ missing=[]
+ for folder,name,_,_,size in model_assets(LOAD_SDXL,ENABLE_SEEDVR2,ENABLE_FLUX3):
+  candidates=list(Path('/kaggle/input').rglob(name)) if Path('/kaggle/input').exists() else []
+  candidates.extend(Path('/kaggle/temp')/v/'ComfyUI/models'/folder/name for v in ['image-studio-v1','image-studio-v2','image-studio-v3'])
+  if not any(p.is_file() and p.stat().st_size==size for p in candidates):missing.append(name)
+ if missing:raise RuntimeError('Attach your saved Image Studio Model Packs output before starting. Missing: '+', '.join(missing)+'. No model downloads started.')
 try:
  import torch
  if not torch.cuda.is_available():raise RuntimeError('Select a Kaggle GPU accelerator and restart this cell.')
@@ -76,28 +87,18 @@ try:
    run(['git','-C',ultimate,'checkout','--detach','a5547db9e1d07d3318bb21e9e9c474f4c1e9c8df'])
   if subprocess.check_output(['git','-C',str(ultimate),'rev-parse','HEAD'],text=True).strip()!='a5547db9e1d07d3318bb21e9e9c474f4c1e9c8df':raise RuntimeError('Unexpected Ultimate SD Upscale revision.')
   run(['git','-C',ultimate,'submodule','update','--init','--recursive'])
- assets=[('upscale_models','RealESRGAN_x4plus.pth','https://github.com/xinntao/Real-ESRGAN/releases/download/v0.1.0/RealESRGAN_x4plus.pth','4fa0d38905f75ac06eb49a7951b426670021be3018265fd191d2125df9d682f1',67040989)]
- if LOAD_SDXL:assets.append(('checkpoints',MODEL,'https://huggingface.co/RunDiffusion/Juggernaut-XL-v9/resolve/main/'+MODEL,MODEL_SHA,MODEL_SIZE))
- if ENABLE_SEEDVR2:
-  prefix='https://huggingface.co/Comfy-Org/SeedVR2/resolve/df48879708206a403d2a61acd55578c2e80fd233/'
-  assets.extend([
-   ('diffusion_models','seedvr2_3b_int8_convrot.safetensors',prefix+'diffusion_models/seedvr2_3b_int8_convrot.safetensors','c3dec8bcc5916843a8a858572970597462e1f2dc598d6dfd818f6cd40f53a157',3458259704),
-   ('vae','seedvr2_ema_vae_fp16.safetensors',prefix+'vae/seedvr2_ema_vae_fp16.safetensors','20678548f420d98d26f11442d3528f8b8c94e57ee046ef93dbb7633da8612ca1',501324814)])
- if ENABLE_FLUX3:
-  prefix='https://huggingface.co/black-forest-labs/flux-3-image-klein-comfy/resolve/9d36114cf7a2e03a45c28f5cc4987d20ebfdb6c1/'
-  assets.extend([
-   ('diffusion_models','flux3-image-klein-int8-convrot.safetensors',prefix+'diffusion_models/flux3-image-klein-int8-convrot.safetensors','847d8933548afd93df4af2cac2498e70891bf28d9dae06d695f536992e168fe2',5827874779),
-   ('text_encoders','qwen3vl_4b_int8_convrot.safetensors',prefix+'text_encoders/qwen3vl_4b_int8_convrot.safetensors','32de113cbf8282b02cbff0794b637b9d6676da09314a1db5a30bcea9bf4ee01c',4858559240),
-   ('vae','flux2-vae.safetensors',prefix+'vae/flux2-vae.safetensors','868fe7b343cc8f3a19dbcfcafbc3d5f888802be3f89bd81b65b3621a066ce8f3',336211292),
-   ('text_encoders','qwen3.5_9b_flux3_prompt_upsampler_w4a8.safetensors',prefix+'text_encoders/qwen3.5_9b_flux3_prompt_upsampler_w4a8.safetensors','e5d85a7421d197bf5a12474511936ecabce19a833252f16e9310a983194a4458',6724090780)])
+ assets=model_assets(LOAD_SDXL,ENABLE_SEEDVR2,ENABLE_FLUX3)
  for folder,filename,url,digest,size in assets:
   dest=comfy/'models'/folder/filename;dest.parent.mkdir(parents=True,exist_ok=True)
+  verified=False
   if not dest.exists():
    candidates=list(Path('/kaggle/input').rglob(filename)) if Path('/kaggle/input').exists() else []
-   candidates.append(Path('/kaggle/temp/image-studio-v1/ComfyUI/models')/folder/filename)
+   candidates.extend(Path('/kaggle/temp')/v/'ComfyUI/models'/folder/filename for v in ['image-studio-v1','image-studio-v2'])
    for candidate in candidates:
     if candidate.is_file() and candidate.stat().st_size==size and sha(candidate)==digest:
-     dest.symlink_to(candidate);print('Reusing verified model:',candidate,flush=True);break
+     dest.symlink_to(candidate);verified=True;print('Reusing verified model:',candidate,flush=True);break
+  if REQUIRE_ATTACHED_MODELS and not dest.exists():
+   raise RuntimeError('Missing saved model: '+filename+'. Attach your saved Image Studio Model Packs output via Add Input. No model was downloaded.')
   if ENABLE_FLUX3 and 'black-forest-labs' in url and not dest.exists():
    if shutil.disk_usage(dest.parent).free<size+2*1024**3:raise RuntimeError('Insufficient disk space for selected FLUX3 assets.')
    from kaggle_secrets import UserSecretsClient
@@ -108,7 +109,7 @@ try:
     code="import os;from huggingface_hub import hf_hub_download;hf_hub_download(repo_id='black-forest-labs/flux-3-image-klein-comfy',filename="+repr(folder+'/'+filename)+",revision='9d36114cf7a2e03a45c28f5cc4987d20ebfdb6c1',local_dir="+repr(str(comfy/'models'))+",token=os.environ['HF_TOKEN'])"
     run([python,'-c',code],env=env)
    finally:env.pop('HF_TOKEN',None);del token
-  download(url,dest,digest,size)
+  if not verified:download(url,dest,digest,size)
  # Only install workflows for enabled model families.
  WORKFLOW_PAYLOAD={k:v for k,v in WORKFLOW_PAYLOAD.items() if (LOAD_SDXL or k in ['Upscale 2x','Upscale 4x','Restore SeedVR2','Create FLUX3']) and (ENABLE_FLUX3 or k!='Create FLUX3') and (ENABLE_SEEDVR2 or k!='Restore SeedVR2')}
  workflow_dir=comfy/'user/default/workflows';workflow_dir.mkdir(parents=True,exist_ok=True)
