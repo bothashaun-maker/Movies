@@ -17,7 +17,7 @@ These names describe presets, not measured quality or speed guarantees. Actual T
 1. Open Kaggle and create a **New Notebook**.
 2. Choose **File → Import Notebook → GitHub/URL**. Paste `https://github.com/bothashaun-maker/Movies/blob/main/H3_Next_T4.ipynb`.
 3. Set **Accelerator: GPU T4 ×2** and **Internet: ON**. Stop your older ComfyUI session first.
-4. If you have saved the new model packs below, use **Add Input → Your Work / Notebook Outputs** to attach them. Otherwise, the required files download automatically.
+4. If you have saved the new model packs below, use **Add Input → Your Datasets** to attach them. Otherwise, the required files download automatically.
 5. Press the Play button on the notebook's single code cell. Wait for the ComfyUI Cloudflare link and open it. Keep Kaggle running while you use ComfyUI.
 6. Choose a workflow from ComfyUI's **Workflows** menu. Edit the prompt in **Prompt / size / seconds / optional reference**, then press **Run**.
 
@@ -33,9 +33,9 @@ You need **four saved model packs shared by all three new workflows**, not one d
 
 1. Create a new Kaggle notebook. Import `https://github.com/bothashaun-maker/Movies/blob/main/H3_Next_Model_Packs.ipynb`.
 2. Name it **H3 Next Models - Singularity**. Set **Accelerator: None**, **Internet: ON**, and keep it private.
-3. Leave `PACK = 'singularity'` near the top of the code cell.
-4. Choose **Save Version → Save & Run All**, with outputs included. This runs the downloads and saves the output files. You do not need to run the cell separately first.
-5. Wait until that saved version finishes successfully. Open its **Output/Files** tab and check that it contains model files and `h3-pack-selection.json`.
+3. Leave `PACK = 'singularity'` and `AUTO_CREATE_DATASET = True` near the top of the code cell.
+4. Open **Add-ons → Secrets**. Add your Kaggle API token under **KAGGLE_API_TOKEN** and enable it for this notebook. Do not paste the token into code. Set `DATASET_OWNER` to your Kaggle username if automatic detection does not work.
+5. Run the single cell. It checks authentication, downloads and verifies the models, then automatically submits a **private Kaggle Dataset** and prints its link. Wait for Kaggle processing to finish. **No manual Save Version is required for this upload.**
 6. Repeat with three more copies of the same preparation notebook:
 
 | Notebook name | Set PACK to | Size |
@@ -44,11 +44,11 @@ You need **four saved model packs shared by all three new workflows**, not one d
 | H3 Next Models - Molmo | `'molmo'` | 8.99 GiB |
 | H3 Next Models - Support | `'support'` | 13.93 GiB |
 
-You can start these preparation notebooks separately while earlier saves are running, subject to Kaggle's available concurrent sessions. There is no GPU requirement for preparation.
+You can start these preparation notebooks separately while earlier uploads are running, subject to Kaggle's available concurrent sessions. There is no GPU requirement for preparation.
 
-7. In **H3 Next T4**, select **Add Input → Your Work / Notebook Outputs** and attach those saved outputs. Run the rendering notebook normally.
+7. In **H3 Next T4**, select **Add Input → Your Datasets** and attach those private Datasets. Run the rendering notebook normally.
 
-A separate Dataset conversion is unnecessary. A draft without saved output files is insufficient. These are new packs: the older H3 packs contain shared reference/audio VAEs but do not contain Singularity, DenoMix, Molmo2, Pika or Sol. Runtime setup and hash verification still run on startup; reusing packs avoids downloading the weights again.
+Successful submission is recorded for same-session retries; existing remote Datasets are never overwritten. If a fresh session reports a duplicate name, check Your Datasets for the existing pack. Failed uploads retain verified local files. Optional fallback: set `AUTO_CREATE_DATASET=False`, then Save Version with output files and attach Notebook Outputs. A draft alone does not preserve local models. Live authenticated Kaggle submission remains unverified here. These are new packs: the older H3 packs contain shared reference/audio VAEs but do not contain Singularity, DenoMix, Molmo2, Pika or Sol. Runtime setup and hash verification still run on startup; reusing packs avoids downloading the weights again.
 
 ## Engineering details and validation
 

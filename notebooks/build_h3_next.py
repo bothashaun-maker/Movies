@@ -79,7 +79,7 @@ intro='''# H3 Next — Molmo2 · Sol · Pika · Singularity · DenoMix
 **New experimental notebook for Kaggle T4 ×2. Existing notebooks are unchanged.**
 
 1. Set **GPU T4 ×2** and **Internet ON**.
-2. Attach saved outputs from **H3_Next_Model_Packs.ipynb** if you have prepared them. Otherwise, missing files download automatically. The old H3 packs supply the shared reference/audio VAEs but do not contain the new models.
+2. Attach private Datasets from **H3_Next_Model_Packs.ipynb** if you have prepared them. Otherwise, missing files download automatically. The old H3 packs supply the shared reference/audio VAEs but do not contain the new models.
 3. Press the single code cell's Play button. Wait for **Your full H3 workflow link**.
 4. Open that Cloudflare link. Under **Workflows**, choose:
    - **Singularity - Pika 4 Step Final** — default comparison candidate.
@@ -106,7 +106,11 @@ code=next(c.source for c in old.cells if c.cell_type=='code')
 start=code.index('PACKS=');end=code.index('\nassert PACK in PACKS',start)
 code=code[:start]+'PACKS='+repr(packs)+code[end:]
 code=code.replace("PACK='ref2va'  # ref2va, fl2va, encoder, support","PACK='singularity'  # singularity, denomix, molmo, support").replace('PACK must be ref2va, fl2va, encoder, or support','PACK must be singularity, denomix, molmo, or support')
-md='''# H3 Next model packs — save once using CPU
+# Upload verified real files as a private named Dataset by default.
+code="AUTO_CREATE_DATASET = True\nDATASET_OWNER = ''  # Your Kaggle username, if not auto-detected.\n"+r(N/'dataset.py')+'\n'+code
+code=code.replace("OUTPUT.mkdir(parents=True,exist_ok=True)", "if AUTO_CREATE_DATASET:\n    dataset_client,DATASET_OWNER=dataset_session(DATASET_OWNER)\nOUTPUT.mkdir(parents=True,exist_ok=True)")
+code=code.replace("print('Save this CPU notebook version with its output files. Attach the saved output to your renderer using Add Input.')", "if AUTO_CREATE_DATASET:\n    save_private_dataset(OUTPUT,PACK,selected,DATASET_OWNER,dataset_client)\nelse:\n    print('Save Version with output files, then attach Notebook Outputs.')")
+md='''# H3 Next model packs — automatic private Dataset creator
 
 These are the new models for **H3_Next_T4.ipynb**. Your old packs remain valid for the older notebooks.
 
@@ -117,11 +121,20 @@ Create four separate copies of this preparation notebook. Rename each and change
 '''
 for key,group in packs.items():md+=f"| H3 Next Models - {key} | `{key}` | {sum(a['size'] for a in group)/1024**3:.2f} GiB |\n"
 md+='''
-For each copy: set **Accelerator: None**, **Internet ON**, keep it **private**, and choose **Save Version → Save & Run All** with outputs included. No manual run is required first. Wait for success and confirm the saved output contains `models`. Use one pack per preparation session. Check your account's actual saved-output allowance.
+For each copy:
 
-In H3 Next, click **Add Input → Your Work / Notebook Outputs** and attach all four saved outputs. Leave `MODEL_DATASET=''`. They are discovered automatically and can be reused. You do not need to convert them into separate Datasets. These packs contain roughly 62 GiB in total. They include the shared reference/audio VAEs so the new renderer does not require the old packs too.
+1. Set **Accelerator: None**, **Internet ON**, and keep it **private**.
+2. In **Add-ons → Secrets**, add your Kaggle API token as **KAGGLE_API_TOKEN** and enable it for this notebook. Never paste the token in the code. Existing configured Kaggle authentication also works.
+3. Leave `AUTO_CREATE_DATASET = True`. Enter your Kaggle username in `DATASET_OWNER` if it is not detected automatically.
+4. Run the single cell. It checks authentication first, downloads/verifies the selected pack, then automatically uploads it as a **private Kaggle Dataset** and prints its link.
+5. Wait for Kaggle to finish processing. In H3 Next, choose **Add Input → Your Datasets** and attach it. Repeat for each pack you need. Leave `MODEL_DATASET=''` in the renderer.
 
-Startup still installs the runtime and verifies model hashes. Saving only the rendering notebook does not preserve its temporary model files. Each preparation pack is below 20 GiB, and free space is checked before downloading.
+**No manual Save Version is required to submit the Dataset.** Saving the notebook and logs is separate. Use a fresh CPU session/copy for each pack. All four packs are shared by the three H3 Next workflows; they total roughly 62 GiB. Each is below 20 GiB. Account storage limits still apply.
+
+Uploads use real files without a second full-size model copy. Existing Datasets are never overwritten. Successful submission is recorded for same-session retries; an existing remote Dataset without a local receipt may cause a duplicate-name error—check Your Datasets before retrying. Failed uploads retain verified files; rerun after fixing authentication or connectivity. Submission is not confirmation that Kaggle processing has completed.
+
+Optional fallback: set `AUTO_CREATE_DATASET=False`, run the cell, then **Save Version with output files** and attach through **Notebook Outputs**. Actual authenticated Kaggle uploads have not been tested from this development environment.
+
 '''
 pnb=nbformat.v4.new_notebook(cells=[nbformat.v4.new_markdown_cell(md),nbformat.v4.new_code_cell(code)],metadata=nb.metadata)
 for i,c in enumerate(pnb.cells):c.id=f'h3-next-models-{i}'
