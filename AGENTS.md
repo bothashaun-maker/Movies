@@ -80,3 +80,16 @@ chat transcript. Update it when the user changes these instructions.
 - See `docs/H3_NOTEBOOK_COLLECTIONS.md` for menus, verification and remaining GPU limits. 47 tests passed; all seven new canvases loaded in real ComfyUI Chromium and validated as browser/sample/decode graphs. This is not proof of T4 speed or quality.
 
 - `H3_Model_Packs.ipynb` prepares all four notebooks’ default weights as four CPU-only reusable outputs (`ref2va`, `fl2va`, `encoder`, `support`). Regenerate with `python notebooks/build_h3_model_packs.py` when catalogs change. Each pack is below 20 GiB; combined storage is about 73 GiB. Attach saved outputs through Add Input; temporary renderer files/symlinks are not durable datasets.
+
+## Movie upscaler (2026-11-07)
+
+- User now requested a separate Kaggle movie upscaler and explicitly authorized
+  building and pushing it. This supersedes the earlier CapCut-only preference
+  for this separate tool; do not add it as a required H3 generation stage.
+- `Movie_Upscaler_Kaggle_v1.ipynb` opens native connected SeedVR2 and Real-ESRGAN
+  graphs. Rebuild both it and `Movie_Upscaler_Model_Packs.ipynb` with
+  `python notebooks/movie_upscaler/build.py`. Keep sources and notebooks together.
+- Preserve explicit Run, saved model-pack outputs, durable chunk receipts,
+  audio/frame-count checks and no notebook previews/download prompts.
+- Uses GPU 0 only. CPU/media/browser checks are not evidence of T4 performance
+  or SeedVR2 inference. See `notebooks/movie_upscaler/README.md` for validation.
