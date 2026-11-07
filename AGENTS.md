@@ -109,3 +109,5 @@ chat transcript. Update it when the user changes these instructions.
   submission, using private Kaggle API credentials. Saved notebook outputs are
   an optional fallback, not the default persistence instruction. Never claim
   live Kaggle upload success from mocked API checks.
+
+- H3 Next model-pack storage fix: automatic Dataset uploads may use measured `/kaggle/temp` or `/tmp` space, with same-filesystem hardlink staging and partial-download accounting. Never force the 19.53 GiB checkpoints into 19.50 GiB working storage. Saved Notebook Outputs mode must remain working-only; temporary storage is not durable before upload. Do not remove the free-space guard or assume a 50 GiB quota.

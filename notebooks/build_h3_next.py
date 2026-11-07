@@ -109,6 +109,10 @@ code=code.replace("PACK='ref2va'  # ref2va, fl2va, encoder, support","PACK='sing
 # Upload verified real files as a private named Dataset by default.
 code="AUTO_CREATE_DATASET = True\nDATASET_OWNER = ''  # Your Kaggle username, if not auto-detected.\n"+r(N/'dataset.py')+'\n'+code
 code=code.replace("OUTPUT.mkdir(parents=True,exist_ok=True)", "if AUTO_CREATE_DATASET:\n    dataset_client,DATASET_OWNER=dataset_session(DATASET_OWNER)\nOUTPUT.mkdir(parents=True,exist_ok=True)")
+# Replace the inherited working-only quota check with measured storage selection.
+start=code.index("OUTPUT.mkdir(parents=True,exist_ok=True)")
+end=code.index("manifest.write_text",start)
+code=code[:start]+"OUTPUT=select_pack_storage(PACK,selected,AUTO_CREATE_DATASET)\nmanifest=OUTPUT.parent/'h3-pack-selection.json'\n"+code[end:]
 code=code.replace("print('Save this CPU notebook version with its output files. Attach the saved output to your renderer using Add Input.')", "if AUTO_CREATE_DATASET:\n    save_private_dataset(OUTPUT,PACK,selected,DATASET_OWNER,dataset_client)\nelse:\n    print('Save Version with output files, then attach Notebook Outputs.')")
 md='''# H3 Next model packs — automatic private Dataset creator
 
@@ -130,6 +134,8 @@ For each copy:
 5. Wait for Kaggle to finish processing. In H3 Next, choose **Add Input → Your Datasets** and attach it. Repeat for each pack you need. Leave `MODEL_DATASET=''` in the renderer.
 
 **No manual Save Version is required to submit the Dataset.** Saving the notebook and logs is separate. Use a fresh CPU session/copy for each pack. All four packs are shared by the three H3 Next workflows; they total roughly 62 GiB. Each is below 20 GiB. Account storage limits still apply.
+
+The builder measures free space in `/kaggle/working`, `/kaggle/temp` and `/tmp`, then uses one location that fits the entire pack. It reuses partial downloads when space permits; it never assumes a fixed temporary-disk quota. Temporary files last only for the current session, so wait for the Dataset upload and Kaggle processing before ending it.
 
 Uploads use real files without a second full-size model copy. Existing Datasets are never overwritten. Successful submission is recorded for same-session retries; an existing remote Dataset without a local receipt may cause a duplicate-name error—check Your Datasets before retrying. Failed uploads retain verified files; rerun after fixing authentication or connectivity. Submission is not confirmation that Kaggle processing has completed.
 

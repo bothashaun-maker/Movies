@@ -29,6 +29,8 @@ The resulting video appears at the Save MP4 node and in ComfyUI's output folder 
 
 ## Save models once, reuse them
 
+The automatic Dataset builder measures free space in working and temporary storage and selects a location that fits the whole pack. It keeps upload staging on that same filesystem without copying the model. This avoids forcing a 19.53 GiB model into Kaggle’s roughly 19.50 GiB working space. Temporary capacity varies; if no location fits, it stops before downloading. Keep the session running until upload completes.
+
 You need **four saved model packs shared by all three new workflows**, not one dataset per workflow. Together they use about **62 GiB**. You may skip DenoMix's pack if you only use Singularity; selecting DenoMix later will download its missing checkpoint.
 
 1. Create a new Kaggle notebook. Import `https://github.com/bothashaun-maker/Movies/blob/main/H3_Next_Model_Packs.ipynb`.

@@ -96,3 +96,55 @@ def dataset_session(owner='',api=None):
     if not re.fullmatch(r'[A-Za-z0-9_-]+',owner):
         raise RuntimeError('Set DATASET_OWNER to your Kaggle username. No model downloads started.')
     return api,owner
+
+
+def select_pack_storage(pack, assets, automatic=True, candidates=None, headroom=512*1024**2):
+    """Choose one filesystem that fits; never add free space across mounts.
+
+    Temporary storage is valid only when uploading a named Dataset. Saved notebook
+    outputs must remain in /kaggle/working. Existing models/partials stay in place.
+    """
+    import shutil
+    if candidates is None:
+        candidates=[Path('/kaggle/working/models')]
+        if automatic:
+            candidates += [Path('/kaggle/temp/h3-next-packs')/pack/'models',
+                           Path('/tmp/h3-next-packs')/pack/'models']
+    choices=[];reports=[]
+    for value in candidates:
+        root=Path(value)
+        try:
+            root.mkdir(parents=True,exist_ok=True)
+            manifest=root.parent/'h3-pack-selection.json'
+            if manifest.exists() and json.loads(manifest.read_text()).get('pack')!=pack:
+                reports.append(str(root)+': belongs to another pack; preserved')
+                continue
+            # Verify write access without touching any existing model files.
+            import tempfile
+            with tempfile.TemporaryFile(dir=root):pass
+            remaining=0;reusable=0
+            for asset in assets:
+                path=root/asset['file'];partial=path.with_suffix(path.suffix+'.part')
+                if path.exists():
+                    if path.is_symlink() or path.stat().st_size!=asset['size']:
+                        raise ValueError('Existing model has an invalid size/type; preserved: '+str(path))
+                    reusable+=asset['size']  # downloader checks the full hash before use
+                else:
+                    present=partial.stat().st_size if partial.is_file() and not partial.is_symlink() else 0
+                    if present>asset['size']:raise ValueError('Oversized partial file preserved: '+str(partial))
+                    remaining+=asset['size']-present;reusable+=present
+            free=shutil.disk_usage(root).free
+            reports.append(f'{root}: {free/1024**3:.2f} GiB free; {remaining/1024**3:.2f} GiB still needed + {headroom/1024**3:.2f} GiB headroom')
+            if free>=remaining+headroom:choices.append((reusable,free,root))
+        except (OSError,ValueError) as error:
+            reports.append(str(root)+': '+str(error))
+    print('Storage checks:\n'+'\n'.join(reports),flush=True)
+    if not choices:
+        raise RuntimeError('No single writable location has enough free space for this pack. '
+                           'No files were deleted and no downloads started. '+
+                           ('Start a fresh CPU session with more available disk, or attach an existing Dataset.' if automatic else
+                            'Notebook Outputs require working storage. Use AUTO_CREATE_DATASET=True to allow temporary storage and private Dataset upload.'))
+    # Prefer resumable files, then the location with most available headroom.
+    root=max(choices,key=lambda c:(c[0],c[1]))[2]
+    print('Model download and upload staging location:',root,flush=True)
+    return root
