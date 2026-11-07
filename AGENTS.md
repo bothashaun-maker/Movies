@@ -93,3 +93,12 @@ chat transcript. Update it when the user changes these instructions.
   audio/frame-count checks and no notebook previews/download prompts.
 - Uses GPU 0 only. CPU/media/browser checks are not evidence of T4 performance
   or SeedVR2 inference. See `notebooks/movie_upscaler/README.md` for validation.
+
+## H3 Next experiment (2026-11-07)
+
+- User authorized building and pushing the new research-based notebook. `H3_Next_T4.ipynb` is separate from the existing four collections; regenerate only with `python notebooks/build_h3_next.py`. Sources are `notebooks/h3_next/`.
+- Installs three visible 18-node canvases: Singularity/Pika four-step, Singularity/Pika two-step draft, DenoMix eight-step. Molmo2 INT8 uses an experimental FP16/SDPA adaptation for T4; Sol INT8 decodes output video. Original H3 VAE handles reference images. Optional motion dial defaults to zero. No upscaler, sparse attention, SCAIL motion-transfer or Director timeline is implied.
+- Preserve three isolated preparation/sampling/decoding processes and exact conditioning/reference checkpoints. Molmo2 must exit before loading diffusion weights to reduce Kaggle host RAM pressure. Include new code identity in retry keys. Prefix/scale adaptation must remain a reader operation, never a second full checkpoint copy.
+- `H3_Next_Model_Packs.ipynb` prepares four reusable CPU-only saved outputs: singularity, denomix, molmo, support; combined about 62 GiB, each below 20 GiB. These differ from the older H3 packs. Use Save Version → Save & Run All with outputs; no separate manual run is needed first.
+- All three canvases loaded in actual ComfyUI Chromium; browser/preparation/sample/decode schemas passed for text and image; conditioning/reference safetensors round-trip and native reference geometry passed CPU checks. Full new-model GPU rendering, actual memory use, speed and quality remain unverified. Do not describe preset names as benchmark results.
+- Read `docs/H3_NEXT_T4.md` for simple import/use/storage instructions and limitations. Existing notebooks must remain unchanged when updating this experiment.

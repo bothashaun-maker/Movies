@@ -1,3 +1,7 @@
+# New experimental notebook: H3 Next
+
+[H3 Next T4](H3_Next_T4.ipynb) adds three full canvases using Molmo2, Sol, Pika, Singularity and DenoMix. [Step-by-step instructions and validation limits](docs/H3_NEXT_T4.md) include the separate reusable model packs. The four existing notebooks below are unchanged. GPU rendering of H3 Next remains unverified.
+
 # Four named notebooks
 
 Use the separate notebooks listed in [Notebook collections](docs/H3_NOTEBOOK_COLLECTIONS.md): **Current Working Workflow**, **Pixa — 5 Workflows**, **Director**, and **Three-Step Workflow**. Each starts with one executable cell and opens ComfyUI through Cloudflare. The Pixa notebook installs all five workflows; Director includes both actual Director variants. Import a fresh GitHub copy into Kaggle to receive updates.
