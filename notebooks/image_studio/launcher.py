@@ -5,6 +5,10 @@ import sys, os, subprocess, json, time, urllib.request, hashlib, shutil, re, sig
 LOAD_SDXL = True
 ENABLE_SEEDVR2 = True
 ENABLE_FACESWAP = True
+AUTO_PREPARE_FACE_PACK = True
+AUTO_SAVE_PREPARED_FACE_PACK = True
+PACK_BUILDER_SOURCE = None
+STARTUP_MODELS_SOURCE = None
 FACE_NODE_SOURCE = None
 # Optional gated model: accept its terms on Hugging Face and add Kaggle Secret HF_TOKEN.
 ENABLE_FLUX3 = False
@@ -17,6 +21,7 @@ MODEL='Juggernaut-XL_v9_RunDiffusionPhoto_v2.safetensors'
 MODEL_SHA='c9e3e68f89b8e38689e1097d4be4573cf308de4e3fd044c64ca697bdb4aa8bca'
 MODEL_SIZE=7105348188
 CF_SHA='1f99fb518b83dec2ba8d870a7cc991d82a77e6196295a3d2754ba17ab9f91872'
+# Renderer dependencies are unchanged; reuse a retained v4 installation.
 BASE=Path('/kaggle/temp/image-studio-v4'); BASE.mkdir(parents=True,exist_ok=True)
 OUT=Path('/kaggle/working/image-studio'); OUT.mkdir(parents=True,exist_ok=True)
 lock=open(BASE/'startup.lock','w')
@@ -27,7 +32,7 @@ children=[]
 import socket
 probe=socket.socket()
 try: probe.bind(('127.0.0.1',8188))
-except OSError: raise RuntimeError('Port 8188 is occupied. Stop the earlier studio cell before starting v4.')
+except OSError: raise RuntimeError('Port 8188 is occupied. Stop the earlier studio cell before starting v5.')
 finally: probe.close()
 
 def run(args,**kw):subprocess.run(list(map(str,args)),check=True,**kw)
@@ -47,14 +52,14 @@ def download(url,path,expected,size=None):
  temp.replace(path)
 def spawn(args,log):
  f=open(log,'w');p=subprocess.Popen(list(map(str,args)),stdout=f,stderr=subprocess.STDOUT,start_new_session=True);f.close();children.append(p);return p
-# Check all required names before package setup or GPU initialization.
-if REQUIRE_ATTACHED_MODELS:
- missing=[]
- for folder,name,_,_,size in model_assets(LOAD_SDXL,ENABLE_SEEDVR2,ENABLE_FLUX3,ENABLE_FACESWAP):
-  candidates=list(Path('/kaggle/input').rglob(name)) if Path('/kaggle/input').exists() else []
-  candidates.extend(Path('/kaggle/temp')/v/'ComfyUI/models'/folder/name for v in ['image-studio-v1','image-studio-v2','image-studio-v3','image-studio-v4'])
-  if not any(p.is_file() and p.stat().st_size==size for p in candidates):missing.append(name)
- if missing:raise RuntimeError('Attach your saved Image Studio Model Packs output before starting. Missing: '+', '.join(missing)+'. No model downloads started.')
+# Prepare only missing face models; keep generation packs attached and untouched.
+try:
+ resolved_models=prepare_startup_models(
+  model_assets(LOAD_SDXL,ENABLE_SEEDVR2,ENABLE_FLUX3,ENABLE_FACESWAP),PACK_BUILDER_SOURCE,
+  require_attached=REQUIRE_ATTACHED_MODELS,prepare_faces=AUTO_PREPARE_FACE_PACK,
+  save_face_dataset=AUTO_SAVE_PREPARED_FACE_PACK)
+except BaseException:
+ fcntl.flock(lock,fcntl.LOCK_UN);lock.close();raise
 try:
  import torch
  if not torch.cuda.is_available():raise RuntimeError('Select a Kaggle GPU accelerator and restart this cell.')
@@ -105,8 +110,7 @@ try:
   dest=comfy/'models'/folder/filename;dest.parent.mkdir(parents=True,exist_ok=True)
   verified=False
   if not dest.exists():
-   candidates=list(Path('/kaggle/input').rglob(filename)) if Path('/kaggle/input').exists() else []
-   candidates.extend(Path('/kaggle/temp')/v/'ComfyUI/models'/folder/filename for v in ['image-studio-v1','image-studio-v2','image-studio-v3'])
+   candidates=resolved_models.get(filename,[])
    for candidate in candidates:
     if candidate.is_file() and candidate.stat().st_size==size and sha(candidate)==digest:
      dest.symlink_to(candidate);verified=True;print('Reusing verified model:',candidate,flush=True);break

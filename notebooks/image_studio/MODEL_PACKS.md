@@ -1,3 +1,9 @@
+# v5 missing-face-pack repair
+
+The renderer can now prepare the small face pack automatically if it is missing. Keep the existing standard pack attached and run v5 with Internet enabled. It verifies the face models, attempts private Dataset submission using existing authentication, and prints the link if submitted. If Dataset upload fails, verified face models remain usable for that session; retain the working outputs or retry saving them. Nothing is redownloaded when a valid attached/cached face pack is found.
+
+AUTO_PREPARE_FACE_PACK=True enables this targeted repair. REQUIRE_ATTACHED_MODELS=True still protects the generation packs against unrequested downloads. The standalone CPU builder below remains available but is no longer a mandatory separate step for the missing face pack.
+
 # Image Studio model packs
 
 The builder now defaults to **PACK='faceswap'** (~843 MB), with **AUTO_CREATE_DATASET=True** using the user's existing Kaggle authentication. Run it on CPU with Internet enabled. After verification it requests a new private named Dataset and prints its link. Wait for Kaggle processing, then attach it to **Image Studio v4** alongside the existing standard pack. Existing Datasets are not updated or overwritten. Failed uploads retain verified files for retry; credentials are never included in notebook source.

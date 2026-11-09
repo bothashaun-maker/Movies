@@ -1,6 +1,20 @@
-# Face Swap added — Image Studio v4
+# Image Studio v5 — missing face-pack startup fixed
 
-Attach your existing **standard** pack plus the new **faceswap** pack. The Model Packs builder now starts with `PACK = 'faceswap'` (about **843 MB**) and `AUTO_CREATE_DATASET = True`, using your already configured Kaggle authentication to submit a private Dataset. No standard-pack rebuild is required. Saved notebook outputs remain supported.
+Keep your existing standard/FLUX3 inputs attached, enable **Internet + T4**, then run the single startup cell. You do not need to manually prepare the separate face pack first.
+
+With `AUTO_PREPARE_FACE_PACK = True`, startup automatically downloads and verifies only missing face models (up to **843 MB**) before initializing a GPU. Attached or cached face models are reused. Your existing generation packs are not downloaded again.
+
+Startup also tries to submit the verified face pack as a private Dataset using your existing Kaggle authentication. If submission succeeds, it prints the Dataset link; attach that Dataset in future sessions to skip the face downloads. If upload fails, startup reports that separately and continues with the verified local files. Those files remain under `/kaggle/working/image-studio-model-packs/faceswap`; save outputs or retry the builder to preserve them.
+
+For a strict attached-packs-only setup, set `AUTO_PREPARE_FACE_PACK = False`. Missing standard/FLUX3 packs still stop with an explicit error when `REQUIRE_ATTACHED_MODELS = True`. Set `ENABLE_FACESWAP = False` only if you want to omit face swapping entirely.
+
+No image starts automatically. Open the studio, choose a workflow, then press Run. Face swap, generation and upscaling nodes/settings are unchanged from v4. Local startup-repair checks passed; live Kaggle startup and Dataset submission remain unverified here.
+
+---
+
+# Face Swap workflow
+
+Existing attached standard and face packs are reused. The standalone face builder remains an optional way to prepare a face pack in advance. The Model Packs builder now starts with `PACK = 'faceswap'` (about **843 MB**) and `AUTO_CREATE_DATASET = True`, using your already configured Kaggle authentication to submit a private Dataset. No standard-pack rebuild is required. Saved notebook outputs remain supported.
 
 Open **Image Studio - Face Swap**, upload **SOURCE** (identity) and **TARGET** (photo to change), choose source/target indices (0 = leftmost face), then press Run. It saves a PNG at the target photo's original dimensions. This photo-only pipeline runs on CPU, leaving T4 memory for generation. Use the existing upscaling workflows separately if desired. No face restoration is applied automatically.
 

@@ -1,9 +1,17 @@
+# v5 startup repair
+
+The reported v4 exception listed `inswapper_128.onnx` and `buffalo_l.zip` because no exact-size face-model files were found in the scanned attached/cached locations. That trace does not establish whether a Dataset was built, uploaded or attached elsewhere. It does establish that requiring the separate face pack prevented the studio opening.
+
+v5 prepares only missing face models before GPU initialization, using the same verified CPU builder already in the project. It reuses attached/cached files, stores real pack files in working output, and tries private Dataset submission through the existing authentication. Upload failure is reported and does not block this session once model preparation passes. Missing core-generation packs remain strict. Set AUTO_PREPARE_FACE_PACK=False for the old strict behavior.
+
+Nine local repair tests use small synthetic face-model files and a real local HTTP server: the exact missing-pair scenario, one-file reuse, attached-file reuse, no face downloads when face swap is disabled, strict missing-core behavior, disabled auto-preparation, repeated local-pack reuse, nonblocking Dataset failure and generated notebook embedding. Seven existing pack tests also pass. No face-inference or workflow code changed. Live Kaggle/public-host download/upload remain unverified for this repair.
+
 # Face Swap — Image Studio v4
 
 A dedicated photo face-swap workflow is now available in the normal ComfyUI workflow menu. It uses InsightFace buffalo_l detection/recognition and InSwapper 128, with separate visible source detection, target detection, swap and PNG-save stages. It does not use a prompt to approximate someone's identity.
 
 1. Open **Image_Studio_Model_Packs.ipynb** on Kaggle. It now starts with `PACK = 'faceswap'` and `AUTO_CREATE_DATASET = True`, using your existing Kaggle authentication. Run it on **Accelerator: None**, Internet enabled. It downloads and verifies about **843 MB** of face models, then submits a new private Dataset and prints its link. Actual API submission remains unverified from this development environment.
-2. Attach the face Dataset to **Image_Studio_Kaggle_v4.ipynb**, alongside your existing standard pack. Your existing 11.1 GB standard pack is unchanged; do not rebuild it just to add face swap. Saved notebook outputs also work if you prefer that route or Dataset submission fails.
+2. Attach the face Dataset to **Image_Studio_Kaggle_v5.ipynb**, alongside your existing standard pack. Your existing 11.1 GB standard pack is unchanged; do not rebuild it just to add face swap. Saved notebook outputs also work if you prefer that route or Dataset submission fails.
 3. Run the v4 startup cell. Open the studio link and select **Image Studio - Face Swap**.
 4. Upload the identity photo under **SOURCE** and the picture to change under **TARGET**. Leave both indices at 0 for a one-face photo; face indices start at 0, ordered from left to right in each image.
 5. Press **Run**. The result is saved as PNG under `image-studio/images/ImageStudio/FaceSwap`. The target's canvas size is preserved. For enlargement, open an existing upscaling workflow and upload the swapped PNG.

@@ -108,6 +108,9 @@ workflows['Create FLUX3']=dict(last_node_id=30,last_link_id=91,nodes=fnodes,link
 source=(ROOT/'launcher.py').read_text().replace('WORKFLOW_PAYLOAD = {}','WORKFLOW_PAYLOAD = '+repr(workflows))
 source=source.replace('FACE_NODE_SOURCE = None','FACE_NODE_SOURCE = '+repr((ROOT/'face_nodes.py').read_text()))
 source=source.replace('ASSET_CATALOG_SOURCE = None',(ROOT/'assets.py').read_text())
+pack_support=(ROOT/'asset_builder.py').read_text().replace('ASSET_CATALOG_SOURCE = None',(ROOT/'assets.py').read_text())
+source=source.replace('PACK_BUILDER_SOURCE = None','PACK_BUILDER_SOURCE = '+repr(pack_support))
+source=source.replace('STARTUP_MODELS_SOURCE = None',(ROOT/'startup_models.py').read_text())
 nb={'nbformat':4,'nbformat_minor':5,'metadata':{'kernelspec':{'display_name':'Python 3','language':'python','name':'python3'},'language_info':{'name':'python','version':'3.11'},'accelerator':'GPU'},'cells':[{'cell_type':'markdown','id':'image-studio-guide','metadata':{},'source':(ROOT/'intro.md').read_text().splitlines(True)},{'cell_type':'code','id':'image-studio-start','metadata':{},'execution_count':None,'outputs':[],'source':source.splitlines(True)}]}
-(args.output or ROOT/'Image_Studio_Kaggle_v4.ipynb').write_text(json.dumps(nb,indent=1))
+(args.output or ROOT/'Image_Studio_Kaggle_v5.ipynb').write_text(json.dumps(nb,indent=1))
 print('Built notebook',len(source),'characters')
