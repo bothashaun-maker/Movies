@@ -1,0 +1,1 @@
+episode_id,shot_id,take_id,date,notebook,workflow,model_revision_or_manifest,reference_file,prompt_file,workflow_json,seed,width,height,requested_seconds,accepted_seconds,generation_minutes,result_path,accepted_or_rejected,reason,diagnostic_path

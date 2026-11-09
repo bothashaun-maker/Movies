@@ -1,0 +1,1 @@
+episode_id,shot_id,source_file,source_sha256,workflow,scale,max_target_edge,chunk_frames,context_frames,job_folder,elapsed_minutes,final_file,audio_sync_checked,face_and_seams_checked,accepted,backup_location
