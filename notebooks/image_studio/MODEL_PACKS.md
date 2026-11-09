@@ -1,3 +1,7 @@
+# JJP v6 compatibility
+
+Image Studio v6 adds the JJP creative production nodes and playbook with no new model weights. Reuse existing standard, face and optional FLUX3 packs. The v5 missing-face preparation fix and automatic private Dataset attempt are retained. See JJP_PLAYBOOK.md for approved-cast/output persistence; model packs do not back up your reference photos.
+
 # v5 missing-face-pack repair
 
 The renderer can now prepare the small face pack automatically if it is missing. Keep the existing standard pack attached and run v5 with Internet enabled. It verifies the face models, attempts private Dataset submission using existing authentication, and prints the link if submitted. If Dataset upload fails, verified face models remain usable for that session; retain the working outputs or retry saving them. Nothing is redownloaded when a valid attached/cached face pack is found.

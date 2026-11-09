@@ -10,6 +10,8 @@ AUTO_SAVE_PREPARED_FACE_PACK = True
 PACK_BUILDER_SOURCE = None
 STARTUP_MODELS_SOURCE = None
 FACE_NODE_SOURCE = None
+JJP_NODE_SOURCE = None
+JJP_PRESETS_SOURCE = None
 # Optional gated model: accept its terms on Hugging Face and add Kaggle Secret HF_TOKEN.
 ENABLE_FLUX3 = False
 REQUIRE_ATTACHED_MODELS = True
@@ -32,7 +34,7 @@ children=[]
 import socket
 probe=socket.socket()
 try: probe.bind(('127.0.0.1',8188))
-except OSError: raise RuntimeError('Port 8188 is occupied. Stop the earlier studio cell before starting v5.')
+except OSError: raise RuntimeError('Port 8188 is occupied. Stop the earlier studio cell before starting v6.')
 finally: probe.close()
 
 def run(args,**kw):subprocess.run(list(map(str,args)),check=True,**kw)
@@ -97,6 +99,9 @@ try:
    face_marker.write_text(fingerprint)
   custom=comfy/'custom_nodes/image_studio_faces';custom.mkdir(parents=True,exist_ok=True)
   (custom/'__init__.py').write_text(FACE_NODE_SOURCE)
+ custom_jjp=comfy/'custom_nodes/jjp_image_production';custom_jjp.mkdir(parents=True,exist_ok=True)
+ (custom_jjp/'__init__.py').write_text(JJP_NODE_SOURCE)
+ (custom_jjp/'jjp_presets.json').write_text(JJP_PRESETS_SOURCE)
  run([sys.executable,'-m','pip','--python',python,'freeze'],stdout=open(OUT/'packages.txt','w'))
  ultimate=comfy/'custom_nodes/ComfyUI_UltimateSDUpscale'
  if LOAD_SDXL:
@@ -149,7 +154,11 @@ try:
      tmp.replace(target)
    if not all((folder/name).is_file() for name in allowed):raise RuntimeError('Incomplete buffalo_l model archive.')
  # Only install workflows for enabled model families.
- WORKFLOW_PAYLOAD={k:v for k,v in WORKFLOW_PAYLOAD.items() if (LOAD_SDXL or k in ['Upscale 2x','Upscale 4x','Restore SeedVR2','Create FLUX3','Face Swap']) and (ENABLE_FACESWAP or k!='Face Swap') and (ENABLE_FLUX3 or k!='Create FLUX3') and (ENABLE_SEEDVR2 or k!='Restore SeedVR2')}
+ def workflow_enabled(wf):
+  types={n['type'] for n in wf['nodes']}
+  return (LOAD_SDXL or 'CheckpointLoaderSimple' not in types) and (ENABLE_FACESWAP or 'StudioFaceSwap' not in types) and (ENABLE_FLUX3 or 'TextGenerate' not in types) and (ENABLE_SEEDVR2 or 'SeedVR2Conditioning' not in types)
+ WORKFLOW_PAYLOAD={k:v for k,v in WORKFLOW_PAYLOAD.items() if workflow_enabled(v)}
+
  workflow_dir=comfy/'user/default/workflows';workflow_dir.mkdir(parents=True,exist_ok=True)
  for name,wf in WORKFLOW_PAYLOAD.items():(workflow_dir/f'Image Studio - {name}.json').write_text(json.dumps(wf,indent=2))
  # Stable output destination: PNGs retain the actual graph, prompt, seed and settings.

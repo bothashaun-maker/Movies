@@ -50,7 +50,7 @@ class Tests(unittest.TestCase):
  def test_faces_disabled_need_no_face_files(self):
   self.run_preflight(assets=[self.core]);self.assertEqual(self.downloads,[])
  def test_generated_notebook_embeds_helper_and_builder(self):
-  n=json.loads((R/'Image_Studio_Kaggle_v5.ipynb').read_text());code=''.join(n['cells'][1]['source']);compile(code,'v5','exec')
+  n=json.loads((R/'Image_Studio_Kaggle_v6.ipynb').read_text());code=''.join(n['cells'][1]['source']);compile(code,'v5','exec')
   self.assertIn('def prepare_startup_models(',code);self.assertIn('AUTO_PREPARE_FACE_PACK = True',code)
   self.assertNotIn('PACK_BUILDER_SOURCE = None',code);self.assertNotIn('STARTUP_MODELS_SOURCE = None',code)
 if __name__=='__main__':unittest.main()

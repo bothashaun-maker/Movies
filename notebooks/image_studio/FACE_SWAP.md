@@ -1,3 +1,7 @@
+# JJP v6 cast workflows
+
+The original manual photo-swap graph is retained. v6 adds approved-reference library loading, a two-character duet graph, and JJP artwork/provenance export. See JJP_PLAYBOOK.md for the full image-production system. Existing face-weight restrictions and CPU integration apply; no new face models or commercial authorization are implied.
+
 # v5 startup repair
 
 The reported v4 exception listed `inswapper_128.onnx` and `buffalo_l.zip` because no exact-size face-model files were found in the scanned attached/cached locations. That trace does not establish whether a Dataset was built, uploaded or attached elsewhere. It does establish that requiring the separate face pack prevented the studio opening.

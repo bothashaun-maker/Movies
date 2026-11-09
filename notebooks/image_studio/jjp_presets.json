@@ -1,0 +1,19 @@
+{
+  "brand": "JesusJuiceProductions",
+  "source": "User-supplied JJP Launch System, Edition I; image-production adaptation",
+  "style": "cinematic live-action realism, grounded physical materials, thoughtful film lighting, dignified performances, no rendered lettering",
+  "negative": "anime, cartoon, manga, illustration, plastic skin, watermark, illegible text, human-faced villain, shame-based imagery, exploitative grief imagery",
+  "episodes": {
+    "Custom": {"wing":"Custom","world":"","palette":"neutral cinematic tones","cast":"None","reference":""},
+    "Verdict of the Lamb": {"wing":"Gothic Gospel","world":"A cosmic courtroom, thunder beyond monumental arches, broken chains, a faceless shadow accuser made of smoke; the human leads stand in mercy and resolve.","palette":"crimson light against charcoal black, restrained ivory highlights","cast":"Duet","reference":"John 19:30"},
+    "Anastasis": {"wing":"Gothic Gospel","world":"The courtroom world opens into an empty-tomb garden at dawn, darkness transforming into resurrection light; no accuser present.","palette":"crimson transitioning to sunrise gold and living green","cast":"Duet","reference":""},
+    "God-Breathed": {"wing":"Doom / War","world":"A twilight battlefield with broken swords, illuminated scripture scrolls and chains opening into light; a lone warrior-scribe faces non-human darkness.","palette":"charcoal, deep crimson, warm scroll light","cast":"Lead One","reference":"2 Timothy 3:16"},
+    "Every Thought Captive": {"wing":"Electronic / Mind","world":"A symbolic war room inside a mind, neural grids and faceless glitch-static entities giving way to a quiet river of light.","palette":"dark indigo, cyan grid light, white peace","cast":"Duet","reference":""},
+    "Present Your Body": {"wing":"Reggae / Garden","world":"A sunset hillside becomes a starlit garden; opened shackles and new growth communicate renewal without spectacle.","palette":"golden hour amber, living green, warm night blue","cast":"Duet","reference":"Romans 12:1"},
+    "Jesus, Thank You For Loving Me": {"wing":"Ballad / Sunrise","world":"An intimate empty-tomb garden at sunrise; one grateful worshipper, soft light, no armies or towers.","palette":"soft sunrise gold, warm ivory, muted garden green","cast":"Lead One","reference":"John 20:16"},
+    "Mirror of Glory": {"wing":"Mystic / Desert","world":"A lone mirror in a golden desert reflects a transformed world of light; the seeker is faceless and cloaked.","palette":"sandstone gold, desert blue, luminous ivory","cast":"Duet","reference":"James 1:23-25; 2 Corinthians 3:18"},
+    "Love Your Enemies": {"wing":"Chamber / Hillside","world":"A Galilean hillside in a sun-shower, rain and light falling across the whole scene; the second lead carries the moment and the first is a distant silent listener.","palette":"rain silver, fresh green, gentle gold","cast":"Lead Two","reference":"Matthew 5:45"}
+  },
+  "formats": {"Episode key art":[1216,832],"Square cover":[1024,1024],"YouTube thumbnail":[1216,832],"Vertical still":[832,1216],"Cast reference":[832,1216]},
+  "cast_rule": "Only approved human leads represent the recurring cast; evil entities remain non-human and faceless. The seeker is faceless and cloaked."
+}

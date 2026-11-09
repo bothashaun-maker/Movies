@@ -1,80 +1,41 @@
-# Image Studio v5 — missing face-pack startup fixed
+# JesusJuiceProductions — Image Studio v6
 
-Keep your existing standard/FLUX3 inputs attached, enable **Internet + T4**, then run the single startup cell. You do not need to manually prepare the separate face pack first.
+The supplied **JJP Launch System** is now available as an image-production layer across creation, restyling, inpainting, detail, face swap and every upscaling mode. Original general workflows remain available.
 
-With `AUTO_PREPARE_FACE_PACK = True`, startup automatically downloads and verifies only missing face models (up to **843 MB**) before initializing a GPU. Attached or cached face models are reused. Your existing generation packs are not downloaded again.
+## Start
 
-Startup also tries to submit the verified face pack as a private Dataset using your existing Kaggle authentication. If submission succeeds, it prints the Dataset link; attach that Dataset in future sessions to skip the face downloads. If upload fails, startup reports that separately and continues with the verified local files. Those files remain under `/kaggle/working/image-studio-model-packs/faceswap`; save outputs or retry the builder to preserve them.
+Attach your existing standard model pack, enable **Internet + T4 GPU**, and run the single cell. Optional FLUX3 still needs its existing model pack and `ENABLE_FLUX3=True`. No new generator weights are required by the JJP tools. The v5 fix remains: missing face models are prepared on CPU and private Dataset submission is attempted using existing authentication. Valid attached/cached models are reused. Software setup and the studio tunnel still need Internet.
 
-For a strict attached-packs-only setup, set `AUTO_PREPARE_FACE_PACK = False`. Missing standard/FLUX3 packs still stop with an explicit error when `REQUIRE_ATTACHED_MODELS = True`. Set `ENABLE_FACESWAP = False` only if you want to omit face swapping entirely.
+Open the printed studio URL, then select a workflow and press **Run**. Startup never renders automatically. Stop an earlier studio cell before starting this one; v6 reuses the compatible existing runtime. GitHub updates do not change an already imported Kaggle copy—import this v6 notebook.
 
-No image starts automatically. Open the studio, choose a workflow, then press Run. Face swap, generation and upscaling nodes/settings are unchanged from v4. Local startup-repair checks passed; live Kaggle startup and Dataset submission remain unverified here.
+## The JJP menus
 
----
+- **JJP Episode 01–08:** editable connected creation graphs for the eight worlds in your PDF, from Verdict of the Lamb through Love Your Enemies.
+- **JJP - Create / Restyle / Inpaint / Detail:** cinematic realism, world/palette, cast prefix and shot-purpose controls, with source-art dimensions connected to generation where applicable.
+- **JJP - Upscale 2x / 4x / Creative / Restore SeedVR2:** existing enhancement engines with the same shared brief and artwork export. The brief does not secretly change a RealESRGAN model or guarantee identity preservation.
+- **JJP - Face Swap:** manual source and target photo inputs. **Face Swap from Cast** loads an approved identity. **Duet Face Swap from Cast** applies Lead One and Lead Two in two visible swap stages; choose target indices carefully (0 = leftmost).
+- **JJP - Approve Cast:** upload and inspect a reference, set its role and reusable prompt prefix, set `approved=true`, then Run. The library starts empty. Save private outputs and reattach them in future sessions; refresh node options after adding references.
 
-# Face Swap workflow
+Your references stay in the private runtime/output library, not this public GitHub repository. The toolkit does not invent your cast's appearance or automatically approve a generated likeness. Text prompts are not multi-image identity conditioning. Use approved references, review the final faces, and reject drift.
 
-Existing attached standard and face packs are reused. The standalone face builder remains an optional way to prepare a face pack in advance. The Model Packs builder now starts with `PACK = 'faceswap'` (about **843 MB**) and `AUTO_CREATE_DATASET = True`, using your already configured Kaggle authentication to submit a private Dataset. No standard-pack rebuild is required. Saved notebook outputs remain supported.
+## Artwork and records
 
-Open **Image Studio - Face Swap**, upload **SOURCE** (identity) and **TARGET** (photo to change), choose source/target indices (0 = leftmost face), then press Run. It saves a PNG at the target photo's original dimensions. This photo-only pipeline runs on CPU, leaving T4 memory for generation. Use the existing upscaling workflows separately if desired. No face restoration is applied automatically.
+The shared **JJP Episode / Shot Brief** has episode, format, scene, cast, character prefix, title and exact scripture-reference fields. A preset reference can be disabled or replaced. Missing references stay empty; no quotation or translation is generated.
 
-InsightFace model weights are restricted to **non-commercial research**. Only use photos you own or have permission to use. InSwapper's 128px internal crop limits face detail; likeness is not guaranteed. Missing faces and invalid indices cause explicit errors.
+The **JJP Artwork + Episode Export** node preserves an untouched `master.png` and writes `delivery.png` plus `episode.json` under `image-studio/images/JJP/episodes`. Titles and references are drawn after generation with consistent typography. Choose original dimensions, square, 16:9 or 9:16; aspect conversion pads rather than cropping the source. Delivery resizing is Lanczos interpolation, not a learned upscale. Run the existing upscaler first when you need learned detail. Disable lettering for clean reference artwork; face-swap delivery defaults to lettering off.
 
-The source includes separate detection and swap nodes; it is fully embedded in this notebook. Set `ENABLE_FACESWAP = False` if running without the face pack. All v3 generation/upscaling workflows and their existing model packs remain available.
+Keep your model packs, approved cast and finished images distinct. Model Datasets do not back up photos or generated outputs. Save private outputs before discarding Kaggle. Files are not posted to any social platform automatically. The full companion guide is `notebooks/image_studio/JJP_PLAYBOOK.md` on GitHub.
 
----
+## Existing controls and limits
 
-# Reusable model packs — v4 startup
+SDXL/Juggernaut starts around one megapixel, 30 steps, DPM++ 2M Karras, CFG 5.5. Restyle starts at denoise 0.6; inpaint uses SDXL latent-noise masking, not a dedicated inpaint checkpoint. Detail uses a 1.5x latent pass with denoise 0.3. These are editable starting settings, not universal quality claims.
 
-Use the same approach as your uploaded **H3_Model_Packs Data Sets.ipynb**:
+RealESRGAN x4plus supplies 2x/4x enlargement (2x uses 4x then Lanczos downsampling). Ultimate SD Upscale starts at 2x, 768px tiles, 20 steps, denoise 0.20. SeedVR2 3B INT8 starts at 2x with tiled VAE and one sample step; VAE tiling alone does not guarantee large targets fit transformer VRAM. Start with a source around 1024px or smaller. These engines can alter detail and likeness.
 
-1. Run **Image_Studio_Model_Packs.ipynb** once with **Internet ON** and **Accelerator: None**, leaving `PACK = 'standard'`.
-2. Wait for **PACK COMPLETE**, then **Save Version with output files** and keep it private.
-3. Here, choose **Add Input → Your Work / Notebook Output Files** and attach that saved version. Enable **Internet + T4 GPU**, then run the studio cell.
+Face swap runs on CPU through InsightFace/InSwapper; its internal aligned face crop is 128px. These pretrained face weights are **non-commercial research only**. The PDF's release plan does not change model licensing. Use photos you own or have permission to use. No commercial face model replacement is implied.
 
-For the saved-output route, disable AUTO_CREATE_DATASET in the builder; that route requires no named Dataset API call. `REQUIRE_ATTACHED_MODELS = True` stops startup if weights are missing. Attached files are checksum-verified and read directly without another full model copy. Software setup and the studio tunnel still use Internet.
+FLUX3 remains optional, with its required prompt upsampler, INT8 generator/text encoder and W4A8 enhancer. It requires accepted model terms/HF_TOKEN when building its pack, not when all weights are already attached. Its T4 performance remains unverified here. Separate T4s are not pooled VRAM.
 
-For FLUX3, build a separate **flux3** pack with accepted Hugging Face terms and Kaggle Secret HF_TOKEN, attach its saved output alongside the standard pack, and enable `ENABLE_FLUX3`. The renderer needs no Hugging Face token once the complete weights are attached.
+The source PDF, private reference photos and personal biographies are not included in the public repository. Review likeness/dignity, antagonist design, spelling, scripture accuracy, model rights and relevant synthetic-content disclosure before a release. These are production aids, not automatic approval or guaranteed theological/visual accuracy.
 
-The generation/upscaling workflows are unchanged from v2. Earlier notebooks remain available.
-
----
-
-# Image Studio — Kaggle v3
-
-Single-cell ComfyUI image studio, built for Shaun's Kaggle T4 workflow.
-
-1. Enable **Internet** and a **T4 GPU** in Kaggle settings.
-2. Run the cell below once; open its **OPEN IMAGE STUDIO** URL.
-3. In ComfyUI's workflow menu, open **Image Studio - Create**, **Restyle**, **Inpaint**, or **Detail**, or an upscaling workflow. Change the prompt and press **Run**. No image starts automatically.
-4. Images and logs are in `/kaggle/working/image-studio`. **Save Version with outputs** before ending your session. PNG metadata retains the generation graph and seed; drag a PNG into ComfyUI to restore it.
-
-**Create:** 1024×1024, 30 steps, DPM++ 2M Karras, CFG 5.5. Try 832×1216 portrait or 1216×832 landscape, batch 1. These are starting settings, not a universal optimum.
-
-**Restyle:** upload a source with dimensions around 1 megapixel; denoise 0.6 balances source structure and change. Lower preserves more structure. **Inpaint:** upload, right-click the image node → Open in MaskEditor, paint the area to change, save the mask and run. Uses SDXL latent-noise masking, not a dedicated inpainting checkpoint; seams and identity changes remain possible.
-
-**Detail:** 1024px generation followed by 1.5× latent enlargement and a 0.3-denoise detail pass. This is generative detail, not faithful super-resolution; it can change faces/text. It is slower and uses more VRAM. If memory fails, use Create or reduce the selected resolution explicitly. No automatic quality reductions occur.
-
-**Model:** [Juggernaut XL v9](https://huggingface.co/RunDiffusion/Juggernaut-XL-v9), about 7.1 GB, verified with the model file's published SHA256. Read its model card and underlying SDXL license before commercial use. This is a practical SDXL quality option for T4, not a claim to be the best model for every image. One T4 runs the graph; a second T4 is not pooled VRAM. No paid image API is used.
-
-The checkpoint is reused during the session. Use the CPU model pack builder to save it once; attached inputs are discovered and checksum-verified. Model weights/runtime live in `/kaggle/temp`, not in saved image outputs. Dependencies require Internet even with an attached checkpoint. ComfyUI and cloudflared are pinned; Kaggle's Torch stack is preserved with constraints. Future Kaggle image changes may need a compatibility update.
-
-**Validation limit:** see the research and validation report linked beside the notebook for completed local checks. Kaggle GPU generation, output quality, T4 speed, and public tunnel reliability remain unverified. If setup fails, retain `comfy.log` and `tunnel.log`. Keep the startup cell running; stopping it stops its own server and tunnel. Quick Tunnel URLs grant access to anyone holding the URL.
-
-## Upscaling added in v2
-
-**Upscale 2x / Upscale 4x:** upload an existing image in the Load Image node and press Run. Uses the official RealESRGAN x4plus checkpoint and ComfyUI's tiled model upscaling. The 2x option runs the 4x model and downsamples with Lanczos. This can still change small details; inspect faces and text. A 1024×1024 input becomes 2048×2048 or 4096×4096 respectively.
-
-**Upscale Creative:** upload an image, replace the positive prompt with a description of that image, then Run. Uses Ultimate SD Upscale with 768px tiles, batch 1, 20 steps and denoise 0.20; starts at 2x. It reuses your SDXL checkpoint. Expect more compute and possible invented texture, face changes and seams. It is a connected graph with the upstream Ultimate SD Upscale node; the pipeline is not hidden inside a new wrapper.
-
-**Restore SeedVR2:** native ComfyUI SeedVR2 3B INT8 workflow with FP16 compute, tiled VAE encoding/decoding, one sampling step and a 2x starting size. This is generative restoration and can change detail. The diffusion transformer is not spatially tiled: VAE tiling alone does not guarantee a large target fits in VRAM. Start with a source at 1024px or below. Increase the multiplier only after a successful run. No automatic render or hidden resolution reduction.
-
-The standard model pack contains about 11.1 GB of model files. Set `LOAD_SDXL = False` to skip the 7.1 GB SDXL download and show only the enlargement/restoration workflows; set `ENABLE_SEEDVR2 = False` to skip its approximately 4.0 GB. RealESRGAN adds about 67 MB. First setup needs additional dependency space. Attached Kaggle inputs with matching filenames and SHA256 values are reused. An existing v1 checkpoint is also reused within the same session.
-
-Stop the older studio cell before starting v2. The new notebook has a separate runtime, current pinned ComfyUI, and model-specific workflows. Earlier v1 remains available. Keep your original images; upscaling cannot recover unknowable ground truth.
-
-## Optional FLUX 3 Klein generation
-
-Set `ENABLE_FLUX3 = True` only if you want this model. Accept the [FLUX 3 Klein Comfy model terms](https://huggingface.co/black-forest-labs/flux-3-image-klein-comfy), create a Hugging Face read token with access to that model, and store it in Kaggle **Secrets → HF_TOKEN**, enabled for this notebook. Never paste a token into a prompt or notebook code. You can set `LOAD_SDXL = False` to avoid downloading the older generator too.
-
-The **Create FLUX3** graph expands ComfyUI's official template into visible ordinary nodes. It retains the required Qwen3.5 prompt upsampler, shows the enhanced prompt, uses the INT8 distilled generator/text encoder, a W4A8 prompt enhancer and tiled VAE decode. Starts at 1024×1024, 16 steps, Euler/simple, CFG 1. The extra models total about 17.75 GB. This profile is experimental here: graph loading is checked, but gated model download, T4 inference, speed and visual quality are unverified. An 8 GB RTX 3070 claim from upstream does not establish T4 performance. T4 uses FP16 compute and compatible INT8/dequantization paths; no FP8/NVFP4 hardware acceleration is assumed. The weights use the FLUX Kommunity License, distinct from the code's Apache-2.0 license.
+Local tests cover presets, cast approval/checksums, exact reference strings, unchanged master pixels, metadata, export geometry and ComfyUI/browser wiring. Full Kaggle/T4 generation, real Dataset upload and user-photo likeness remain unverified. Keep the startup cell running while using the studio; stopping it closes its own server and tunnel. Anyone holding a live Quick Tunnel URL can access that session.
