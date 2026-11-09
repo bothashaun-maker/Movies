@@ -1,3 +1,5 @@
+> **Superseded for commercial image production.** Read [the v7 source review](../image_studio_commercial/RESEARCH.md) and [complete license audit](../image_studio_commercial/LICENSE_AUDIT.md). This historical page selected models before the commercial-use correction.
+
 # Image Studio v2 — research, decisions and validation
 
 Researched 7 November 2026 for Kaggle NVIDIA T4. This is a targeted source review, not an exhaustive scrape of GitHub and not a visual benchmark. No repository's stars, tutorial title or creator benchmark is treated as proof of best quality on a T4.

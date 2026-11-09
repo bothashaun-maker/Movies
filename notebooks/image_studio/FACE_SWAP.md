@@ -1,3 +1,5 @@
+> **Historical v1–v6 guidance. For commercial music-video images use [Commercial v7](../../Image_Studio_Commercial_v7.ipynb), the [revised playbook](../image_studio_commercial/JJP_PLAYBOOK.md) and [license audit](../image_studio_commercial/LICENSE_AUDIT.md). The earlier InsightFace pretrained face stack is research-only.**
+
 # JJP v6 cast workflows
 
 The original manual photo-swap graph is retained. v6 adds approved-reference library loading, a two-character duet graph, and JJP artwork/provenance export. See JJP_PLAYBOOK.md for the full image-production system. Existing face-weight restrictions and CPU integration apply; no new face models or commercial authorization are implied.

@@ -1,0 +1,185 @@
+{
+  "last_node_id": 3,
+  "last_link_id": 2,
+  "nodes": [
+    {
+      "id": 1,
+      "type": "LoadImage",
+      "pos": [
+        0,
+        0
+      ],
+      "size": [
+        330,
+        280
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            1
+          ]
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": []
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoadImage"
+      },
+      "widgets_values": [
+        "",
+        "image"
+      ],
+      "title": "LoadImage"
+    },
+    {
+      "id": 2,
+      "type": "JJPEpisodeBrief",
+      "pos": [
+        0,
+        330
+      ],
+      "size": [
+        330,
+        280
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "positive",
+          "type": "STRING",
+          "links": []
+        },
+        {
+          "name": "negative",
+          "type": "STRING",
+          "links": []
+        },
+        {
+          "name": "width",
+          "type": "INT",
+          "links": []
+        },
+        {
+          "name": "height",
+          "type": "INT",
+          "links": []
+        },
+        {
+          "name": "brief",
+          "type": "STRING",
+          "links": [
+            2
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "JJPEpisodeBrief"
+      },
+      "widgets_values": [
+        "Custom",
+        "Square cover",
+        "",
+        "None",
+        "",
+        "",
+        "",
+        true,
+        "",
+        "",
+        ""
+      ],
+      "title": "JJPEpisodeBrief"
+    },
+    {
+      "id": 3,
+      "type": "JJPArtworkExport",
+      "pos": [
+        0,
+        660
+      ],
+      "size": [
+        330,
+        280
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 1
+        },
+        {
+          "name": "brief",
+          "type": "STRING",
+          "link": 2
+        }
+      ],
+      "outputs": [
+        {
+          "name": "delivery",
+          "type": "IMAGE",
+          "links": []
+        },
+        {
+          "name": "saved_files",
+          "type": "STRING",
+          "links": []
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "JJPArtworkExport"
+      },
+      "widgets_values": [
+        "From brief",
+        true,
+        2048
+      ],
+      "title": "JJPArtworkExport"
+    }
+  ],
+  "links": [
+    [
+      1,
+      1,
+      0,
+      3,
+      0,
+      "IMAGE"
+    ],
+    [
+      2,
+      2,
+      4,
+      3,
+      1,
+      "STRING"
+    ]
+  ],
+  "groups": [],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 0.5,
+      "offset": [
+        150,
+        150
+      ]
+    },
+    "model_profile": "commercial-v7"
+  },
+  "version": 0.4
+}

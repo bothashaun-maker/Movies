@@ -1,0 +1,34 @@
+MediaPipe model license evidence, reviewed 2026-11-09. Bundle SHA256: 64184e229b263107bc2b804c6625db1341ff2bb731874b0bcc2fe6544e0bc9ff
+
+https://storage.googleapis.com/mediapipe-assets/Model%20Card%20MediaPipe%20Face%20Mesh%20V2.pdf
+Geng Yan, Google
+Ivan Grishchenko, Google
+MODEL DATE
+September 15, 2022
+LICENSED UNDER
+Apache License, Version 2.0
+
+_
+Based on Model Cards for Model Repo ing, In Proceedings of FAT* Conference (FAT*2019). ACM, New York, NY, USA
+
+https://storage.googleapis.com/mediapipe-assets/MediaPipe%20BlazeFace%20Model%20Card%20(Short%20Range).pdf
+
+DOCUMENTATION
+Paper: https://arxiv.org/abs/2006.10204
+
+LICENSED UNDER
+Apache License, Version 2.0
+
+Based on Model Cards for Model Reporting, In Proceedings of FAT* Conference (FAT*2019). ACM, New York, NY, USA
+
+
+https://storage.googleapis.com/mediapipe-assets/Model%20Card%20Blendshape%20V2.pdf
+Appendix.
+
+front-facing camera
+
+LICENSED UNDER
+Apache License, Version 2.0
+Le : Input frame with predicted facial landmarks.
+Right: 3D avatar controlled with predicted blendshape
+coe cients

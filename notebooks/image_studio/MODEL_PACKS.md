@@ -1,3 +1,5 @@
+> **Historical v1–v6 guidance. For commercial music-video images use [Commercial v7](../../Image_Studio_Commercial_v7.ipynb), the [revised playbook](../image_studio_commercial/JJP_PLAYBOOK.md) and [license audit](../image_studio_commercial/LICENSE_AUDIT.md). The earlier InsightFace pretrained face stack is research-only.**
+
 # JJP v6 compatibility
 
 Image Studio v6 adds the JJP creative production nodes and playbook with no new model weights. Reuse existing standard, face and optional FLUX3 packs. The v5 missing-face preparation fix and automatic private Dataset attempt are retained. See JJP_PLAYBOOK.md for approved-cast/output persistence; model packs do not back up your reference photos.

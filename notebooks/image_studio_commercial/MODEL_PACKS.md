@@ -1,0 +1,11 @@
+# Commercial model packs
+
+This CPU notebook downloads and verifies the pinned catalog, saves real model files, includes original license notices and submits a **private** Kaggle Dataset with your existing credentials. Run separately for `PACK='create_edit'` (~16.13 GB) and `PACK='finish'` (~4.40 GB). Splitting keeps each run's saved weights below 20 GB; actual Kaggle limits and free disk are checked by the downloader. Do not keep both pack directories in a single CPU notebook's saved output if your output quota is insufficient: use separate copies/versions for the packs.
+
+`AUTO_CREATE_DATASET=True` by default. It uses configured Kaggle credentials or the private `KAGGLE_API_TOKEN` secret, with legacy `KAGGLE_USERNAME` + `KAGGLE_KEY` secrets also supported. Set `DATASET_OWNER` only if your credentials do not expose your username. Credentials are never printed or written to the pack. A successful submission receipt is not proof that Kaggle has finished processing: wait for the Dataset to become available, then attach it under Add Input → Your Datasets. On upload failure, model files remain in notebook outputs and can be attached that way. This environment has no Kaggle credentials, so actual upload has not been performed or verified here.
+
+Second run: attached saved datasets/notebook outputs with matching filenames, sizes and SHA256 are reused. The CPU builder copies verified inputs into durable output; the GPU studio symlinks them. Model downloads are skipped. Existing Real-ESRGAN and SeedVR2 weights from older packs can be reused after full verification. Package setup and the small tunnel binary may still need Internet in a fresh Kaggle session. Saving a dataset alone does not attach it to a notebook automatically.
+
+No existing Dataset is deleted, overwritten or made public. A manifest fingerprint gives each commercial pack a separate Dataset name. Never attach the old faceswap pack as a replacement for this profile. Preserve clean photos and private approved-cast output separately; model packs contain no personal photos.
+
+Sources, revisions, sizes, SHA256 and SPDX identifiers are in catalog.json and the embedded notebook. Full Apache/BSD notices and MediaPipe model-license evidence are carried into packs. Dataset metadata uses `other` to preserve the original component licenses, without relicensing them.

@@ -1,3 +1,5 @@
+> **Historical v1–v6 guidance. For commercial music-video images use [Commercial v7](../../Image_Studio_Commercial_v7.ipynb), the [revised playbook](../image_studio_commercial/JJP_PLAYBOOK.md) and [license audit](../image_studio_commercial/LICENSE_AUDIT.md). The earlier InsightFace pretrained face stack is research-only.**
+
 # JesusJuiceProductions — Image Production System
 
 Adapted from the user's **JJP Launch System, Edition I**, supplied 9 November 2026. This is the image-production companion to that creative plan. It is not a new music-distribution plan, a promise of audience growth, or a claim that model rights have been cleared. The original PDF and private cast photographs are not included in this public repository.
