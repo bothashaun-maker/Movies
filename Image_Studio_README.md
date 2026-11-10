@@ -1,3 +1,5 @@
+**[Open Commercial v8 — automatic finish-pack preparation](Image_Studio_Commercial_v8.ipynb)**. Attach your saved create_edit Dataset; missing finishing models are prepared and verified automatically, using the working v3 private-Dataset creation method. Save outputs if publication is not confirmed.
+
 **[PDF: JJP Image Production Playbook](JJP_Image_Production_Playbook.pdf)** — designed to match The Launch System; updated for your Google Flow → ×4 stills → clips → movie-upscale workflow.
 
 # JesusJuiceProductions Image Studio — commercial v7

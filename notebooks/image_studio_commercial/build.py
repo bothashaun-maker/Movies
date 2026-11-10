@@ -6,12 +6,14 @@ R=Path(__file__).parent
 workflows=build();licenses={p.name:p.read_text() for p in (R/'licenses').iterdir() if p.is_file()}
 pack=(R/'asset_builder.py').read_text().replace('LICENSE_FILES = {}','LICENSE_FILES = '+repr(licenses))
 source=(R/'launcher.py').read_text().replace('LICENSE_FILES = {}','LICENSE_FILES = '+repr(licenses))
+source=source.replace('STARTUP_MODELS_SOURCE = None',(R/'startup_models.py').read_text())
 for token,value in [('PACK_BUILDER_SOURCE = None','PACK_BUILDER_SOURCE = '+repr(pack)),('FACE_NODE_SOURCE = None','FACE_NODE_SOURCE = '+repr((R/'face_nodes.py').read_text())),('JJP_NODE_SOURCE = None','JJP_NODE_SOURCE = '+repr((R/'jjp_nodes.py').read_text())),('JJP_PRESETS_SOURCE = None','JJP_PRESETS_SOURCE = '+repr((R/'jjp_presets.json').read_text())),('CATALOG = {}','CATALOG = '+repr(json.loads((R/'catalog.json').read_text()))),('WORKFLOW_PAYLOAD = {}','WORKFLOW_PAYLOAD = '+repr(workflows))]:source=source.replace(token,value)
 def notebook(filename,intro,code,gpu):
  compile(code,filename,'exec')
  nb={'nbformat':4,'nbformat_minor':5,'metadata':{'kernelspec':{'display_name':'Python 3','language':'python','name':'python3'},'language_info':{'name':'python','version':'3.11'},'accelerator':'GPU' if gpu else 'none'},'cells':[{'cell_type':'markdown','id':'guide','metadata':{},'source':intro.splitlines(True)},{'cell_type':'code','id':'start','metadata':{},'execution_count':None,'outputs':[],'source':code.splitlines(True)}]}
  (R/filename).write_text(json.dumps(nb,indent=1))
 notebook('Image_Studio_Commercial_v7.ipynb',(R/'README.md').read_text(),source,True)
+notebook('Image_Studio_Commercial_v8.ipynb',(R/'README.md').read_text(),source,True)
 notebook('Image_Studio_Commercial_Model_Packs.ipynb',(R/'MODEL_PACKS.md').read_text(),pack,False)
 notebook('Image_Studio_Commercial_Model_Packs_v2.ipynb',(R/'MODEL_PACKS.md').read_text(),pack,False)
 notebook('Image_Studio_Commercial_Model_Packs_v3.ipynb',(R/'MODEL_PACKS.md').read_text(),pack,False)

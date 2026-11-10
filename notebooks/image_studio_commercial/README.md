@@ -1,9 +1,15 @@
+# JJP Image Studio Commercial v8 — automatic finishing pack
+
+Attach your saved **create_edit** Dataset and run the single startup cell. Startup reuses verified saved finish models. If the finish pack is missing, it prepares it automatically (~4.40 GB for the full pack, less network transfer when matching upscalers are already attached), verifies every weight, and submits a private Dataset using the confirmed working Model Packs v3 direct-create method. Then setup continues to ComfyUI. Nothing generates automatically.
+
+Keep this session running. If Dataset publication is not confirmed, startup reports it honestly and continues with the locally verified models; **Save Version with outputs** before closing. Attach the saved finish Dataset/output in future sessions to avoid downloading those weights again. Software packages may still need Internet. Missing create_edit weights still stop startup before model downloads. The explicit two-pack CPU preparation route remains supported.
+
 # JJP Image Studio Commercial v7
 
-Use **Image_Studio_Commercial_v7.ipynb** for new music-video artwork. This replaces the v1–v6 image profile. Those historical notebooks include InsightFace research-only weights and must not be used as the commercial face workflow.
+Use **Image_Studio_Commercial_v8.ipynb** for new music-video artwork. This replaces the v1–v6 image profile. Those historical notebooks include InsightFace research-only weights and must not be used as the commercial face workflow.
 
-1. Import **Image_Studio_Commercial_Model_Packs.ipynb** into Kaggle. Use CPU + Internet. Run once with `PACK='create_edit'`, save outputs, then once with `PACK='finish'`. Existing Kaggle credentials are used to submit each as a private Dataset. Nothing is downloaded to your PC. See MODEL_PACKS.md.
-2. Import the v7 studio notebook into Kaggle. Attach both private datasets (or the saved pack notebook outputs), select a GPU, enable Internet and run its single code cell. It verifies every model before installation. Missing packs produce a clear error without starting model downloads. Set `ENABLE_CREATE_EDIT=False` for an upscaling/compositing-only session.
+1. Import **Image_Studio_Commercial_Model_Packs.ipynb** into Kaggle. Use CPU + Internet. Run with `PACK='create_edit'` and save outputs. Preparing `PACK='finish'` separately is optional in v8 because startup can prepare it automatically. Existing Kaggle credentials are used to submit each as a private Dataset. Nothing is downloaded to your PC. See MODEL_PACKS.md.
+2. Import the v7 studio notebook into Kaggle. Attach create_edit (and finish if already saved), as private datasets or saved pack notebook outputs, select a GPU, enable Internet and run its single code cell. It verifies every model before installation. Missing create_edit stops before downloads; missing finish is prepared automatically by default. Set `ENABLE_CREATE_EDIT=False` for an upscaling/compositing-only session.
 3. Open the printed Cloudflare URL. In the workflow menu choose **Image Studio - …**, upload references and press Run. Startup does not generate automatically. Keep the startup cell running. The URL gives access to this session; keep it private.
 4. Save Version with outputs before ending your session. Preserve approved cast, original photos, clean pre-swap targets, PNG metadata, provenance.json and licenses. GitHub updates do not update an already imported Kaggle notebook.
 

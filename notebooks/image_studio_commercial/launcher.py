@@ -6,6 +6,9 @@ ENABLE_SEEDVR2 = True
 ENABLE_MESH_SWAP = True
 ENABLE_BFS_HEADSWAP = True
 REQUIRE_ATTACHED_MODELS = True
+AUTO_PREPARE_FINISH_PACK = True
+AUTO_SAVE_FINISH_DATASET = True
+STARTUP_MODELS_SOURCE = None
 PACK_BUILDER_SOURCE = None
 FACE_NODE_SOURCE = None
 JJP_NODE_SOURCE = None
@@ -48,17 +51,13 @@ def spawn(args,log):
  f=open(log,'w');p=subprocess.Popen(list(map(str,args)),stdout=f,stderr=subprocess.STDOUT,start_new_session=True);f.close();children.append(p);return p
 # Only allowlisted weights can enter this fresh installation. Never reuse old plugins.
 assets=[a for a in CATALOG['assets'] if (a['pack']!='create_edit' or ENABLE_CREATE_EDIT) and (not a['name'].startswith('seedvr2') or ENABLE_SEEDVR2) and (not a['name'].endswith('.task') or ENABLE_MESH_SWAP) and (a['folder']!='loras' or (ENABLE_CREATE_EDIT and ENABLE_BFS_HEADSWAP))]
-resolved_models={};missing=[]
-for asset in assets:
- name=asset['name'];candidates=[]
- for root in [Path('/kaggle/input'),Path('/kaggle/working/image-studio-model-packs'),BASE/'ComfyUI/models']:
-  if root.exists():candidates.extend(root.rglob(name))
- valid=next((p for p in candidates if p.is_file() and p.stat().st_size==asset['bytes'] and sha(p)==asset['sha256']),None)
- if valid:resolved_models[name]=valid
- else:missing.append(name)
-if missing and REQUIRE_ATTACHED_MODELS:
- fcntl.flock(lock,fcntl.LOCK_UN);lock.close()
- raise RuntimeError('Run Commercial Model Packs on CPU for create_edit and finish; attach the saved private datasets or notebook outputs. Missing: '+', '.join(missing)+'. No model downloads started.')
+try:
+ resolved_models=prepare_models(assets,PACK_BUILDER_SOURCE,
+  [Path('/kaggle/input'),Path('/kaggle/working/image-studio-model-packs'),BASE/'ComfyUI/models',Path('/kaggle/temp/image-studio-v4/ComfyUI/models')],
+  Path('/kaggle/working/image-studio-model-packs'),require_attached=REQUIRE_ATTACHED_MODELS,
+  auto_finish=AUTO_PREPARE_FINISH_PACK,save_dataset=AUTO_SAVE_FINISH_DATASET)
+except BaseException:
+ fcntl.flock(lock,fcntl.LOCK_UN);lock.close();raise
 try:
  import torch
  if not torch.cuda.is_available():raise RuntimeError('Select a Kaggle GPU accelerator and restart this cell.')

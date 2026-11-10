@@ -24,3 +24,7 @@ The user's real create_edit run downloaded and uploaded all three model files be
 ## Direct Dataset creation repair — v3
 
 The user's v2 log failed at our added lookup: `403 Permission datasets.get was denied`, before `dataset_create_new` ran. Compared the earlier image pack API builder and the supplied H3 saved-output notebook directly. Restored the image builder's direct private `dataset_create_new` call, removing our own read/status/remote-manifest prerequisite. The SDK retains its own supported creation behaviour. The corrected slug, saved weights, private flag and actionable errors remain. Tests cover the exact denied-lookup regression, no false success for name conflicts, the actual creation endpoint rejecting a request, and SDK response objects. Full authenticated creation cannot be executed here without the user's Kaggle session.
+
+## Automatic finish-pack preparation
+
+The user attached create_edit successfully, but startup still required a separately prepared finish pack. The main notebook now prepares missing finish weights automatically, reuses verified saved inputs, and calls the working v3 direct Dataset publisher. A publication failure retains usable local models and reports the need to save outputs; it does not claim persistence. Missing core models still fail before downloads. CPU regression tests cover these paths; full GPU startup and authenticated publication remain unverified here.
