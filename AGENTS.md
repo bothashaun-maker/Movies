@@ -120,3 +120,10 @@ chat transcript. Update it when the user changes these instructions.
 - Current pair: `Image_Studio_All_Models_Dataset.ipynb` (CPU, all eight reviewed weights, PACK='all') and `Image_Studio_Commercial_v9.ipynb` (GPU, verify saved models only). Workflows belong in the studio notebook, not model Dataset files. Keep this simple working structure unless the user requests a change.
 
 - Combined Dataset storage correction: the complete model set is 20.53 GB, but the CPU creator must not require that entire set plus a second local/staging copy. Use `Image_Studio_All_Models_Dataset_v2.ipynb`: preserve the original authenticated `dataset_create_new(public=False)` call and original SDK uploader, supplying one verified file at a time inside that single request. Reuse existing sources without copying/deleting them; release only this creator's successfully uploaded temporary downloads. Peak missing-file storage is the largest missing model plus reserve. Studio v9 remains unchanged and takes one Dataset input.
+
+
+## General image workflows — latest user requirement
+
+- The user explicitly rejected episode/story/brand production features. Image Studio must provide ordinary cinematic image creation, image editing/inpainting, face/head swaps and upscaling with direct prompt/upload/run/save controls. No episode presets, scripture fields, cast approval, branded exports or required production stages in the active notebook/workflows.
+- Current active notebook: `Image_Studio_Normal_v10.ipynb` (alias `Image_Studio_Normal.ipynb`), sources under `notebooks/image_studio_normal/`. It uses the SAME existing ONE ALL MODELS Dataset. Do not rebuild/change the Dataset, model set, working upload/authentication method or original upscalers for a UI/workflow change.
+- Earlier production notebooks/playbooks remain historical artifacts, not the active image interface. Archive old app-managed menu files outside the workflow menu; preserve user photos, images and personal graphs. Keep the visible native ComfyUI graph.

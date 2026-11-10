@@ -1,15 +1,20 @@
-# JesusJuiceProductions Image Studio — ONE Dataset
+# Image Studio — normal image workflows
 
-**[1. NEW: ALL MODELS Dataset Creator (CPU)](Image_Studio_All_Models_Dataset_v2.ipynb)**
+**[Open Image Studio Normal v10](Image_Studio_Normal_v10.ipynb)**
 
-**[2. NEW: Commercial Studio v9 (GPU)](Image_Studio_Commercial_v9.ipynb)**
+Attach your existing **ONE ALL MODELS Dataset**. Select Kaggle GPU T4, enable Internet for software/tunnel setup, run the single code cell and open ComfyUI. Choose **Image Studio - Create - Cinematic**, write your prompt and press Run. Your Dataset, models, credentials and uploader are unchanged: **do not rebuild the Dataset for this notebook**.
 
-Run the new CPU creator once. It puts **all eight reviewed models into one private Dataset** using the working v3 upload method. No Dataset Inputs are required for the creator; matching saved files are reused when available. The weights total **20.53 GB / 19.12 GiB**, plus small manifests and license notices. The corrected creator uploads one missing model at a time and releases only its successful temporary download; it needs room for the largest missing file, not all 20.53 GB at once. Existing model files are reused without copying or deleting. Account Dataset quotas still apply.
+Normal workflows only:
 
-Attach **only that ONE completed Dataset** to the new studio. All 24 workflows are included in the notebook. Studio startup verifies saved weights and opens ComfyUI; it does not download models, prepare extra packs or create Datasets. Software installation and the tunnel still need Internet.
+- Create cinematic images with ordinary prompt, width, height and seed controls.
+- Edit images or paint a mask for local edits.
+- Face identity editing, masked face editing, BFS head replacement and a simple pixel-composite fallback.
+- Upscale 2×, Upscale 4× and SeedVR2 restoration. These original upscaling graphs are unchanged.
 
-Models: Klein 4B, Qwen3-4B encoder, Flux2 VAE, Real-ESRGAN x4plus, SeedVR2 model and VAE, Google face landmarks, BFS 4B head-swap adapter. No InsightFace research-only weights are included. This is the complete reviewed image stack, not a collection of all historical models.
+No episode presets, scripture fields, cast-approval stages, required branding or lettered exports. PNGs save normally with graph/settings metadata. Old app-managed canvases are preserved in an output archive outside the workflow menu; existing images and personal workflows are not deleted.
 
-[Production playbook PDF](JJP_Image_Production_Playbook.pdf) · [Current setup](notebooks/image_studio_commercial/README.md) · [Dataset instructions](notebooks/image_studio_commercial/MODEL_PACKS.md) · [License audit](notebooks/image_studio_commercial/LICENSE_AUDIT.md) · [Validation](notebooks/image_studio_commercial/VALIDATION.md)
+[Normal workflow instructions](notebooks/image_studio_normal/README.md) · [Individual workflow JSONs](notebooks/image_studio_normal/workflow_files) · [Validation](notebooks/image_studio_normal/VALIDATION.md)
 
-The earlier split-pack/automatic-finish startup approach is superseded for this workflow. Do not import an older copy expecting it to update automatically. Keep existing files until the complete Dataset is available. Full live Kaggle publication of the combined pack and GPU inference remain unverified here.
+If you already have the ALL MODELS Dataset, keep it. The [existing CPU Dataset creator](Image_Studio_All_Models_Dataset_v2.ipynb) remains available separately and is not changed by this workflow correction. Startup verifies saved models and does not prepare model packs or create Datasets.
+
+Full FLUX/BFS/SeedVR2 GPU inference and comparative cinematic quality remain unverified here. Existing commercially reviewed weights are retained; research-only InsightFace weights are not reintroduced.
