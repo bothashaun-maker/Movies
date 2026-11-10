@@ -111,3 +111,10 @@ chat transcript. Update it when the user changes these instructions.
   live Kaggle upload success from mocked API checks.
 
 - H3 Next model-pack storage fix: automatic Dataset uploads may use measured `/kaggle/temp` or `/tmp` space, with same-filesystem hardlink staging and partial-download accounting. Never force the 19.53 GiB checkpoints into 19.50 GiB working storage. Saved Notebook Outputs mode must remain working-only; temporary storage is not durable before upload. Do not remove the free-space guard or assume a 50 GiB quota.
+
+
+## Image Studio storage — user decision, 10 November 2026
+
+- User explicitly requires **all image creation, face/head editing and upscaling models in ONE saved Kaggle Dataset**, and only that one Dataset input in the studio. Do not split create_edit/finish inputs or prepare/download missing packs during GPU studio startup.
+- Use the confirmed working Model Packs v3 direct private Dataset creation method. Preserve authentication and upload behavior; do not add a datasets.get/status permission prerequisite.
+- Current pair: `Image_Studio_All_Models_Dataset.ipynb` (CPU, all eight reviewed weights, PACK='all') and `Image_Studio_Commercial_v9.ipynb` (GPU, verify saved models only). Workflows belong in the studio notebook, not model Dataset files. Keep this simple working structure unless the user requests a change.

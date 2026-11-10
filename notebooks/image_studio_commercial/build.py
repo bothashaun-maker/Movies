@@ -14,9 +14,11 @@ def notebook(filename,intro,code,gpu):
  (R/filename).write_text(json.dumps(nb,indent=1))
 notebook('Image_Studio_Commercial_v7.ipynb',(R/'README.md').read_text(),source,True)
 notebook('Image_Studio_Commercial_v8.ipynb',(R/'README.md').read_text(),source,True)
+notebook('Image_Studio_Commercial_v9.ipynb',(R/'README.md').read_text(),source,True)
 notebook('Image_Studio_Commercial_Model_Packs.ipynb',(R/'MODEL_PACKS.md').read_text(),pack,False)
 notebook('Image_Studio_Commercial_Model_Packs_v2.ipynb',(R/'MODEL_PACKS.md').read_text(),pack,False)
 notebook('Image_Studio_Commercial_Model_Packs_v3.ipynb',(R/'MODEL_PACKS.md').read_text(),pack,False)
+notebook('Image_Studio_All_Models_Dataset.ipynb',(R/'MODEL_PACKS.md').read_text(),pack,False)
 export=R/'workflow_files';export.mkdir(exist_ok=True)
 for name,wf in workflows.items():
  import re

@@ -5,11 +5,7 @@ ENABLE_CREATE_EDIT = True
 ENABLE_SEEDVR2 = True
 ENABLE_MESH_SWAP = True
 ENABLE_BFS_HEADSWAP = True
-REQUIRE_ATTACHED_MODELS = True
-AUTO_PREPARE_FINISH_PACK = True
-AUTO_SAVE_FINISH_DATASET = True
 STARTUP_MODELS_SOURCE = None
-PACK_BUILDER_SOURCE = None
 FACE_NODE_SOURCE = None
 JJP_NODE_SOURCE = None
 JJP_PRESETS_SOURCE = None
@@ -52,10 +48,8 @@ def spawn(args,log):
 # Only allowlisted weights can enter this fresh installation. Never reuse old plugins.
 assets=[a for a in CATALOG['assets'] if (a['pack']!='create_edit' or ENABLE_CREATE_EDIT) and (not a['name'].startswith('seedvr2') or ENABLE_SEEDVR2) and (not a['name'].endswith('.task') or ENABLE_MESH_SWAP) and (a['folder']!='loras' or (ENABLE_CREATE_EDIT and ENABLE_BFS_HEADSWAP))]
 try:
- resolved_models=prepare_models(assets,PACK_BUILDER_SOURCE,
-  [Path('/kaggle/input'),Path('/kaggle/working/image-studio-model-packs'),BASE/'ComfyUI/models',Path('/kaggle/temp/image-studio-v4/ComfyUI/models')],
-  Path('/kaggle/working/image-studio-model-packs'),require_attached=REQUIRE_ATTACHED_MODELS,
-  auto_finish=AUTO_PREPARE_FINISH_PACK,save_dataset=AUTO_SAVE_FINISH_DATASET)
+ resolved_models=prepare_models(assets,
+  [Path('/kaggle/input'),Path('/kaggle/working/image-studio-model-packs'),BASE/'ComfyUI/models'])
 except BaseException:
  fcntl.flock(lock,fcntl.LOCK_UN);lock.close();raise
 try:
@@ -110,7 +104,7 @@ try:
   dest=comfy/'models'/asset['folder']/asset['name'];dest.parent.mkdir(parents=True,exist_ok=True)
   if dest.is_symlink() and not dest.exists():dest.unlink()
   if not dest.exists() and asset['name'] in resolved_models:dest.symlink_to(resolved_models[asset['name']])
-  if not dest.exists():download(asset['source'],dest,asset['sha256'],asset['bytes'])
+  if not dest.exists():raise RuntimeError('Saved model disappeared: '+asset['name']+'. Reattach the ALL MODELS Dataset; no model download started.')
   if sha(dest)!=asset['sha256']:raise RuntimeError('Asset checksum mismatch: '+asset['name'])
  def workflow_enabled(wf):
   types={n['type'] for n in wf['nodes']}

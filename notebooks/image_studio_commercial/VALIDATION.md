@@ -28,3 +28,7 @@ The user's v2 log failed at our added lookup: `403 Permission datasets.get was d
 ## Automatic finish-pack preparation
 
 The user attached create_edit successfully, but startup still required a separately prepared finish pack. The main notebook now prepares missing finish weights automatically, reuses verified saved inputs, and calls the working v3 direct Dataset publisher. A publication failure retains usable local models and reports the need to save outputs; it does not claim persistence. Missing core models still fail before downloads. CPU regression tests cover these paths; full GPU startup and authenticated publication remain unverified here.
+
+## One complete Dataset; strict saved-model startup
+
+User rejected split packs and GPU preparation. CPU selection now supports/defaults to all eight allowlisted assets in one Dataset, keeping the user-confirmed v3 direct private upload function. The main launcher no longer embeds/executes the builder or downloads weights; it verifies saved files and fails on missing inputs. v9 and the distinctly named ALL MODELS builder are the recommended pair. The combined models total 20.53 GB / 19.12 GiB, with actual free-disk preflight and no second staging copy. Live account quota and combined Dataset publication remain unverified here.

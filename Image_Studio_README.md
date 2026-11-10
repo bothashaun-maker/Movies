@@ -1,15 +1,15 @@
-**[Open Commercial v8 — automatic finish-pack preparation](Image_Studio_Commercial_v8.ipynb)**. Attach your saved create_edit Dataset; missing finishing models are prepared and verified automatically, using the working v3 private-Dataset creation method. Save outputs if publication is not confirmed.
+# JesusJuiceProductions Image Studio — ONE Dataset
 
-**[PDF: JJP Image Production Playbook](JJP_Image_Production_Playbook.pdf)** — designed to match The Launch System; updated for your Google Flow → ×4 stills → clips → movie-upscale workflow.
+**[1. NEW: ALL MODELS Dataset Creator (CPU)](Image_Studio_All_Models_Dataset.ipynb)**
 
-# JesusJuiceProductions Image Studio — commercial v7
+**[2. NEW: Commercial Studio v9 (GPU)](Image_Studio_Commercial_v9.ipynb)**
 
-[Open Commercial v7](Image_Studio_Commercial_v7.ipynb) · [CPU model-pack notebook](Image_Studio_Commercial_Model_Packs.ipynb) · [Production playbook](notebooks/image_studio_commercial/JJP_PLAYBOOK.md) · [License audit](notebooks/image_studio_commercial/LICENSE_AUDIT.md) · [Research](notebooks/image_studio_commercial/RESEARCH.md) · [Validation](notebooks/image_studio_commercial/VALIDATION.md)
+Run the new CPU creator once. It puts **all eight reviewed models into one private Dataset** using the working v3 upload method. No Dataset Inputs are required for the creator; matching saved files are reused when available. The weights total **20.53 GB / 19.12 GiB**, plus small manifests and license notices. The builder checks available disk; your account quotas apply.
 
-For music-video artwork: FLUX.2 Klein **4B** creation/editing, dedicated **BFS 4B head swap**, reference identity editing, Real-ESRGAN/SeedVR2 upscaling, eight JJP episode worlds, approved cast and branded delivery. All selected weights have Apache-2.0, BSD-3-Clause or author-declared MIT terms; exact files and full dependency decisions are recorded in the audit. No InsightFace/ArcFace weights are installed.
+Attach **only that ONE completed Dataset** to the new studio. All 24 workflows are included in the notebook. Studio startup verifies saved weights and opens ComfyUI; it does not download models, prepare extra packs or create Datasets. Software installation and the tunnel still need Internet.
 
-Run the CPU pack notebook separately for `create_edit` (~16.13 GB) and `finish` (~4.40 GB). It reuses verified attached files and submits private Kaggle datasets with your existing authentication. Attach the saved datasets/outputs to a fresh imported v7 GPU notebook, run its single startup cell and open ComfyUI. Select a workflow and press Run. Nothing generates automatically. Source, embedded graphs and [individual workflow JSON files](notebooks/image_studio_commercial/workflow_files) are published together.
+Models: Klein 4B, Qwen3-4B encoder, Flux2 VAE, Real-ESRGAN x4plus, SeedVR2 model and VAE, Google face landmarks, BFS 4B head-swap adapter. No InsightFace research-only weights are included. This is the complete reviewed image stack, not a collection of all historical models.
 
-**v1–v6 are historical image notebooks.** Their InSwapper/buffalo_l face route uses research-only pretrained weights and is unsuitable for this commercial profile. It was wrong to select that route for this production goal. Read the [migration guide](notebooks/image_studio_commercial/MIGRATION.md) before redoing images. Keep original identity photos and clean pre-swap targets; a previously swapped JJP master is not a clean source. Existing upscaler-only work is not automatically affected.
+[Production playbook PDF](JJP_Image_Production_Playbook.pdf) · [Current setup](notebooks/image_studio_commercial/README.md) · [Dataset instructions](notebooks/image_studio_commercial/MODEL_PACKS.md) · [License audit](notebooks/image_studio_commercial/LICENSE_AUDIT.md) · [Validation](notebooks/image_studio_commercial/VALIDATION.md)
 
-BFS is a dedicated **head** replacement candidate, not a measured overall quality winner. Generic editing can change likeness; the supplemental CPU mesh compositor can show visible artifacts. Twenty-four workflows passed browser/schema checks, with CPU compositor/export and tiny Real-ESRGAN inference verified. FLUX/BFS/SeedVR2 GPU quality, T4 memory/speed, live Kaggle/Cloudflare and actual Dataset submission remain unverified here. See the validation record rather than assuming these checks establish production quality.
+The earlier split-pack/automatic-finish startup approach is superseded for this workflow. Do not import an older copy expecting it to update automatically. Keep existing files until the complete Dataset is available. Full live Kaggle publication of the combined pack and GPU inference remain unverified here.

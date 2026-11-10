@@ -1,19 +1,12 @@
-# JJP Image Studio Commercial v8 — automatic finishing pack
+# JJP Image Studio Commercial v9 — one saved dataset
 
-Attach your saved **create_edit** Dataset and run the single startup cell. Startup reuses verified saved finish models. If the finish pack is missing, it prepares it automatically (~4.40 GB for the full pack, less network transfer when matching upscalers are already attached), verifies every weight, and submits a private Dataset using the confirmed working Model Packs v3 direct-create method. Then setup continues to ComfyUI. Nothing generates automatically.
+**CPU builder → one ALL MODELS Dataset → studio.** The working v3 private Dataset upload method is retained. Automatic finishing-model preparation has been removed from studio startup.
 
-Keep this session running. If Dataset publication is not confirmed, startup reports it honestly and continues with the locally verified models; **Save Version with outputs** before closing. Attach the saved finish Dataset/output in future sessions to avoid downloading those weights again. Software packages may still need Internet. Missing create_edit weights still stop startup before model downloads. The explicit two-pack CPU preparation route remains supported.
+1. Run **Image_Studio_All_Models_Dataset.ipynb** on CPU. No Dataset Inputs are required for the builder; any existing matching files are reused automatically. The default `PACK='all'` saves all eight models (~20.53 GB / 19.12 GiB) to one private Dataset. Allow sufficient disk and account quota.
+2. Attach that one saved Dataset to **Image_Studio_Commercial_v9.ipynb**. Select a GPU and enable Internet for software setup/tunnel, then run the single startup cell.
+3. Startup verifies saved models, opens persistent ComfyUI and installs all 24 workflows. It does not download models, prepare packs, publish Datasets or generate images. Choose a workflow and press Run.
 
-# JJP Image Studio Commercial v7
-
-Use **Image_Studio_Commercial_v8.ipynb** for new music-video artwork. This replaces the v1–v6 image profile. Those historical notebooks include InsightFace research-only weights and must not be used as the commercial face workflow.
-
-1. Import **Image_Studio_Commercial_Model_Packs.ipynb** into Kaggle. Use CPU + Internet. Run with `PACK='create_edit'` and save outputs. Preparing `PACK='finish'` separately is optional in v8 because startup can prepare it automatically. Existing Kaggle credentials are used to submit each as a private Dataset. Nothing is downloaded to your PC. See MODEL_PACKS.md.
-2. Import the v7 studio notebook into Kaggle. Attach create_edit (and finish if already saved), as private datasets or saved pack notebook outputs, select a GPU, enable Internet and run its single code cell. It verifies every model before installation. Missing create_edit stops before downloads; missing finish is prepared automatically by default. Set `ENABLE_CREATE_EDIT=False` for an upscaling/compositing-only session.
-3. Open the printed Cloudflare URL. In the workflow menu choose **Image Studio - …**, upload references and press Run. Startup does not generate automatically. Keep the startup cell running. The URL gives access to this session; keep it private.
-4. Save Version with outputs before ending your session. Preserve approved cast, original photos, clean pre-swap targets, PNG metadata, provenance.json and licenses. GitHub updates do not update an already imported Kaggle notebook.
-
-Recommended dedicated head replacement: **BFS Head Swap 4B**, with the author’s MIT-declared BFS adapter and Apache-licensed Klein 4B base. It replaces head/hair as well as face; inspect likeness and framing. Generic Identity Edit remains available for prompt-directed face changes. No head-swap quality or T4 speed ranking has been measured here.
+Missing saved models stop startup with their filenames. Keep the current model files and Datasets until the combined Dataset is available. Use the completed ALL MODELS Dataset as the studio’s single input. The deleted faceswap pack is not needed.
 
 Included: FLUX.2 Klein **4B distilled** generation, native single/multiple-reference editing, masked editing, two reference identity editing, CPU mesh face compositing, Real-ESRGAN 2×/4×, SeedVR2 restoration, approved cast, eight JJP episode worlds, custom world/palette/wing controls, deterministic branded square/landscape/vertical exports. All generation uses visible connected native ComfyUI nodes. No FaceID, ArcFace, InsightFace, GFPGAN or CodeFormer weights are silently downloaded.
 
@@ -21,4 +14,4 @@ Identity editing is generative: inspect facial likeness, hands, clothing and bac
 
 The distilled model uses four steps and CFG 1. Negative text in the JJP brief is retained for review but is not active negative guidance at CFG 1. Masked edit first generates a reference edit, then composites it within your painted LoadImage mask. Use MaskEditor and a white replacement mask. This preserves the unmasked target except for the selected feather band; it does not use a dedicated inpainting checkpoint. Export resizing is interpolation, not neural upscaling. Use the upscaling workflow for learned detail first.
 
-Default weights need about 20.53 GB across two packs, plus runtime disk. Generation uses GPU 0; two T4s do not form a single shared VRAM pool. Low-VRAM/FP16 flags are supplied. Full FLUX inference on Kaggle/T4, peak memory, image quality and live Cloudflare remain unverified here. Do not treat model-author speed/memory claims as measured notebook results. See VALIDATION.md and LICENSE_AUDIT.md.
+Default weights need about 20.53 GB in one pack, plus runtime disk. Generation uses GPU 0; two T4s do not form a single shared VRAM pool. Low-VRAM/FP16 flags are supplied. Full FLUX inference on Kaggle/T4, peak memory, image quality and live Cloudflare remain unverified here. Do not treat model-author speed/memory claims as measured notebook results. See VALIDATION.md and LICENSE_AUDIT.md.
