@@ -1,3 +1,5 @@
+**[PDF: JJP Image Production Playbook](JJP_Image_Production_Playbook.pdf)** — designed to match The Launch System; updated for your Google Flow → ×4 stills → clips → movie-upscale workflow.
+
 # JesusJuiceProductions Image Studio — commercial v7
 
 [Open Commercial v7](Image_Studio_Commercial_v7.ipynb) · [CPU model-pack notebook](Image_Studio_Commercial_Model_Packs.ipynb) · [Production playbook](notebooks/image_studio_commercial/JJP_PLAYBOOK.md) · [License audit](notebooks/image_studio_commercial/LICENSE_AUDIT.md) · [Research](notebooks/image_studio_commercial/RESEARCH.md) · [Validation](notebooks/image_studio_commercial/VALIDATION.md)

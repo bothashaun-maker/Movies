@@ -1,3 +1,7 @@
+**[Open or download the designed PDF playbook](../../JJP_Image_Production_Playbook.pdf)** · 10 pages · Updated 10 November 2026.
+
+> Your existing references: face swaps were made in Google Flow and enlarged using Upscale 4x (Real-ESRGAN x4plus). They do not need rebuilding because of the historical notebook's InsightFace models. Flow's applicable terms and source-image/likeness permissions remain separate. Preserve originals and the enlarged masters for clip creation, then use the movie upscaler on finished clips.
+
 # JesusJuiceProductions commercial image playbook
 
 Use the Commercial v7 notebook and two commercial packs for new music-video stills. Keep v1–v6 only as historical references. Their InsightFace path is unsuitable for this commercial profile. Read LICENSE_AUDIT.md for the full component review and MIGRATION.md before redoing images.
