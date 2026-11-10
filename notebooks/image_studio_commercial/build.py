@@ -19,6 +19,7 @@ notebook('Image_Studio_Commercial_Model_Packs.ipynb',(R/'MODEL_PACKS.md').read_t
 notebook('Image_Studio_Commercial_Model_Packs_v2.ipynb',(R/'MODEL_PACKS.md').read_text(),pack,False)
 notebook('Image_Studio_Commercial_Model_Packs_v3.ipynb',(R/'MODEL_PACKS.md').read_text(),pack,False)
 notebook('Image_Studio_All_Models_Dataset.ipynb',(R/'MODEL_PACKS.md').read_text(),pack,False)
+notebook('Image_Studio_All_Models_Dataset_v2.ipynb',(R/'MODEL_PACKS.md').read_text(),pack,False)
 export=R/'workflow_files';export.mkdir(exist_ok=True)
 for name,wf in workflows.items():
  import re

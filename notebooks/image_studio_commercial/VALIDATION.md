@@ -32,3 +32,7 @@ The user attached create_edit successfully, but startup still required a separat
 ## One complete Dataset; strict saved-model startup
 
 User rejected split packs and GPU preparation. CPU selection now supports/defaults to all eight allowlisted assets in one Dataset, keeping the user-confirmed v3 direct private upload function. The main launcher no longer embeds/executes the builder or downloads weights; it verifies saved files and fails on missing inputs. v9 and the distinctly named ALL MODELS builder are the recommended pair. The combined models total 20.53 GB / 19.12 GiB, with actual free-disk preflight and no second staging copy. Live account quota and combined Dataset publication remain unverified here.
+
+## Combined Dataset disk-space repair
+
+The user's CPU run failed before transfers because the builder required the sum of all 20.53 GB plus reserve in local working storage. The Dataset creator now reuses verified mounted/local sources without copying and supplies missing models one at a time to Kaggle's original uploader inside one original `dataset_create_new(public=False)` call. Only successful owned temporary downloads are released; existing sources are retained. Six regression cases exercise the actual Kaggle 2.0.2 method bodies with offline transport, including one request containing eight model tokens, smaller temporary disk, no-copy input reuse, local working-file reuse, failure retention/restoration, receipt reuse and insufficient single-model capacity. Full authenticated Kaggle execution remains unverified; Studio v9 is unchanged.

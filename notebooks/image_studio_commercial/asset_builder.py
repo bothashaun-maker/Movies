@@ -1,5 +1,6 @@
 # CPU-only model pack builder. Run once and save the outputs on Kaggle.
 PACK_BUILDER_VERSION = 'dataset-upload-v3-direct-create'
+ALL_MODELS_STORAGE_VERSION = 'single-model-cache-v2'
 AUTO_CREATE_DATASET = True  # Uses your existing Kaggle authentication to create a private Dataset.
 DATASET_OWNER = ''  # Usually detected from authenticated Kaggle API credentials.
 PACK = 'all'  # All eight reviewed models in one private Dataset (~20.53 GB / 19.12 GiB)
@@ -131,6 +132,24 @@ def kaggle_error_text(error):
  message=re.sub(r'(?i)((?:api[_-]?key|access_token|token|authorization)\s*[=:]\s*)[^\s,;]+',r'\1[REDACTED]',message)
  return message[:1800]
 
+def authenticated_api():
+ # Kaggle API uses private notebook credentials. Never print or store their values.
+ if not os.environ.get('KAGGLE_API_TOKEN') and not os.environ.get('KAGGLE_KEY'):
+  try:
+   from kaggle_secrets import UserSecretsClient
+   os.environ['KAGGLE_API_TOKEN']=UserSecretsClient().get_secret('KAGGLE_API_TOKEN')
+  except Exception:pass
+ if not os.environ.get('KAGGLE_API_TOKEN') and not os.environ.get('KAGGLE_KEY'):
+  try:
+   from kaggle_secrets import UserSecretsClient
+   secrets=UserSecretsClient()
+   os.environ['KAGGLE_USERNAME']=secrets.get_secret('KAGGLE_USERNAME')
+   os.environ['KAGGLE_KEY']=secrets.get_secret('KAGGLE_KEY')
+  except Exception:pass
+ from kaggle.api.kaggle_api_extended import KaggleApi
+ api=KaggleApi();api.authenticate()
+ return api
+
 def save_private_dataset(pack_root,owner='',api=None):
  root=Path(pack_root);manifest=json.loads((root/'manifest.json').read_text())
  validate_manifest(manifest)
@@ -140,22 +159,7 @@ def save_private_dataset(pack_root,owner='',api=None):
  for record in manifest['files']:
   p=root/record['path']
   if p.is_symlink() or not p.is_file() or p.stat().st_size!=record['bytes'] or file_sha(p)!=record['sha256']:raise RuntimeError('Model verification failed before Dataset upload: '+p.name)
- if api is None:
-  # Kaggle API uses private notebook credentials. Never print or store their values.
-  if not os.environ.get('KAGGLE_API_TOKEN') and not os.environ.get('KAGGLE_KEY'):
-   try:
-    from kaggle_secrets import UserSecretsClient
-    os.environ['KAGGLE_API_TOKEN']=UserSecretsClient().get_secret('KAGGLE_API_TOKEN')
-   except Exception:pass
-  if not os.environ.get('KAGGLE_API_TOKEN') and not os.environ.get('KAGGLE_KEY'):
-   try:
-    from kaggle_secrets import UserSecretsClient
-    secrets=UserSecretsClient()
-    os.environ['KAGGLE_USERNAME']=secrets.get_secret('KAGGLE_USERNAME')
-    os.environ['KAGGLE_KEY']=secrets.get_secret('KAGGLE_KEY')
-   except Exception:pass
-  from kaggle.api.kaggle_api_extended import KaggleApi
-  api=KaggleApi();api.authenticate()
+ if api is None:api=authenticated_api()
  owner=owner or api.config_values.get('username','')
  handle,fingerprint=dataset_identity(owner,manifest)
  url='https://www.kaggle.com/datasets/'+handle
@@ -198,6 +202,101 @@ def publish_pack(pack_root,owner='',api=None):
   (root/'dataset-error.json').write_text(json.dumps({'stage':'dataset-publication','reason':detail,'models_retained':True},indent=2))
   raise RuntimeError('Dataset publication failed: '+detail+' Save Version with outputs before closing this session. Rerunning reuses verified weights. Diagnostic: '+str(root/'dataset-error.json')) from None
 
+def create_complete_dataset(output_root=Path('/kaggle/working/image-studio-model-packs'),input_root=Path('/kaggle/input'),owner='',api=None):
+ """Use one native create_new request; feed its uploader one verified file at a time."""
+ import inspect,tempfile
+ root=Path(output_root)/'all';root.mkdir(parents=True,exist_ok=True)
+ lock=open(root/'.builder.lock','w')
+ try:fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
+ except BlockingIOError:lock.close();raise RuntimeError('The ALL MODELS Dataset creator is already running.')
+ original_upload=None
+ try:
+  assets=selected_assets('all')
+  records=[dict(path=n,bytes=z,sha256=d,source=u) for _,n,u,d,z in assets]
+  manifest=dict(schema=2,profile='commercial-v7',pack='all',complete=True,model_bytes=sum(a[4] for a in assets),files=records,license_catalog=CATALOG)
+  validate_manifest(manifest)
+  if api is None:api=authenticated_api()
+  handle,fingerprint=dataset_identity(owner or api.config_values.get('username',''),manifest)
+  url='https://www.kaggle.com/datasets/'+handle;receipt=root/'dataset-upload.json'
+  if receipt.exists():
+   old=json.loads(receipt.read_text())
+   if old.get('handle')==handle and old.get('submitted') and old.get('manifest_fingerprint')==fingerprint:
+    print('Previously submitted ALL MODELS Dataset:',url,flush=True);return url
+  # Locate verified sources before reserving disk. Existing source files are never
+  # copied, moved or removed. Only this creator's missing-file cache is released.
+  print('Finding verified saved models; existing sources will not be copied or deleted.',flush=True)
+  sources={}
+  for _,name,_,digest,size in assets:
+   for search in [Path(input_root),Path(output_root)]:
+    if not search.exists():continue
+    found=next((q for q in search.rglob(name) if q.is_file() and q.stat().st_size==size and file_sha(q)==digest),None)
+    if found:
+     sources[name]=found.resolve();print('Reusing existing model:',name,flush=True);break
+  cache=Path(output_root)/'.all-models-download-cache'
+  if cache.is_symlink():raise RuntimeError('Temporary download cache must not be a symlink.')
+  cache.mkdir(exist_ok=True)
+  missing=[a for a in assets if a[1] not in sources]
+  peak=max((a[4] for a in missing),default=0)
+  free=shutil.disk_usage(cache).free
+  print('ONE ALL MODELS Dataset:',len(assets),'models;',sum(a[4] for a in assets),'bytes total',flush=True)
+  print('Verified existing sources:',len(sources),'; largest missing download:',peak,'bytes; free disk:',free,flush=True)
+  if free<peak+(512*1024**2 if peak else 16*1024**2):raise RuntimeError('Need room for only the largest missing model ('+str(peak)+' bytes) plus 512 MiB reserve; free '+str(free)+'. Existing model files were not changed.')
+  original_upload=api.upload_files;signature=inspect.signature(original_upload)
+  if 'folder' not in signature.parameters:raise RuntimeError('Kaggle uploader has an unsupported folder argument; no downloads started.')
+  metadata=dict(title='Image Studio all '+fingerprint,id=handle,licenses=[{'name':'other'}],description='Complete private Image Studio model pack. Original component licenses apply; see manifest.json and included license notices.')
+  state=root/'upload-progress.json'
+  upload_finished=False
+  def stream_upload(*args,**kwargs):
+   nonlocal upload_finished
+   # dataset_create_new owns its normal request and upload context. Delegate all
+   # transfers to its unmodified uploader, changing only each input folder.
+   def send(folder):
+    bound=signature.bind(*args,**kwargs);bound.arguments['folder']=str(folder)
+    return original_upload(*bound.args,**bound.kwargs)
+   uploaded=[]
+   request=signature.bind(*args,**kwargs).arguments['request']
+   for _,name,source_url,digest,size in sorted(assets,key=lambda a:a[1] not in sources):
+    source=sources.get(name,cache/name)
+    owned=source.parent.resolve()==cache.resolve()
+    if owned:transfer(source_url,source,digest,size)
+    if not source.is_file() or source.stat().st_size!=size or file_sha(source)!=digest:raise RuntimeError('Model failed upload verification: '+name)
+    with tempfile.TemporaryDirectory(prefix='.single-model-',dir=root) as temp:
+     # Kaggle's native uploader uses isfile/open, which follow this absolute link.
+     # Uploaded Dataset files contain actual bytes, not the local link.
+     (Path(temp)/name).symlink_to(source.resolve())
+     print('Uploading verified model:',name,flush=True)
+     count=len(request.files);send(temp)
+     if len(request.files)!=count+1:raise RuntimeError('Kaggle uploader did not confirm the file token: '+name)
+    uploaded.append(name);state.write_text(json.dumps({'handle':handle,'uploaded_models':uploaded,'dataset_created':False},indent=2))
+    if owned:
+     # Only newly downloaded cache files, after a successful native file upload.
+     source.unlink();print('Released temporary download:',name,flush=True)
+   with tempfile.TemporaryDirectory(prefix='.pack-notices-',dir=root) as temp:
+    folder=Path(temp);(folder/'manifest.json').write_text(json.dumps(manifest,indent=2))
+    for name,content in LICENSE_FILES.items():(folder/name).write_text(content)
+    send(folder)
+   upload_finished=True
+  api.upload_files=stream_upload
+  with tempfile.TemporaryDirectory(prefix='.dataset-request-',dir=root) as temp:
+   (Path(temp)/'dataset-metadata.json').write_text(json.dumps(metadata,indent=2))
+   result=api.dataset_create_new(temp,public=False,quiet=False,convert_to_csv=False,dir_mode='skip')
+  field=lambda k:result.get(k) if isinstance(result,dict) else getattr(result,k,None)
+  error=field('error') or field('error_message');status=field('status')
+  if result is None or error or str(status).lower() in ('error','failed','failure'):raise RuntimeError('Kaggle Dataset creation was not confirmed: '+kaggle_error_text(error or status or 'empty response'))
+  if not upload_finished:raise RuntimeError('Kaggle did not run the complete model upload; no success receipt was written.')
+  receipt.write_text(json.dumps(dict(handle=handle,url=url,submitted=True,requested_private=True,manifest_fingerprint=fingerprint,upload_mode='one-model-at-a-time'),indent=2))
+  (root/'manifest.json').write_text(json.dumps(manifest,indent=2))
+  print('PRIVATE ALL MODELS DATASET SUBMITTED:',url,flush=True)
+  print('Wait for processing, then attach this ONE Dataset to Studio v9. No model preparation runs in the studio.',flush=True)
+  return url
+ except (Exception,SystemExit) as error:
+  detail=kaggle_error_text(error)
+  (root/'dataset-error.json').write_text(json.dumps({'stage':'single-dataset-creation','reason':detail,'existing_sources_untouched':True,'temporary_uploaded_downloads_may_be_released':True},indent=2))
+  raise RuntimeError(detail+' Existing source models are untouched. Dataset creation has not been confirmed; see '+str(root/'dataset-error.json')) from None
+ finally:
+  if original_upload is not None:api.upload_files=original_upload
+  fcntl.flock(lock,fcntl.LOCK_UN);lock.close()
+
 if __name__=='__main__':
- build_pack(PACK)
- if AUTO_CREATE_DATASET:publish_pack(Path('/kaggle/working/image-studio-model-packs')/PACK,DATASET_OWNER)
+ if AUTO_CREATE_DATASET:create_complete_dataset(owner=DATASET_OWNER)
+ else:build_pack(PACK)

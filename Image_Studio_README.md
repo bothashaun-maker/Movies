@@ -1,10 +1,10 @@
 # JesusJuiceProductions Image Studio — ONE Dataset
 
-**[1. NEW: ALL MODELS Dataset Creator (CPU)](Image_Studio_All_Models_Dataset.ipynb)**
+**[1. NEW: ALL MODELS Dataset Creator (CPU)](Image_Studio_All_Models_Dataset_v2.ipynb)**
 
 **[2. NEW: Commercial Studio v9 (GPU)](Image_Studio_Commercial_v9.ipynb)**
 
-Run the new CPU creator once. It puts **all eight reviewed models into one private Dataset** using the working v3 upload method. No Dataset Inputs are required for the creator; matching saved files are reused when available. The weights total **20.53 GB / 19.12 GiB**, plus small manifests and license notices. The builder checks available disk; your account quotas apply.
+Run the new CPU creator once. It puts **all eight reviewed models into one private Dataset** using the working v3 upload method. No Dataset Inputs are required for the creator; matching saved files are reused when available. The weights total **20.53 GB / 19.12 GiB**, plus small manifests and license notices. The corrected creator uploads one missing model at a time and releases only its successful temporary download; it needs room for the largest missing file, not all 20.53 GB at once. Existing model files are reused without copying or deleting. Account Dataset quotas still apply.
 
 Attach **only that ONE completed Dataset** to the new studio. All 24 workflows are included in the notebook. Studio startup verifies saved weights and opens ComfyUI; it does not download models, prepare extra packs or create Datasets. Software installation and the tunnel still need Internet.
 
