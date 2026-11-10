@@ -1,4 +1,5 @@
 # CPU-only model pack builder. Run once and save the outputs on Kaggle.
+PACK_BUILDER_VERSION = 'dataset-upload-v2'
 AUTO_CREATE_DATASET = True  # Uses your existing Kaggle authentication to create a private Dataset.
 DATASET_OWNER = ''  # Usually detected from authenticated Kaggle API credentials.
 PACK = 'create_edit'  # Run once per pack: create_edit (~16.13 GB), finish (~4.40 GB)
@@ -101,6 +102,59 @@ def build_pack(pack,output_root=Path('/kaggle/working/image-studio-model-packs')
   return data
  finally:fcntl.flock(lock,fcntl.LOCK_UN);lock.close()
 
+def dataset_identity(owner,manifest):
+ import re
+ if not isinstance(owner,str) or not re.fullmatch(r'[A-Za-z0-9_-]+',owner):raise ValueError('Set DATASET_OWNER to your Kaggle username or use configured Kaggle credentials.')
+ fingerprint=hashlib.sha256(json.dumps(manifest['files'],sort_keys=True).encode()).hexdigest()[:12]
+ # Local pack names may have underscores; Kaggle dataset URL slugs may not.
+ pack_slug=re.sub(r'[^a-z0-9]+','-',manifest['pack'].lower()).strip('-')
+ slug='image-studio-commercial-'+pack_slug+'-'+fingerprint
+ if not 6<=len(slug)<=50 or not re.fullmatch(r'[a-z0-9]+(?:-[a-z0-9]+)*',slug):raise ValueError('Invalid Kaggle Dataset slug; no files were uploaded.')
+ return owner+'/'+slug,fingerprint
+
+def kaggle_error_text(error):
+ """Keep the actionable reason without exposing credentials or response headers."""
+ import re
+ message=str(error)
+ response=getattr(error,'response',None)
+ if response is not None:
+  try:
+   data=response.json()
+   if isinstance(data,dict):message=str(data.get('message') or data.get('error') or data.get('detail') or message)
+  except (ValueError,TypeError):pass
+ for key in ('KAGGLE_API_TOKEN','KAGGLE_KEY'):
+  value=os.environ.get(key)
+  if value:message=message.replace(value,'[REDACTED]')
+ message=re.sub(r'(?i)Bearer\s+[^\s,;]+','Bearer [REDACTED]',message)
+ message=re.sub(r'(?i)((?:api[_-]?key|access_token|token|authorization)\s*[=:]\s*)[^\s,;]+',r'\1[REDACTED]',message)
+ return message[:1800]
+
+def http_status(error):
+ response=getattr(error,'response',None)
+ return getattr(response,'status_code',None) or getattr(error,'status_code',None) or getattr(error,'code',None)
+
+def existing_dataset(api,handle,manifest):
+ # Only a 404 means absent. Permission/network errors must not start a huge upload.
+ if not callable(getattr(api,'dataset_status',None)):return None
+ try:status=api.dataset_status(handle)
+ except Exception as error:
+  if http_status(error)==404:return None
+  raise RuntimeError('Cannot check existing Dataset before upload: '+kaggle_error_text(error)) from None
+ status=str(status).lower()
+ if status not in ('ready','complete','completed'):
+  raise RuntimeError('Dataset already exists with status '+status+': https://www.kaggle.com/datasets/'+handle+'. Wait/check its Kaggle processing; no files were reuploaded.')
+ import tempfile,zipfile
+ with tempfile.TemporaryDirectory(prefix='studio-manifest-check-') as tmp:
+  api.dataset_download_file(handle,'manifest.json',path=tmp,force=True,quiet=True)
+  remote=Path(tmp)/'manifest.json'
+  if remote.is_file():data=json.loads(remote.read_text())
+  elif (Path(tmp)/'manifest.json.zip').is_file():
+   with zipfile.ZipFile(Path(tmp)/'manifest.json.zip') as archive:data=json.loads(archive.read('manifest.json'))
+  else:raise RuntimeError('Existing Dataset has no readable manifest; it was not changed and no files were reuploaded.')
+  validate_manifest(data)
+  if data.get('pack')!=manifest['pack'] or data.get('files')!=manifest['files']:raise RuntimeError('Existing Dataset manifest differs; it was not changed and no files were reuploaded.')
+ return status
+
 def save_private_dataset(pack_root,owner='',api=None):
  root=Path(pack_root);manifest=json.loads((root/'manifest.json').read_text())
  validate_manifest(manifest)
@@ -127,29 +181,47 @@ def save_private_dataset(pack_root,owner='',api=None):
   from kaggle.api.kaggle_api_extended import KaggleApi
   api=KaggleApi();api.authenticate()
  owner=owner or api.config_values.get('username','')
- import re
- if not re.fullmatch(r'[A-Za-z0-9_-]+',owner):raise RuntimeError('Set DATASET_OWNER to your Kaggle username or configure Kaggle authentication privately.')
- fingerprint=hashlib.sha256(json.dumps(manifest['files'],sort_keys=True).encode()).hexdigest()[:12]
- slug='image-studio-commercial-'+manifest['pack']+'-'+fingerprint
- handle=owner+'/'+slug;url='https://www.kaggle.com/datasets/'+handle
+ handle,fingerprint=dataset_identity(owner,manifest)
+ url='https://www.kaggle.com/datasets/'+handle
  receipt=root/'dataset-upload.json'
- if receipt.exists() and json.loads(receipt.read_text()).get('handle')==handle:
-  print('Previously submitted Dataset:',url,flush=True);return url
+ if receipt.exists():
+  previous=json.loads(receipt.read_text())
+  if previous.get('handle')==handle and previous.get('submitted') and previous.get('manifest_fingerprint')==fingerprint:
+   print('Previously submitted Dataset:',url,flush=True);return url
+ status=existing_dataset(api,handle,manifest)
+ if status:
+  receipt.write_text(json.dumps({'handle':handle,'url':url,'submitted':True,'manifest_fingerprint':fingerprint,'verified_remote_manifest':True,'visibility':'unchanged; existing Dataset'},indent=2))
+  print('REUSED EXISTING MATCHING DATASET:',url,flush=True);return url
  metadata={'title':'Image Studio '+manifest['pack']+' '+fingerprint,'id':handle,'licenses':[{'name':'other'}],'description':'Private verified model pack for Image Studio. Original model licenses apply; no relicensing. See manifest.json for model sources and SHA256 values.'}
  (root/'dataset-metadata.json').write_text(json.dumps(metadata,indent=2))
- # Files are flat: never zip many GiB or omit nested weights by accident.
- # create_new(public=False) will not modify an existing dataset or its visibility.
- result=api.dataset_create_new(str(root),public=False,quiet=False,convert_to_csv=False,dir_mode='skip')
- error=result.get('error') if isinstance(result,dict) else getattr(result,'error',None)
- if error:raise RuntimeError('Dataset creation was not confirmed: '+str(error)+'. Model files remain saved; existing datasets were not changed.')
+ # Stage hardlinks to the exact pack files, avoiding an extra multi-GB copy.
+ # Do not upload builder locks, old manifests, receipts or failure diagnostics.
+ import tempfile
+ with tempfile.TemporaryDirectory(prefix='.studio-upload-',dir=root.parent) as tmp:
+  stage=Path(tmp)
+  for name in [r['path'] for r in manifest['files']]+list(LICENSE_FILES)+['manifest.json','dataset-metadata.json']:
+   os.link(root/name,stage/name)
+  result=api.dataset_create_new(str(stage),public=False,quiet=False,convert_to_csv=False,dir_mode='skip')
+ field=lambda key:result.get(key) if isinstance(result,dict) else getattr(result,key,None)
+ error=field('error') or field('error_message')
+ status=field('status')
+ if error or (status and str(status).lower() in ('error','failed','failure')):
+  raise RuntimeError('Kaggle rejected Dataset creation: '+kaggle_error_text(error or status)+'. Verified models are retained; no model downloads are needed.')
+ if result is None:raise RuntimeError('Kaggle returned no creation response. Verified models are retained. Check the Dataset page before retrying.')
  receipt.write_text(json.dumps({'handle':handle,'url':url,'submitted':True,'requested_private':True,'manifest_fingerprint':fingerprint},indent=2))
  print('PRIVATE DATASET SUBMITTED:',url,flush=True)
  print('Wait for Kaggle processing, then Image Studio Commercial v7 → Add Input → Your Datasets. No PC download needed.',flush=True)
  return url
 
 
+def publish_pack(pack_root,owner='',api=None):
+ try:return save_private_dataset(pack_root,owner,api)
+ except (Exception,SystemExit) as error:
+  detail=kaggle_error_text(error)
+  root=Path(pack_root)
+  (root/'dataset-error.json').write_text(json.dumps({'stage':'dataset-publication','reason':detail,'models_retained':True},indent=2))
+  raise RuntimeError('Dataset publication failed: '+detail+' Save Version with outputs before closing this session. Rerunning reuses verified weights. Diagnostic: '+str(root/'dataset-error.json')) from None
+
 if __name__=='__main__':
  build_pack(PACK)
- if AUTO_CREATE_DATASET:
-  try:save_private_dataset(Path('/kaggle/working/image-studio-model-packs')/PACK,DATASET_OWNER)
-  except (Exception,SystemExit):raise RuntimeError('Private Dataset submission did not complete. Verified files remain in notebook outputs. Check enabled Kaggle credentials privately; set DATASET_OWNER if your token does not expose a username. Existing datasets were not changed.') from None
+ if AUTO_CREATE_DATASET:publish_pack(Path('/kaggle/working/image-studio-model-packs')/PACK,DATASET_OWNER)

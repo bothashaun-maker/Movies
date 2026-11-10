@@ -1,4 +1,4 @@
-# Commercial model packs
+# Commercial model packs — upload fix v2
 
 This CPU notebook downloads and verifies the pinned catalog, saves real model files, includes original license notices and submits a **private** Kaggle Dataset with your existing credentials. Run separately for `PACK='create_edit'` (~16.13 GB) and `PACK='finish'` (~4.40 GB). Splitting keeps each run's saved weights below 20 GB; actual Kaggle limits and free disk are checked by the downloader. Do not keep both pack directories in a single CPU notebook's saved output if your output quota is insufficient: use separate copies/versions for the packs.
 
@@ -9,3 +9,11 @@ Second run: attached saved datasets/notebook outputs with matching filenames, si
 No existing Dataset is deleted, overwritten or made public. A manifest fingerprint gives each commercial pack a separate Dataset name. Never attach the old faceswap pack as a replacement for this profile. Preserve clean photos and private approved-cast output separately; model packs contain no personal photos.
 
 Sources, revisions, sizes, SHA256 and SPDX identifiers are in catalog.json and the embedded notebook. Full Apache/BSD notices and MediaPipe model-license evidence are carried into packs. Dataset metadata uses `other` to preserve the original component licenses, without relicensing them.
+
+## Recover the failed create_edit upload
+
+The reported run finished all three downloads and uploaded the files. Its final Dataset creation failed; the original handler hid Kaggle's reason. The old Dataset URL slug used `create_edit`, which contains an invalid underscore. Upload v2 uses `create-edit`, validates the name before upload, preserves sanitised Kaggle error details in `dataset-error.json`, and uploads only model/manifest/license files. It does not upload locks, old manifests or error receipts.
+
+**Keep your current session and downloaded files.** Run the corrected notebook's complete single code cell in the same CPU notebook/session with `PACK='create_edit'`; verified files already in `/kaggle/working/image-studio-model-packs/create_edit` are reused. No model download is needed. If you instead import the distinctly named `Image_Studio_Commercial_Model_Packs_v2.ipynb` as a new notebook, first Save Version with outputs from the failed run and attach that saved output to v2 via Add Input. The builder copies and verifies those weights; it does not download them again. Do not end an unsaved session assuming the files will persist.
+
+The SDK's “outdated version” warning is not itself evidence of this failure; the log shows successful authentication and file uploads. No credential reset or forced Kaggle package upgrade is required by this fix. Kaggle may still need to upload the retained model files again to finalise the corrected Dataset; that is distinct from redownloading weights from Hugging Face. Before uploading, v2 checks for an existing Dataset: a ready Dataset with the exact matching remote manifest is reused, processing/failed datasets are reported, and access/network errors stop the upload. No existing Dataset is overwritten. Actual authenticated finalisation remains unverified from this development environment.
