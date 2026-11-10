@@ -1,5 +1,5 @@
 # CPU-only model pack builder. Run once and save the outputs on Kaggle.
-PACK_BUILDER_VERSION = 'dataset-upload-v2'
+PACK_BUILDER_VERSION = 'dataset-upload-v3-direct-create'
 AUTO_CREATE_DATASET = True  # Uses your existing Kaggle authentication to create a private Dataset.
 DATASET_OWNER = ''  # Usually detected from authenticated Kaggle API credentials.
 PACK = 'create_edit'  # Run once per pack: create_edit (~16.13 GB), finish (~4.40 GB)
@@ -129,32 +129,6 @@ def kaggle_error_text(error):
  message=re.sub(r'(?i)((?:api[_-]?key|access_token|token|authorization)\s*[=:]\s*)[^\s,;]+',r'\1[REDACTED]',message)
  return message[:1800]
 
-def http_status(error):
- response=getattr(error,'response',None)
- return getattr(response,'status_code',None) or getattr(error,'status_code',None) or getattr(error,'code',None)
-
-def existing_dataset(api,handle,manifest):
- # Only a 404 means absent. Permission/network errors must not start a huge upload.
- if not callable(getattr(api,'dataset_status',None)):return None
- try:status=api.dataset_status(handle)
- except Exception as error:
-  if http_status(error)==404:return None
-  raise RuntimeError('Cannot check existing Dataset before upload: '+kaggle_error_text(error)) from None
- status=str(status).lower()
- if status not in ('ready','complete','completed'):
-  raise RuntimeError('Dataset already exists with status '+status+': https://www.kaggle.com/datasets/'+handle+'. Wait/check its Kaggle processing; no files were reuploaded.')
- import tempfile,zipfile
- with tempfile.TemporaryDirectory(prefix='studio-manifest-check-') as tmp:
-  api.dataset_download_file(handle,'manifest.json',path=tmp,force=True,quiet=True)
-  remote=Path(tmp)/'manifest.json'
-  if remote.is_file():data=json.loads(remote.read_text())
-  elif (Path(tmp)/'manifest.json.zip').is_file():
-   with zipfile.ZipFile(Path(tmp)/'manifest.json.zip') as archive:data=json.loads(archive.read('manifest.json'))
-  else:raise RuntimeError('Existing Dataset has no readable manifest; it was not changed and no files were reuploaded.')
-  validate_manifest(data)
-  if data.get('pack')!=manifest['pack'] or data.get('files')!=manifest['files']:raise RuntimeError('Existing Dataset manifest differs; it was not changed and no files were reuploaded.')
- return status
-
 def save_private_dataset(pack_root,owner='',api=None):
  root=Path(pack_root);manifest=json.loads((root/'manifest.json').read_text())
  validate_manifest(manifest)
@@ -188,10 +162,10 @@ def save_private_dataset(pack_root,owner='',api=None):
   previous=json.loads(receipt.read_text())
   if previous.get('handle')==handle and previous.get('submitted') and previous.get('manifest_fingerprint')==fingerprint:
    print('Previously submitted Dataset:',url,flush=True);return url
- status=existing_dataset(api,handle,manifest)
- if status:
-  receipt.write_text(json.dumps({'handle':handle,'url':url,'submitted':True,'manifest_fingerprint':fingerprint,'verified_remote_manifest':True,'visibility':'unchanged; existing Dataset'},indent=2))
-  print('REUSED EXISTING MATCHING DATASET:',url,flush=True);return url
+ # Match the previously working builder: call create_new directly.
+ # Do not gate creation on our own dataset_status/datasets.get request.
+ # Kaggle can deny lookup on a not-yet-created/private Dataset; that does not
+ # establish that creation is forbidden. create_new never versions/overwrites.
  metadata={'title':'Image Studio '+manifest['pack']+' '+fingerprint,'id':handle,'licenses':[{'name':'other'}],'description':'Private verified model pack for Image Studio. Original model licenses apply; no relicensing. See manifest.json for model sources and SHA256 values.'}
  (root/'dataset-metadata.json').write_text(json.dumps(metadata,indent=2))
  # Stage hardlinks to the exact pack files, avoiding an extra multi-GB copy.

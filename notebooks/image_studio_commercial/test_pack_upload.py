@@ -44,25 +44,30 @@ class Tests(unittest.TestCase):
  def test_receipt_after_success_skips_second_upload(self):
   with pack() as (root,m):
    api=API();api.model=root/'face_landmarker.task';first=a.save_private_dataset(root,api=api);self.assertEqual(first,a.save_private_dataset(root,api=api));self.assertEqual(len(api.uploads),1)
- def test_remote_dataset_without_local_receipt_reuses_manifest_only(self):
+ def test_forbidden_lookup_does_not_block_direct_private_create(self):
   with pack() as (root,m):
-   api=API(existing=True);api.remote=m;api.model=root/'face_landmarker.task';a.save_private_dataset(root,api=api)
-   self.assertEqual(api.uploads,[]);self.assertEqual(api.downloads,['manifest.json']);self.assertTrue(json.loads((root/'dataset-upload.json').read_text())['verified_remote_manifest'])
- def test_processing_dataset_is_not_reuploaded(self):
+   api=API();api.model=root/'face_landmarker.task'
+   def forbidden_lookup(handle):raise AssertionError('Builder must not call datasets.get before create')
+   api.dataset_status=forbidden_lookup
+   a.save_private_dataset(root,api=api)
+   self.assertEqual(len(api.uploads),1);self.assertFalse(api.uploads[0][2]['public']);self.assertEqual(api.downloads,[])
+ def test_existing_dataset_is_not_overwritten_or_false_success(self):
   with pack() as (root,m):
-   api=API(existing='processing')
-   with self.assertRaisesRegex(RuntimeError,'processing'):a.save_private_dataset(root,api=api)
-   self.assertEqual(api.uploads,[])
- def test_existing_wrong_manifest_is_not_overwritten(self):
+   api=API({'status':'error','error':'The requested slug is already in use by a dataset.'});api.model=root/'face_landmarker.task'
+   with self.assertRaisesRegex(RuntimeError,'already in use'):a.save_private_dataset(root,api=api)
+   self.assertFalse((root/'dataset-upload.json').exists());self.assertTrue(api.model.is_file())
+ def test_actual_creation_permission_error_preserves_reason(self):
   with pack() as (root,m):
-   api=API(existing=True);api.remote={**m,'files':[]}
-   with self.assertRaises(RuntimeError):a.save_private_dataset(root,api=api)
-   self.assertEqual(api.uploads,[])
- def test_permission_failure_does_not_start_upload(self):
+   api=API()
+   def reject(*args,**kwargs):raise HTTPFailure(403,"Permission 'datasets.create' was denied")
+   api.dataset_create_new=reject
+   with self.assertRaisesRegex(RuntimeError,'datasets.create'):a.publish_pack(root,api=api)
+   self.assertFalse((root/'dataset-upload.json').exists());self.assertTrue((root/'face_landmarker.task').is_file())
+ def test_direct_create_handles_sdk_response_object(self):
   with pack() as (root,m):
-   api=API();api.dataset_status=lambda handle:(_ for _ in ()).throw(HTTPFailure(403,'quota or access denied'))
-   with self.assertRaisesRegex(RuntimeError,'quota or access denied'):a.save_private_dataset(root,api=api)
-   self.assertEqual(api.uploads,[])
+   from types import SimpleNamespace
+   api=API(SimpleNamespace(status='success',error=None));api.model=root/'face_landmarker.task';a.save_private_dataset(root,api=api)
+   self.assertTrue(json.loads((root/'dataset-upload.json').read_text())['requested_private'])
  def test_error_redacts_secrets(self):
   with patch.dict(os.environ,{'KAGGLE_API_TOKEN':'supersecret','KAGGLE_KEY':'legacysecret'}):
    text=a.kaggle_error_text('Server rejected supersecret legacysecret Bearer abcdefgh token=xyz')
