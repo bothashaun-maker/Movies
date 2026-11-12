@@ -5,6 +5,36 @@ ASSETS.extend([
  dict(repo='aptech0081/MiniMax-H3-Acc-LoRAs-ComfyUI',revision='c169e9cd1dab4ac56b413b1343218ab4a3af2f19',file='minimax_h3_ref2va_pdd_acc_8step_comfyui.safetensors',dest='pdd_acc/minimax_h3_ref2va_pdd_acc_8step_comfyui.safetensors',size=1658719592,sha256='5531fa0da887c24ec0083b0050ea9e4ff03c479cfbe21ef586d1c5c79bdc78a1')])
 SUITE_ASSETS=[a for a in ASSETS if not a.get('vsa') and 'Semantic-Bridge' not in a['repo']]
 
+def suite_attached_input(path):
+    """Kaggle inputs are durable but their mounted random reads can be very slow."""
+    try:return path.resolve().is_relative_to(Path('/kaggle/input').resolve())
+    except (OSError,RuntimeError):return False
+
+def suite_stage_attached(source,target,asset):
+    """Copy and hash an attached weight in one sequential pass onto fast scratch."""
+    import time
+    target.parent.mkdir(parents=True,exist_ok=True)
+    if file_has_size(target,asset) and sha256_file(target)==asset['sha256']:
+        print('Fast local model already verified:',target.name,flush=True);return target
+    if target.exists() or target.is_symlink():
+        raise RuntimeError('Existing fast-stage file failed verification; preserved: '+str(target))
+    partial=target.with_suffix(target.suffix+'.stage-partial')
+    if partial.exists() or partial.is_symlink():
+        raise RuntimeError('Incomplete fast-stage file preserved; remove it only after inspection: '+str(partial))
+    digest=hashlib.sha256();copied=0;last=time.monotonic()
+    print('Staging attached model onto fast local storage:',source.name,flush=True)
+    with source.open('rb') as reader,partial.open('xb') as writer:
+        for block in iter(lambda:reader.read(16*1024**2),b''):
+            writer.write(block);digest.update(block);copied+=len(block)
+            if time.monotonic()-last>=30:
+                print(f'Fast-stage {source.name}: {copied/2**30:.2f}/{asset["size"]/2**30:.2f} GiB',flush=True);last=time.monotonic()
+        writer.flush();os.fsync(writer.fileno())
+    if copied!=asset['size'] or digest.hexdigest()!=asset['sha256']:
+        raise RuntimeError('Attached model failed size/SHA-256 while staging; partial preserved: '+str(partial))
+    partial.replace(target)
+    print('Fast local model verified:',target.name,flush=True)
+    return target
+
 def suite_required_assets(graph,require_diffusion=True):
     text=json.dumps(graph,sort_keys=True)
     selected=[a for a in SUITE_ASSETS if Path(a.get('dest') or a['file']).name in text]
@@ -36,6 +66,29 @@ def suite_prepare_assets(selected):
                 print('Reclaiming notebook-downloaded cache:',p.name,flush=True);p.unlink()
         ledger_file.write_text(json.dumps(ledger,indent=2))
         plan=model_storage_plan()
+    # Safetensors performs many small/random reads while building the two-GPU H3
+    # shards. Reading a 20 GiB checkpoint directly from Kaggle's mounted Dataset
+    # can leave initialization at block 0 for tens of minutes. Stage attached
+    # files once with a sequential verified copy, then reuse them all session.
+    stage_items=[]
+    for a,source in plan['locations']:
+        if suite_attached_input(source):stage_items.append((a,source,stored_asset(plan['store'],a)))
+    extra=sum(a['size'] for a,_,target in stage_items if not file_has_size(target,a))
+    if extra:
+        plan['store'].mkdir(parents=True,exist_ok=True)
+        free=shutil.disk_usage(plan['store']).free
+        if free<extra+2*2**30:
+            raise RuntimeError(f'Fast local staging needs {extra/2**30:.2f} GiB plus 2 GiB reserve, '
+                               f'but {plan["store"]} has {free/2**30:.2f} GiB. No attached files were changed.')
+    staged={}
+    for a,source,target in stage_items:
+        staged[a['sha256']]=suite_stage_attached(source,target,a)
+        ledger[a['sha256']]={'path':str(staged[a['sha256']]),'store':str(plan['store']),
+            'sha256':a['sha256'],'size':a['size'],'mtime_ns':staged[a['sha256']].stat().st_mtime_ns}
+    if staged:
+        ledger_file.write_text(json.dumps(ledger,indent=2))
+        plan['locations']=[(a,staged.get(a['sha256'],source)) for a,source in plan['locations']]
+
     from huggingface_hub import hf_hub_download
     for a,source in plan['locations']:
         source.parent.mkdir(parents=True,exist_ok=True)
@@ -53,7 +106,10 @@ def suite_prepare_assets(selected):
         if dst!=source:
             if dst.is_symlink():
                 if dst.resolve()!=source.resolve():
-                    if dst.exists():raise RuntimeError('Refusing to replace existing model link: '+str(dst))
+                    # Replace only a link previously created by this notebook to
+                    # a read-only Kaggle input. Never replace an arbitrary link.
+                    if dst.exists() and not suite_attached_input(dst):
+                        raise RuntimeError('Refusing to replace existing model link: '+str(dst))
                     dst.unlink()
             if not dst.exists() and not dst.is_symlink():dst.symlink_to(source.resolve())
     globals()['MODELS_READY']=True

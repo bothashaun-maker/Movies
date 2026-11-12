@@ -104,3 +104,24 @@ class Collections(unittest.TestCase):
             scope['model_storage_plan']=Mock(side_effect=[RuntimeError('space'),{'locations':[],'store':store}])
             scope['suite_prepare_assets']([])
             self.assertFalse(owned.exists());self.assertTrue(user.exists())
+
+    def test_attached_weights_are_staged_once_and_reused_from_fast_storage(self):
+        from test_h3_complete import scope_at
+        from unittest.mock import Mock
+        import hashlib
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp);scope=scope_at(root);exec(S.joinpath('assets.py').read_text(),scope)
+            store=root/'fast';source=root/'attached/model.safetensors';source.parent.mkdir(parents=True)
+            payload=(b'fixture-model-bytes-'*1024);source.write_bytes(payload)
+            asset={'repo':'fixture/model','revision':'pin','file':'diffusion_models/model.safetensors',
+                   'size':len(payload),'sha256':hashlib.sha256(payload).hexdigest()}
+            target=scope['stored_asset'](store,asset);dst=scope['asset_target'](asset)
+            scope['SUITE_ASSETS']=[asset];scope['suite_attached_input']=lambda p:Path(p)==source
+            scope['model_storage_plan']=Mock(return_value={'locations':[(asset,source)],'store':store})
+            scope['suite_prepare_assets']([asset])
+            self.assertEqual(target.read_bytes(),payload);self.assertTrue(dst.is_symlink())
+            self.assertEqual(dst.resolve(),target.resolve())
+            first_mtime=target.stat().st_mtime_ns
+            scope['suite_prepare_assets']([asset])
+            self.assertEqual(target.stat().st_mtime_ns,first_mtime)
+            self.assertEqual(scope['model_storage_plan'].call_count,2)

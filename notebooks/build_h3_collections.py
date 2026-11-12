@@ -105,7 +105,7 @@ The real custom-node interfaces are installed. Model loading and final saving ar
 
 Default size is 512×768 (or the visible small preset), up to 124 frames at 24 fps. Upload your own image/audio in its node; Speaking Audio requires your recording because its sample WAV was unreadable in the supplied archive. Director opens with a clean five-second timeline; add reference cards and switch Refs ON to use reference conditioning.
 
-The first workflow's weights are prepared during setup. Switching model families may download another ~19.53 GiB checkpoint. When space is insufficient, only tracked notebook-downloaded model caches may be reclaimed; input datasets, uploaded media, latents and outputs are preserved. Attach both model families as Kaggle inputs to avoid repeat family downloads. Storage is measured, not assumed.
+The first workflow's weights are prepared during setup. Attached weights are copied once into measured fast scratch storage and SHA-256 verified during that sequential copy; this prevents tensor sharding from random-reading Kaggle's slower Dataset mount. It is local staging, not a model-host download, and is reused for the session. Switching model families may stage or download another ~19.53 GiB checkpoint. When space is insufficient, only tracked notebook-downloaded caches may be reclaimed; input datasets, uploaded media, latents and outputs are preserved. Attach both model families as Kaggle inputs to avoid model-host downloads. Storage is measured, not assumed.
 
 **GPU rendering of these integrated collections has not been measured here.** Local checks validate schemas, browser editing and worker partitioning; they do not guarantee model numerics or performance.
 '''

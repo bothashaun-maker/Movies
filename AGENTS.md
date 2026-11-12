@@ -112,6 +112,8 @@ chat transcript. Update it when the user changes these instructions.
 
 - H3 Next model-pack storage fix: automatic Dataset uploads may use measured `/kaggle/temp` or `/tmp` space, with same-filesystem hardlink staging and partial-download accounting. Never force the 19.53 GiB checkpoints into 19.50 GiB working storage. Saved Notebook Outputs mode must remain working-only; temporary storage is not durable before upload. Do not remove the free-space guard or assume a 50 GiB quota.
 
+- Director/Pixa collection performance fix (2026-11-12): never tensor-shard H3 checkpoints directly from `/kaggle/input`. Kaggle Dataset mounts made Director remain at `sharded block 0/50` for more than ten minutes. `suite_prepare_assets` must sequentially copy attached weights to measured fast scratch, SHA-256 them during that copy, and link ComfyUI to the staged files. Preserve attached inputs, require room for the complete staging set plus reserve, and reuse verified staged files during the session.
+
 
 ## Image Studio storage — user decision, 10 November 2026
 
