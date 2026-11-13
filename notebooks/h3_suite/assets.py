@@ -19,11 +19,16 @@ def suite_stage_attached(source,target,asset):
     if target.exists() or target.is_symlink():
         raise RuntimeError('Existing fast-stage file failed verification; preserved: '+str(target))
     partial=target.with_suffix(target.suffix+'.stage-partial')
-    if partial.exists() or partial.is_symlink():
-        raise RuntimeError('Incomplete fast-stage file preserved; remove it only after inspection: '+str(partial))
+    if partial.is_symlink() or (partial.exists() and (not partial.is_file() or partial.stat().st_size>asset['size'])):
+        raise RuntimeError('Invalid fast-stage partial preserved: '+str(partial))
     digest=hashlib.sha256();copied=0;last=time.monotonic()
+    if partial.is_file():
+        with partial.open('rb') as saved:
+            for block in iter(lambda:saved.read(16*1024**2),b''):
+                digest.update(block);copied+=len(block)
     print('Staging attached model onto fast local storage:',source.name,flush=True)
-    with source.open('rb') as reader,partial.open('xb') as writer:
+    with source.open('rb') as reader,partial.open('ab' if copied else 'wb') as writer:
+        reader.seek(copied)
         for block in iter(lambda:reader.read(16*1024**2),b''):
             writer.write(block);digest.update(block);copied+=len(block)
             if time.monotonic()-last>=30:
@@ -91,12 +96,16 @@ def suite_prepare_assets(selected):
     # checkpoints need this copy; encoder, VAEs and LoRAs stay on the input mount.
     stage_items=[]
     for a,source in plan['locations']:
-        if (a.get('dest') or a['file']).startswith('diffusion_models/') and suite_attached_input(source):
+        if (globals().get('SUITE_STAGE_ALL',False) or (a.get('dest') or a['file']).startswith('diffusion_models/')) and suite_attached_input(source):
             stage_items.append((a,source,stored_asset(plan['store'],a)))
-    if stage_items:
+    if stage_items or globals().get('SUITE_STAGE_ALL',False):
         suite_checkpoint_budget(plan['store'],selected,ledger)
         ledger_file.write_text(json.dumps(ledger,indent=2))
-    extra=sum(a['size'] for a,_,target in stage_items if not file_has_size(target,a))
+    extra=0
+    for a,_,target in stage_items:
+        if not file_has_size(target,a):
+            partial=target.with_suffix(target.suffix+'.stage-partial')
+            extra+=a['size']-(partial.stat().st_size if partial.is_file() and not partial.is_symlink() else 0)
     if extra:
         plan['store'].mkdir(parents=True,exist_ok=True)
         free=shutil.disk_usage(plan['store']).free

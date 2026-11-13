@@ -1,6 +1,6 @@
 """Build four named entry points; Pixa and Director embed their complete canvases."""
 from pathlib import Path
-import runpy,copy,json,base64,zipfile,io
+import runpy,copy,json,base64,zipfile,io,hashlib
 import nbformat
 ROOT=Path(__file__).resolve().parents[1];S=ROOT/'notebooks/h3_complete';U=ROOT/'notebooks/h3_suite'
 base=runpy.run_path(str(ROOT/'notebooks/build_h3_complete.py'))
@@ -33,7 +33,16 @@ for collection,items in collections.items():
     generated=ROOT/'workflows'/collection;generated.mkdir(exist_ok=True)
     for title,g in canvases.items():(generated/(title+'.json')).write_text(json.dumps(g,indent=2)+'\n')
     plugin=read('diagnostics')+'\n'+read('checkpoint_nodes')+'\nCHECKPOINT_NODE_MAPPINGS=NODE_CLASS_MAPPINGS.copy()\n'+read('browser_node')+'\n'+u('nodes')
-    worker=read('settings')+'\n'+read('assets')+'\n'+u('assets')+'\n'+read('graphs')+'\n'+read('runtime')+'\n'+read('browser_job')+'\n'+u('preflight')+'\n'+u('job')+'''
+    director=collection=='Director'
+    settings=read('settings')
+    extra_job=''
+    if director:
+        settings=settings.replace('ALLOW_MODEL_DOWNLOADS = True','ALLOW_MODEL_DOWNLOADS = False')
+        settings=settings.replace('TIMEOUT_MINUTES = 90','TIMEOUT_MINUTES = 15')
+        settings+='\nDIRECTOR_CODE_ID = '+repr(hashlib.sha256((u('director_job')+u('director_nodes')+u('director_storage')+u('director_prepare_patch')).encode()).hexdigest())+'\n'
+        plugin+='\n'+u('director_nodes')
+        extra_job='\n'+u('director_storage')+'\n'+u('director_job')
+    worker=settings+'\n'+read('assets')+'\n'+u('assets')+'\n'+read('graphs')+'\n'+read('runtime')+'\n'+read('browser_job')+'\n'+u('preflight')+'\n'+u('job')+extra_job+'''
 job=json.loads(Path(sys.argv[1]).read_text())
 MODELS_READY=True;STACK_READY=True
 PORT+=1;API=f'http://127.0.0.1:{PORT}'
@@ -56,6 +65,7 @@ src=pdd.read_text();old='inspect.getsource(MiniMaxH3Model.forward)';new='inspect
 if old in src:src=src.replace(old,new);pdd.write_text(src)
 else:assert new in src,'Unexpected PDD source.'
 '''
+    if director:installation+='\n'+u('director_prepare_patch')+"\npatch_director_preparation(COMFY/'custom_nodes/ComfyUI-MiniMaxH3-Director/minimax_director.py')\n"
     installation+='\nplugin_source='+repr(plugin)+'\nworker_source='+repr(worker)+'\ncanvases='+repr(canvases)+'\ncollection='+repr(collection)+'\nmedia_archive='+repr(base64.b64encode(media).decode())+'\n'
     installation+='''
 plugin_dir=COMFY/'custom_nodes/H3KaggleBrowser';plugin_dir.mkdir(parents=True,exist_ok=True)
@@ -88,11 +98,16 @@ print('Installed workflows: '+', '.join(canvases),flush=True)
     default_names=(['minimax_h3_fl2va_pruned_int8_convrot.safetensors','qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors','minimax_h3_audio_vae_fp32.safetensors']+
                    (['minimax_h3_fl2v_turbo_4step_v1.1_768p_comfyui_bf16.safetensors','minimax_h3_video_vae_fp16.safetensors'] if collection=='Pixa_5_Workflows' else ['minimax_h3_taomate_fl2va_3step_ema_comfyui.safetensors','minimax_h3_video_vae_int8_convrot.safetensors']))
     weights='suite_prepare_assets([a for a in SUITE_ASSETS if Path(a["file"]).name in '+repr(default_names)+'])\n'
+    if director:
+        # Setup prepares only the encoder/reference phase; the active diffusion
+        # family is selected after the user submits their actual timeline.
+        prep_names=[n for n in default_names if 'pruned_int8_convrot' not in n and 'taomate' not in n]
+        weights=u('director_storage')+'\ndirector_prepare_assets([a for a in SUITE_ASSETS if Path(a["file"]).name in '+repr(prep_names)+'])\n'
     access=read('cloudflare').replace("assert 'H3IsolatedSaveVideo' in api_request('/object_info')", "assert 'H3SuiteSaveVideo' in api_request('/object_info')").replace("print('In ComfyUI: Workflows → MiniMax H3 - Full T4 Workflow → Run',flush=True)","print('In ComfyUI, select a workflow from: '+', '.join(canvases),flush=True)")
     stages={'catalog':read('processes')+'\n'+read('assets')+'\n'+u('assets'),'install':installation,'weights':weights,'workflow':read('graphs')+'\n'+read('runtime'),'access':access}
     for key,text in stages.items():compile(text,key,'exec')
     from pprint import pformat
-    entry=read('settings')+'\n_H3_PIPELINE_SOURCES = '+pformat(stages,sort_dicts=False,width=110)+'\n'+read('pipeline')+'\nrun_pipeline(_H3_PIPELINE_SOURCES,globals())\n'
+    entry=settings+'\n_H3_PIPELINE_SOURCES = '+pformat(stages,sort_dicts=False,width=110)+'\n'+read('pipeline')+'\nrun_pipeline(_H3_PIPELINE_SOURCES,globals())\n'
     nb=copy.deepcopy(base['nb']);nb.cells[1]=base['code'](entry,'run')
     names='\n'.join('- **'+title+'**' for title,_ in items)
     nb.cells[0].source=f'''# H3 — {collection.replace('_',' ')} · Kaggle T4 ×2
@@ -109,6 +124,13 @@ The first workflow's weights are prepared during setup. Only the active diffusio
 
 **GPU rendering of these integrated collections has not been measured here.** Local checks validate schemas, browser editing and worker partitioning; they do not guarantee model numerics or performance.
 '''
+    if director:
+        nb.cells[0].source=nb.cells[0].source.replace('# H3 — Director · Kaggle T4 ×2','# H3 — Director · PHASED-v2 · Kaggle T4 ×2')
+        a=nb.cells[0].source.index('The first workflow\'s weights')
+        b=nb.cells[0].source.index('**GPU rendering',a)
+        nb.cells[0].source=nb.cells[0].source[:a]+'''Director uses three sequential GPU processes: prompt/reference preparation, diffusion sampling, then decoding. Each phase stages only its own models from attached Datasets to a shared 24 GiB local cache; the previous process exits before its inactive cache is released. The encoder and diffusion checkpoint are never staged together. Attach all four compatible H3 packs and wait for Adding data to finish. Missing weights stop with a filename list instead of downloading silently. Model downloads default to OFF. Saved preparation/latents allow retries without repeating successful phases. Import this revision in a fresh session after earlier staging versions.
+
+'''+nb.cells[0].source[b:]
     nb.cells[2].source='''## Session and outputs
 
 Keep Kaggle running while using ComfyUI. Completed MP4s appear at the final Save node and in `ComfyUI/output`. Use **Open render diagnostics** for the selected job's logs. Changing controls and reference/audio inputs changes the job fingerprint. Sampling and decoding remain separate processes; supplied speech/song audio is saved across that boundary rather than re-encoding it in the decoder process.
