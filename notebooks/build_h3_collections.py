@@ -41,6 +41,7 @@ for collection,items in collections.items():
         settings=settings.replace('TIMEOUT_MINUTES = 90','TIMEOUT_MINUTES = 15')
         settings+='\nDIRECTOR_CODE_ID = '+repr(hashlib.sha256((u('director_job')+u('director_nodes')+u('director_storage')+u('director_prepare_patch')).encode()).hexdigest())+'\n'
         plugin+='\n'+u('director_nodes')
+        plugin=plugin.replace("('sampling.log','decoding.log'", "('preparation.log','sampling.log','decoding.log'")
         extra_job='\n'+u('director_storage')+'\n'+u('director_job')
     worker=settings+'\n'+read('assets')+'\n'+u('assets')+'\n'+read('graphs')+'\n'+read('runtime')+'\n'+read('browser_job')+'\n'+u('preflight')+'\n'+u('job')+extra_job+'''
 job=json.loads(Path(sys.argv[1]).read_text())
