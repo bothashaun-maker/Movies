@@ -1,0 +1,111 @@
+{
+  "schema": 1,
+  "profile": "jjp-wangp-motion-v1",
+  "revision": "fe905e15831c620e804ba9e9382e4d9b4f60b21e",
+  "assets": [
+    {
+      "file": "MiniMax-H3-Ref2VA-pruned_rank8_int8_convrot.safetensors",
+      "name": "MiniMax-H3-Ref2VA-pruned_rank8_int8_convrot.safetensors",
+      "bytes": 21057674788,
+      "sha256": "e09db861c48d13560222948b4e38082bc21b1b7d4ddcaed9c865bf9c3233898c",
+      "source": "https://huggingface.co/DeepBeepMeep/MiniMax-H3/resolve/fe905e15831c620e804ba9e9382e4d9b4f60b21e/MiniMax-H3-Ref2VA-pruned_rank8_int8_convrot.safetensors",
+      "role": "diffusion"
+    },
+    {
+      "file": "Qwen3-VL-32B-Instruct/qwen3vl-32B-MiniMax-H3-Q4_K_M.gguf",
+      "name": "qwen3vl-32B-MiniMax-H3-Q4_K_M.gguf",
+      "bytes": 14576977888,
+      "sha256": "1bf75e038c5895b97b6ea16cc1e3d32076254b06ec3df10657650d86dc82279e",
+      "source": "https://huggingface.co/DeepBeepMeep/MiniMax-H3/resolve/fe905e15831c620e804ba9e9382e4d9b4f60b21e/Qwen3-VL-32B-Instruct/qwen3vl-32B-MiniMax-H3-Q4_K_M.gguf",
+      "role": "encoder"
+    },
+    {
+      "file": "minimax_h3_ref2va_pdd_8step_heads_bf16.safetensors",
+      "name": "minimax_h3_ref2va_pdd_8step_heads_bf16.safetensors",
+      "bytes": 44049080,
+      "sha256": "04301915b2c6928d8fdfdafcfeed6526bfee31bb32f7dff6cefbfec04c118683",
+      "source": "https://huggingface.co/DeepBeepMeep/MiniMax-H3/resolve/fe905e15831c620e804ba9e9382e4d9b4f60b21e/minimax_h3_ref2va_pdd_8step_heads_bf16.safetensors",
+      "role": "support"
+    },
+    {
+      "file": "loras/minimax_h3_ref2va_pdd_8step_lora_bf16.safetensors",
+      "name": "minimax_h3_ref2va_pdd_8step_lora_bf16.safetensors",
+      "bytes": 1328407024,
+      "sha256": "8adef5d2029f3204c45986a139549708d83ad3947b25bdd6272a06cb918870c8",
+      "source": "https://huggingface.co/DeepBeepMeep/MiniMax-H3/resolve/fe905e15831c620e804ba9e9382e4d9b4f60b21e/loras/minimax_h3_ref2va_pdd_8step_lora_bf16.safetensors",
+      "role": "support"
+    },
+    {
+      "file": "MiniMax-H3-video_vae_fp16.safetensors",
+      "name": "MiniMax-H3-video_vae_fp16.safetensors",
+      "bytes": 5207806512,
+      "sha256": "455010492bb59a9cc7b8f1ee23905b22a10079f89490adbf820a1728efcaea6b",
+      "source": "https://huggingface.co/DeepBeepMeep/MiniMax-H3/resolve/fe905e15831c620e804ba9e9382e4d9b4f60b21e/MiniMax-H3-video_vae_fp16.safetensors",
+      "role": "support"
+    },
+    {
+      "file": "MiniMax-H3-audio_vae_fp32.safetensors",
+      "name": "MiniMax-H3-audio_vae_fp32.safetensors",
+      "bytes": 605429308,
+      "sha256": "37dddc2f3e6d5d5139d823d5ea283bbf304dadcb885b1ccda818aa13dade5ea2",
+      "source": "https://huggingface.co/DeepBeepMeep/MiniMax-H3/resolve/fe905e15831c620e804ba9e9382e4d9b4f60b21e/MiniMax-H3-audio_vae_fp32.safetensors",
+      "role": "support"
+    },
+    {
+      "file": "minimax_h3/minimax_h3_latent_upscaler_3d_bf16.safetensors",
+      "name": "minimax_h3_latent_upscaler_3d_bf16.safetensors",
+      "bytes": 690592992,
+      "sha256": "4f57821f5837f32f7142b67d815606dbd7550f194e5c769f7d6c3f83b146a5e6",
+      "source": "https://huggingface.co/DeepBeepMeep/MiniMax-H3/resolve/fe905e15831c620e804ba9e9382e4d9b4f60b21e/minimax_h3/minimax_h3_latent_upscaler_3d_bf16.safetensors",
+      "role": "support"
+    },
+    {
+      "file": "Qwen3-VL-32B-Instruct/config.json",
+      "name": "config.json",
+      "bytes": 1474,
+      "sha256": "d2dd0c60d01b9e195d9447c52da61c7302d28828524914c044d9c6e1b81d0427",
+      "source": "https://huggingface.co/DeepBeepMeep/MiniMax-H3/resolve/fe905e15831c620e804ba9e9382e4d9b4f60b21e/Qwen3-VL-32B-Instruct/config.json",
+      "role": "encoder"
+    },
+    {
+      "file": "Qwen3-VL-32B-Instruct/tokenizer.json",
+      "name": "tokenizer.json",
+      "bytes": 7032403,
+      "sha256": "a5d85b6dcc535e6b93115a9ef287e6132fdbf30270da6218194ba742261173c7",
+      "source": "https://huggingface.co/DeepBeepMeep/MiniMax-H3/resolve/fe905e15831c620e804ba9e9382e4d9b4f60b21e/Qwen3-VL-32B-Instruct/tokenizer.json",
+      "role": "encoder"
+    },
+    {
+      "file": "Qwen3-VL-32B-Instruct/tokenizer_config.json",
+      "name": "tokenizer_config.json",
+      "bytes": 11004,
+      "sha256": "0a05d1d0c5b7205132d3815dbb5c3e9912c926a00e0bbf32f67f7afaaa200542",
+      "source": "https://huggingface.co/DeepBeepMeep/MiniMax-H3/resolve/fe905e15831c620e804ba9e9382e4d9b4f60b21e/Qwen3-VL-32B-Instruct/tokenizer_config.json",
+      "role": "encoder"
+    },
+    {
+      "file": "Qwen3-VL-32B-Instruct/preprocessor_config.json",
+      "name": "preprocessor_config.json",
+      "bytes": 390,
+      "sha256": "27225450ac9c6529872ee1924fcb0962ff5634834f817040f444118116f4e516",
+      "source": "https://huggingface.co/DeepBeepMeep/MiniMax-H3/resolve/fe905e15831c620e804ba9e9382e4d9b4f60b21e/Qwen3-VL-32B-Instruct/preprocessor_config.json",
+      "role": "encoder"
+    },
+    {
+      "file": "Qwen3-VL-32B-Instruct/vocab.json",
+      "name": "vocab.json",
+      "bytes": 2776833,
+      "sha256": "ca10d7e9fb3ed18575dd1e277a2579c16d108e32f27439684afa0e10b1440910",
+      "source": "https://huggingface.co/DeepBeepMeep/MiniMax-H3/resolve/fe905e15831c620e804ba9e9382e4d9b4f60b21e/Qwen3-VL-32B-Instruct/vocab.json",
+      "role": "encoder"
+    },
+    {
+      "file": "Qwen3-VL-32B-Instruct/chat_template.json",
+      "name": "chat_template.json",
+      "bytes": 5499,
+      "sha256": "5c72a170d2a4a1a3bc5adad2e689ae28138a9700e5b8c96c0266331e86c0acce",
+      "source": "https://huggingface.co/DeepBeepMeep/MiniMax-H3/resolve/fe905e15831c620e804ba9e9382e4d9b4f60b21e/Qwen3-VL-32B-Instruct/chat_template.json",
+      "role": "encoder"
+    }
+  ]
+}

@@ -1,0 +1,725 @@
+{
+  "repository_revision": "17a61d90de0958675ff3e69b78a8d007d818d663",
+  "reviewed_notebooks": [
+    {
+      "file": "Current_Working_Workflow.ipynb",
+      "sha256": "7e210a59fe3a298954fc734e3178a55c9a66c4818a370759eb0e37a8b65ebf06",
+      "cells": 3,
+      "source_lines": 1736,
+      "signals": {
+        "timeout": 49,
+        "cloudflare": 26,
+        "fp16": 27,
+        "phase": 26,
+        "dataset": 6,
+        "save version": 0,
+        "disk_usage": 5,
+        "kaggle_api_token": 0
+      }
+    },
+    {
+      "file": "Director.ipynb",
+      "sha256": "1b6cd09aff34f30ff5140b258a9877163e91b1397709cbf139ce4861a11fbd4a",
+      "cells": 3,
+      "source_lines": 3046,
+      "signals": {
+        "timeout": 52,
+        "cloudflare": 24,
+        "fp16": 35,
+        "phase": 43,
+        "dataset": 9,
+        "save version": 0,
+        "disk_usage": 7,
+        "kaggle_api_token": 0
+      }
+    },
+    {
+      "file": "H3_Model_Packs.ipynb",
+      "sha256": "f99b0dc955f47a932fbba513d1049a5876bd31dff57e10c63b8492c953b898c1",
+      "cells": 2,
+      "source_lines": 89,
+      "signals": {
+        "timeout": 1,
+        "cloudflare": 0,
+        "fp16": 1,
+        "phase": 0,
+        "dataset": 2,
+        "save version": 1,
+        "disk_usage": 1,
+        "kaggle_api_token": 0
+      }
+    },
+    {
+      "file": "H3_Next_Model_Packs.ipynb",
+      "sha256": "787878733a6ba5f797eee6636eafbc3c952c74a48b7459009c18a53560b42f6e",
+      "cells": 2,
+      "source_lines": 251,
+      "signals": {
+        "timeout": 1,
+        "cloudflare": 0,
+        "fp16": 0,
+        "phase": 2,
+        "dataset": 50,
+        "save version": 3,
+        "disk_usage": 1,
+        "kaggle_api_token": 4
+      }
+    },
+    {
+      "file": "H3_Next_T4.ipynb",
+      "sha256": "01099fda78b3115a619c859c1bbae538ddd4663ec6bfe229c5214f5f2a2e591c",
+      "cells": 3,
+      "source_lines": 2604,
+      "signals": {
+        "timeout": 49,
+        "cloudflare": 24,
+        "fp16": 31,
+        "phase": 30,
+        "dataset": 7,
+        "save version": 0,
+        "disk_usage": 5,
+        "kaggle_api_token": 0
+      }
+    },
+    {
+      "file": "Image_Studio_All_Models_Dataset.ipynb",
+      "sha256": "8660395c38a7e41118a8bca41a1b4ef2f83cc1154205f344c9ed10bcd057ce5c",
+      "cells": 2,
+      "source_lines": 316,
+      "signals": {
+        "timeout": 1,
+        "cloudflare": 0,
+        "fp16": 4,
+        "phase": 0,
+        "dataset": 67,
+        "save version": 2,
+        "disk_usage": 4,
+        "kaggle_api_token": 5
+      }
+    },
+    {
+      "file": "Image_Studio_All_Models_Dataset_v2.ipynb",
+      "sha256": "8660395c38a7e41118a8bca41a1b4ef2f83cc1154205f344c9ed10bcd057ce5c",
+      "cells": 2,
+      "source_lines": 316,
+      "signals": {
+        "timeout": 1,
+        "cloudflare": 0,
+        "fp16": 4,
+        "phase": 0,
+        "dataset": 67,
+        "save version": 2,
+        "disk_usage": 4,
+        "kaggle_api_token": 5
+      }
+    },
+    {
+      "file": "Image_Studio_Commercial_Model_Packs.ipynb",
+      "sha256": "613a3591f49bf01e5a9ecf1315da6dae11a8b4248c884cbe19e0f86de3b04f8d",
+      "cells": 2,
+      "source_lines": 223,
+      "signals": {
+        "timeout": 1,
+        "cloudflare": 0,
+        "fp16": 4,
+        "phase": 0,
+        "dataset": 49,
+        "save version": 3,
+        "disk_usage": 2,
+        "kaggle_api_token": 6
+      }
+    },
+    {
+      "file": "Image_Studio_Commercial_Model_Packs_v2.ipynb",
+      "sha256": "613a3591f49bf01e5a9ecf1315da6dae11a8b4248c884cbe19e0f86de3b04f8d",
+      "cells": 2,
+      "source_lines": 223,
+      "signals": {
+        "timeout": 1,
+        "cloudflare": 0,
+        "fp16": 4,
+        "phase": 0,
+        "dataset": 49,
+        "save version": 3,
+        "disk_usage": 2,
+        "kaggle_api_token": 6
+      }
+    },
+    {
+      "file": "Image_Studio_Commercial_Model_Packs_v3.ipynb",
+      "sha256": "613a3591f49bf01e5a9ecf1315da6dae11a8b4248c884cbe19e0f86de3b04f8d",
+      "cells": 2,
+      "source_lines": 223,
+      "signals": {
+        "timeout": 1,
+        "cloudflare": 0,
+        "fp16": 4,
+        "phase": 0,
+        "dataset": 49,
+        "save version": 3,
+        "disk_usage": 2,
+        "kaggle_api_token": 6
+      }
+    },
+    {
+      "file": "Image_Studio_Commercial_v7.ipynb",
+      "sha256": "90b61adc0848bfc1c99e2cfeb0e2297049df2ad5a26f59af0911b955f66edcef",
+      "cells": 2,
+      "source_lines": 232,
+      "signals": {
+        "timeout": 5,
+        "cloudflare": 9,
+        "fp16": 12,
+        "phase": 0,
+        "dataset": 45,
+        "save version": 6,
+        "disk_usage": 4,
+        "kaggle_api_token": 5
+      }
+    },
+    {
+      "file": "Image_Studio_Commercial_v8.ipynb",
+      "sha256": "90b61adc0848bfc1c99e2cfeb0e2297049df2ad5a26f59af0911b955f66edcef",
+      "cells": 2,
+      "source_lines": 232,
+      "signals": {
+        "timeout": 5,
+        "cloudflare": 9,
+        "fp16": 12,
+        "phase": 0,
+        "dataset": 45,
+        "save version": 6,
+        "disk_usage": 4,
+        "kaggle_api_token": 5
+      }
+    },
+    {
+      "file": "Image_Studio_Commercial_v9.ipynb",
+      "sha256": "96bbe879a712c88cd56adcdfa124a6d9cc1557c6aebd97c6b4c05a47c4f91467",
+      "cells": 2,
+      "source_lines": 194,
+      "signals": {
+        "timeout": 4,
+        "cloudflare": 8,
+        "fp16": 8,
+        "phase": 0,
+        "dataset": 15,
+        "save version": 1,
+        "disk_usage": 1,
+        "kaggle_api_token": 0
+      }
+    },
+    {
+      "file": "Image_Studio_Kaggle_v1.ipynb",
+      "sha256": "83ccf8893e9b5c1e26e6d38c7abf31822fdfc02f15d1ac07bda6973af3d5e51e",
+      "cells": 2,
+      "source_lines": 135,
+      "signals": {
+        "timeout": 4,
+        "cloudflare": 8,
+        "fp16": 0,
+        "phase": 0,
+        "dataset": 0,
+        "save version": 2,
+        "disk_usage": 1,
+        "kaggle_api_token": 0
+      }
+    },
+    {
+      "file": "Image_Studio_Kaggle_v2.ipynb",
+      "sha256": "96a15e11bfb938858adb6c0422df113f7f88382e2b204757f6ac58de2bb6e098",
+      "cells": 2,
+      "source_lines": 196,
+      "signals": {
+        "timeout": 4,
+        "cloudflare": 8,
+        "fp16": 6,
+        "phase": 0,
+        "dataset": 0,
+        "save version": 2,
+        "disk_usage": 2,
+        "kaggle_api_token": 0
+      }
+    },
+    {
+      "file": "Image_Studio_Kaggle_v3.ipynb",
+      "sha256": "1810e1df5b8ed4ba3a9833e59d53b22b7022a7ce231cd7d32505e019c9cd9eb6",
+      "cells": 2,
+      "source_lines": 234,
+      "signals": {
+        "timeout": 4,
+        "cloudflare": 8,
+        "fp16": 6,
+        "phase": 0,
+        "dataset": 1,
+        "save version": 3,
+        "disk_usage": 2,
+        "kaggle_api_token": 0
+      }
+    },
+    {
+      "file": "Image_Studio_Kaggle_v4.ipynb",
+      "sha256": "0f0256a8f198740ebd5a444e8ff38d0f4c83a1bb33c21da205fb58bec4b9da64",
+      "cells": 2,
+      "source_lines": 285,
+      "signals": {
+        "timeout": 4,
+        "cloudflare": 8,
+        "fp16": 6,
+        "phase": 0,
+        "dataset": 5,
+        "save version": 3,
+        "disk_usage": 2,
+        "kaggle_api_token": 0
+      }
+    },
+    {
+      "file": "Image_Studio_Kaggle_v5.ipynb",
+      "sha256": "d81ec1dac1a9310972d1a043e785926b67fa62647f1900c41e800a36954c7625",
+      "cells": 2,
+      "source_lines": 350,
+      "signals": {
+        "timeout": 5,
+        "cloudflare": 8,
+        "fp16": 8,
+        "phase": 0,
+        "dataset": 36,
+        "save version": 6,
+        "disk_usage": 6,
+        "kaggle_api_token": 4
+      }
+    },
+    {
+      "file": "Image_Studio_Kaggle_v6.ipynb",
+      "sha256": "db597d4805dccc5b48a9d3bdddb18d4938297129c4771f1b334958c885667a3f",
+      "cells": 2,
+      "source_lines": 320,
+      "signals": {
+        "timeout": 5,
+        "cloudflare": 7,
+        "fp16": 7,
+        "phase": 0,
+        "dataset": 31,
+        "save version": 4,
+        "disk_usage": 6,
+        "kaggle_api_token": 4
+      }
+    },
+    {
+      "file": "Image_Studio_Model_Packs.ipynb",
+      "sha256": "3fa80dbf1e44425b0b8711df452d0b8ee76b434a7c59792ffcdd466d96ae053e",
+      "cells": 2,
+      "source_lines": 182,
+      "signals": {
+        "timeout": 1,
+        "cloudflare": 0,
+        "fp16": 2,
+        "phase": 0,
+        "dataset": 30,
+        "save version": 2,
+        "disk_usage": 3,
+        "kaggle_api_token": 4
+      }
+    },
+    {
+      "file": "Image_Studio_Normal.ipynb",
+      "sha256": "303234ba60401273cceb7f42732e212296f5fd56a5064611c79ea20255cacc14",
+      "cells": 2,
+      "source_lines": 210,
+      "signals": {
+        "timeout": 4,
+        "cloudflare": 7,
+        "fp16": 7,
+        "phase": 0,
+        "dataset": 8,
+        "save version": 2,
+        "disk_usage": 1,
+        "kaggle_api_token": 0
+      }
+    },
+    {
+      "file": "Image_Studio_Normal_v10.ipynb",
+      "sha256": "303234ba60401273cceb7f42732e212296f5fd56a5064611c79ea20255cacc14",
+      "cells": 2,
+      "source_lines": 210,
+      "signals": {
+        "timeout": 4,
+        "cloudflare": 7,
+        "fp16": 7,
+        "phase": 0,
+        "dataset": 8,
+        "save version": 2,
+        "disk_usage": 1,
+        "kaggle_api_token": 0
+      }
+    },
+    {
+      "file": "Movie_Upscaler_Kaggle_v1.ipynb",
+      "sha256": "cbc38d7d4055d9665c713d571b2cb9950d492720cec45e54eacf4f2c9ac43175",
+      "cells": 2,
+      "source_lines": 419,
+      "signals": {
+        "timeout": 7,
+        "cloudflare": 7,
+        "fp16": 7,
+        "phase": 0,
+        "dataset": 30,
+        "save version": 3,
+        "disk_usage": 4,
+        "kaggle_api_token": 3
+      }
+    },
+    {
+      "file": "Movie_Upscaler_Model_Packs.ipynb",
+      "sha256": "43c57520caf2f181c573aab0e1446584ee84fe05cde3fbaf2c376169b8119129",
+      "cells": 2,
+      "source_lines": 210,
+      "signals": {
+        "timeout": 1,
+        "cloudflare": 0,
+        "fp16": 3,
+        "phase": 0,
+        "dataset": 37,
+        "save version": 4,
+        "disk_usage": 3,
+        "kaggle_api_token": 4
+      }
+    },
+    {
+      "file": "Pixa_5_Workflows.ipynb",
+      "sha256": "beb3bfe326da4f1f9b8b7c58b009ca98711717ae100565430f1f4cbe9c5a992e",
+      "cells": 3,
+      "source_lines": 4637,
+      "signals": {
+        "timeout": 49,
+        "cloudflare": 24,
+        "fp16": 58,
+        "phase": 26,
+        "dataset": 8,
+        "save version": 0,
+        "disk_usage": 7,
+        "kaggle_api_token": 0
+      }
+    },
+    {
+      "file": "Three_Step_Workflow.ipynb",
+      "sha256": "2e3f1476a3f6dbfd3d781c0a3784c175028b2e992aed6930cc31ebcac1243ac3",
+      "cells": 3,
+      "source_lines": 1733,
+      "signals": {
+        "timeout": 49,
+        "cloudflare": 23,
+        "fp16": 27,
+        "phase": 26,
+        "dataset": 6,
+        "save version": 0,
+        "disk_usage": 5,
+        "kaggle_api_token": 0
+      }
+    },
+    {
+      "file": "minimax_h3_cloudflare_fixed.ipynb",
+      "sha256": "fb0e0f6101a0f1112c650215b938820d61688d6f496cf48439e9b4569025c82d",
+      "cells": 3,
+      "source_lines": 1736,
+      "signals": {
+        "timeout": 49,
+        "cloudflare": 26,
+        "fp16": 27,
+        "phase": 26,
+        "dataset": 6,
+        "save version": 0,
+        "disk_usage": 5,
+        "kaggle_api_token": 0
+      }
+    },
+    {
+      "file": "minimax_h3_full_workflow.ipynb",
+      "sha256": "fb0e0f6101a0f1112c650215b938820d61688d6f496cf48439e9b4569025c82d",
+      "cells": 3,
+      "source_lines": 1736,
+      "signals": {
+        "timeout": 49,
+        "cloudflare": 26,
+        "fp16": 27,
+        "phase": 26,
+        "dataset": 6,
+        "save version": 0,
+        "disk_usage": 5,
+        "kaggle_api_token": 0
+      }
+    },
+    {
+      "file": "minimax_h3_kaggle_complete.ipynb",
+      "sha256": "fb0e0f6101a0f1112c650215b938820d61688d6f496cf48439e9b4569025c82d",
+      "cells": 3,
+      "source_lines": 1736,
+      "signals": {
+        "timeout": 49,
+        "cloudflare": 26,
+        "fp16": 27,
+        "phase": 26,
+        "dataset": 6,
+        "save version": 0,
+        "disk_usage": 5,
+        "kaggle_api_token": 0
+      }
+    },
+    {
+      "file": "minimax_h3_kaggle_dual_t4.ipynb",
+      "sha256": "6b229e885c41dcc020363e1abfed4800ad802074d06e42a8dce521535514f268",
+      "cells": 18,
+      "source_lines": 641,
+      "signals": {
+        "timeout": 14,
+        "cloudflare": 0,
+        "fp16": 13,
+        "phase": 1,
+        "dataset": 6,
+        "save version": 0,
+        "disk_usage": 3,
+        "kaggle_api_token": 0
+      }
+    },
+    {
+      "file": "minimax_h3_taomate3_experimental.ipynb",
+      "sha256": "3b4cc12b0bb4d6f64c1dc9178d3b464adb9aeb649251924da3f1ecd4da2c9ab7",
+      "cells": 3,
+      "source_lines": 1733,
+      "signals": {
+        "timeout": 49,
+        "cloudflare": 23,
+        "fp16": 27,
+        "phase": 26,
+        "dataset": 6,
+        "save version": 0,
+        "disk_usage": 5,
+        "kaggle_api_token": 0
+      }
+    },
+    {
+      "file": "music/yue2-3b-frontier-full-song-music-generation.ipynb",
+      "sha256": "dc88a4e4d28bdb06140597386e75a265b63add2b24687795ba46e4d9971c5bfe",
+      "cells": 14,
+      "source_lines": 188,
+      "signals": {
+        "timeout": 1,
+        "cloudflare": 0,
+        "fp16": 0,
+        "phase": 0,
+        "dataset": 1,
+        "save version": 0,
+        "disk_usage": 0,
+        "kaggle_api_token": 0
+      }
+    },
+    {
+      "file": "notebooks/image_studio_commercial/Image_Studio_All_Models_Dataset.ipynb",
+      "sha256": "8660395c38a7e41118a8bca41a1b4ef2f83cc1154205f344c9ed10bcd057ce5c",
+      "cells": 2,
+      "source_lines": 316,
+      "signals": {
+        "timeout": 1,
+        "cloudflare": 0,
+        "fp16": 4,
+        "phase": 0,
+        "dataset": 67,
+        "save version": 2,
+        "disk_usage": 4,
+        "kaggle_api_token": 5
+      }
+    },
+    {
+      "file": "notebooks/image_studio_commercial/Image_Studio_All_Models_Dataset_v2.ipynb",
+      "sha256": "8660395c38a7e41118a8bca41a1b4ef2f83cc1154205f344c9ed10bcd057ce5c",
+      "cells": 2,
+      "source_lines": 316,
+      "signals": {
+        "timeout": 1,
+        "cloudflare": 0,
+        "fp16": 4,
+        "phase": 0,
+        "dataset": 67,
+        "save version": 2,
+        "disk_usage": 4,
+        "kaggle_api_token": 5
+      }
+    },
+    {
+      "file": "notebooks/image_studio_commercial/Image_Studio_Commercial_Model_Packs.ipynb",
+      "sha256": "613a3591f49bf01e5a9ecf1315da6dae11a8b4248c884cbe19e0f86de3b04f8d",
+      "cells": 2,
+      "source_lines": 223,
+      "signals": {
+        "timeout": 1,
+        "cloudflare": 0,
+        "fp16": 4,
+        "phase": 0,
+        "dataset": 49,
+        "save version": 3,
+        "disk_usage": 2,
+        "kaggle_api_token": 6
+      }
+    },
+    {
+      "file": "notebooks/image_studio_commercial/Image_Studio_Commercial_Model_Packs_v2.ipynb",
+      "sha256": "613a3591f49bf01e5a9ecf1315da6dae11a8b4248c884cbe19e0f86de3b04f8d",
+      "cells": 2,
+      "source_lines": 223,
+      "signals": {
+        "timeout": 1,
+        "cloudflare": 0,
+        "fp16": 4,
+        "phase": 0,
+        "dataset": 49,
+        "save version": 3,
+        "disk_usage": 2,
+        "kaggle_api_token": 6
+      }
+    },
+    {
+      "file": "notebooks/image_studio_commercial/Image_Studio_Commercial_Model_Packs_v3.ipynb",
+      "sha256": "613a3591f49bf01e5a9ecf1315da6dae11a8b4248c884cbe19e0f86de3b04f8d",
+      "cells": 2,
+      "source_lines": 223,
+      "signals": {
+        "timeout": 1,
+        "cloudflare": 0,
+        "fp16": 4,
+        "phase": 0,
+        "dataset": 49,
+        "save version": 3,
+        "disk_usage": 2,
+        "kaggle_api_token": 6
+      }
+    },
+    {
+      "file": "notebooks/image_studio_commercial/Image_Studio_Commercial_v7.ipynb",
+      "sha256": "90b61adc0848bfc1c99e2cfeb0e2297049df2ad5a26f59af0911b955f66edcef",
+      "cells": 2,
+      "source_lines": 232,
+      "signals": {
+        "timeout": 5,
+        "cloudflare": 9,
+        "fp16": 12,
+        "phase": 0,
+        "dataset": 45,
+        "save version": 6,
+        "disk_usage": 4,
+        "kaggle_api_token": 5
+      }
+    },
+    {
+      "file": "notebooks/image_studio_commercial/Image_Studio_Commercial_v8.ipynb",
+      "sha256": "90b61adc0848bfc1c99e2cfeb0e2297049df2ad5a26f59af0911b955f66edcef",
+      "cells": 2,
+      "source_lines": 232,
+      "signals": {
+        "timeout": 5,
+        "cloudflare": 9,
+        "fp16": 12,
+        "phase": 0,
+        "dataset": 45,
+        "save version": 6,
+        "disk_usage": 4,
+        "kaggle_api_token": 5
+      }
+    },
+    {
+      "file": "notebooks/image_studio_commercial/Image_Studio_Commercial_v9.ipynb",
+      "sha256": "96bbe879a712c88cd56adcdfa124a6d9cc1557c6aebd97c6b4c05a47c4f91467",
+      "cells": 2,
+      "source_lines": 194,
+      "signals": {
+        "timeout": 4,
+        "cloudflare": 8,
+        "fp16": 8,
+        "phase": 0,
+        "dataset": 15,
+        "save version": 1,
+        "disk_usage": 1,
+        "kaggle_api_token": 0
+      }
+    },
+    {
+      "file": "notebooks/image_studio_normal/Image_Studio_Normal.ipynb",
+      "sha256": "303234ba60401273cceb7f42732e212296f5fd56a5064611c79ea20255cacc14",
+      "cells": 2,
+      "source_lines": 210,
+      "signals": {
+        "timeout": 4,
+        "cloudflare": 7,
+        "fp16": 7,
+        "phase": 0,
+        "dataset": 8,
+        "save version": 2,
+        "disk_usage": 1,
+        "kaggle_api_token": 0
+      }
+    },
+    {
+      "file": "notebooks/image_studio_normal/Image_Studio_Normal_v10.ipynb",
+      "sha256": "303234ba60401273cceb7f42732e212296f5fd56a5064611c79ea20255cacc14",
+      "cells": 2,
+      "source_lines": 210,
+      "signals": {
+        "timeout": 4,
+        "cloudflare": 7,
+        "fp16": 7,
+        "phase": 0,
+        "dataset": 8,
+        "save version": 2,
+        "disk_usage": 1,
+        "kaggle_api_token": 0
+      }
+    },
+    {
+      "file": "notebooks/minimax_h3_prepare_diffusion.ipynb",
+      "sha256": "59fe4dee0544e40f1646cd4d7c948db7655a6d9b65ea25bc92df2fdb468a4dbd",
+      "cells": 4,
+      "source_lines": 82,
+      "signals": {
+        "timeout": 1,
+        "cloudflare": 0,
+        "fp16": 1,
+        "phase": 0,
+        "dataset": 1,
+        "save version": 2,
+        "disk_usage": 1,
+        "kaggle_api_token": 0
+      }
+    },
+    {
+      "file": "notebooks/minimax_h3_prepare_encoder.ipynb",
+      "sha256": "492a4bfa6abc2226a092556403d8e19091758bb01ec32a2b17941a84de435460",
+      "cells": 4,
+      "source_lines": 82,
+      "signals": {
+        "timeout": 1,
+        "cloudflare": 0,
+        "fp16": 1,
+        "phase": 0,
+        "dataset": 1,
+        "save version": 2,
+        "disk_usage": 1,
+        "kaggle_api_token": 0
+      }
+    },
+    {
+      "file": "notebooks/minimax_h3_prepare_support.ipynb",
+      "sha256": "a61efba89a57108219dceb372adb59e4d9dbfac0db0d47b40e4d13a996d6f8f2",
+      "cells": 4,
+      "source_lines": 82,
+      "signals": {
+        "timeout": 1,
+        "cloudflare": 0,
+        "fp16": 1,
+        "phase": 0,
+        "dataset": 1,
+        "save version": 2,
+        "disk_usage": 1,
+        "kaggle_api_token": 0
+      }
+    }
+  ]
+}
