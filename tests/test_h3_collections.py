@@ -116,12 +116,42 @@ class Collections(unittest.TestCase):
             asset={'repo':'fixture/model','revision':'pin','file':'diffusion_models/model.safetensors',
                    'size':len(payload),'sha256':hashlib.sha256(payload).hexdigest()}
             target=scope['stored_asset'](store,asset);dst=scope['asset_target'](asset)
-            scope['SUITE_ASSETS']=[asset];scope['suite_attached_input']=lambda p:Path(p)==source
-            scope['model_storage_plan']=Mock(return_value={'locations':[(asset,source)],'store':store})
-            scope['suite_prepare_assets']([asset])
+            encoder=dict(asset,file='text_encoders/encoder.safetensors',size=7,sha256=hashlib.sha256(b'encoder').hexdigest())
+            enc_source=root/'attached/encoder.safetensors';enc_source.write_bytes(b'encoder')
+            scope['SUITE_ASSETS']=[asset,encoder];scope['suite_attached_input']=lambda p:Path(p) in (source,enc_source)
+            scope['model_storage_plan']=Mock(return_value={'locations':[(asset,source),(encoder,enc_source)],'store':store})
+            scope['suite_prepare_assets']([asset,encoder])
             self.assertEqual(target.read_bytes(),payload);self.assertTrue(dst.is_symlink())
             self.assertEqual(dst.resolve(),target.resolve())
+            self.assertEqual(scope['asset_target'](encoder).resolve(),enc_source.resolve())
+            self.assertFalse(scope['stored_asset'](store,encoder).exists())
             first_mtime=target.stat().st_mtime_ns
-            scope['suite_prepare_assets']([asset])
+            scope['suite_prepare_assets']([asset,encoder])
             self.assertEqual(target.stat().st_mtime_ns,first_mtime)
             self.assertEqual(scope['model_storage_plan'].call_count,2)
+
+    def test_checkpoint_family_switch_keeps_one_local_copy(self):
+        from test_h3_complete import scope_at
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp);s=scope_at(root);exec(S.joinpath('assets.py').read_text(),s)
+            store=root/'cache'
+            old={'repo':'fixture/model','revision':'pin','file':'diffusion_models/old.bin','size':8,'sha256':'old'}
+            new=dict(old,file='diffusion_models/new.bin',sha256='new')
+            p=s['stored_asset'](store,old);p.parent.mkdir(parents=True);p.write_bytes(b'12345678')
+            s['SUITE_ASSETS']=[old,new]
+            ledger={'old':{'path':str(p),'store':str(store),'mtime_ns':p.stat().st_mtime_ns}}
+            s['suite_checkpoint_budget'](store,[new],ledger,limit=10)
+            self.assertFalse(p.exists());self.assertNotIn('old',ledger)
+
+    def test_untracked_checkpoint_is_preserved_and_copy_cap_blocks_growth(self):
+        from test_h3_complete import scope_at
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp);s=scope_at(root);exec(S.joinpath('assets.py').read_text(),s)
+            store=root/'cache'
+            old={'repo':'fixture/model','revision':'pin','file':'diffusion_models/old.bin','size':8,'sha256':'old'}
+            new=dict(old,file='diffusion_models/new.bin',sha256='new')
+            p=s['stored_asset'](store,old);p.parent.mkdir(parents=True);p.write_bytes(b'12345678')
+            s['SUITE_ASSETS']=[old,new]
+            with self.assertRaisesRegex(RuntimeError,'budget'):
+                s['suite_checkpoint_budget'](store,[new],{},limit=10)
+            self.assertTrue(p.exists())

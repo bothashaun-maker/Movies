@@ -41,6 +41,25 @@ def suite_required_assets(graph,require_diffusion=True):
     if require_diffusion and not any((a.get('dest') or a['file']).startswith('diffusion_models/') for a in selected):raise ValueError('No known H3 diffusion model selected.')
     return selected
 
+def suite_checkpoint_budget(store,selected,ledger,limit=24*2**30):
+    """Bound local diffusion copies independently of host-reported free space."""
+    active={a['sha256'] for a in selected}
+    checkpoints=[a for a in SUITE_ASSETS if (a.get('dest') or a['file']).startswith('diffusion_models/')]
+    # A family switch releases only an exact, ledger-tracked inactive checkpoint.
+    for a in checkpoints:
+        if a['sha256'] in active:continue
+        path=stored_asset(store,a);item=ledger.get(a['sha256'],{})
+        if (item.get('path')==str(path) and item.get('store')==str(store)
+            and path.is_file() and not path.is_symlink()
+            and path.resolve().is_relative_to(store.resolve())
+            and path.stat().st_size==a['size'] and path.stat().st_mtime_ns==item.get('mtime_ns')):
+            print('Releasing inactive notebook checkpoint before family switch:',path.name,flush=True)
+            path.unlink();ledger.pop(a['sha256'],None)
+    occupied=sum(stored_asset(store,a).stat().st_size for a in checkpoints if stored_asset(store,a).is_file())
+    missing=sum(a['size'] for a in selected if (a.get('dest') or a['file']).startswith('diffusion_models/') and not stored_asset(store,a).is_file())
+    if occupied+missing>limit:
+        raise RuntimeError('Local diffusion checkpoint budget would exceed 24 GiB. Start a fresh session; untracked files were preserved. No new copy started.')
+
 def suite_prepare_assets(selected):
     # Only our tracked downloads can be evicted. /kaggle/input and arbitrary user paths are never deleted.
     ledger_file=ROOT/'suite-download-cache.json'
@@ -68,16 +87,21 @@ def suite_prepare_assets(selected):
         plan=model_storage_plan()
     # Safetensors performs many small/random reads while building the two-GPU H3
     # shards. Reading a 20 GiB checkpoint directly from Kaggle's mounted Dataset
-    # can leave initialization at block 0 for tens of minutes. Stage attached
-    # files once with a sequential verified copy, then reuse them all session.
+    # can leave initialization at block 0 for tens of minutes. Only diffusion
+    # checkpoints need this copy; encoder, VAEs and LoRAs stay on the input mount.
     stage_items=[]
     for a,source in plan['locations']:
-        if suite_attached_input(source):stage_items.append((a,source,stored_asset(plan['store'],a)))
+        if (a.get('dest') or a['file']).startswith('diffusion_models/') and suite_attached_input(source):
+            stage_items.append((a,source,stored_asset(plan['store'],a)))
+    if stage_items:
+        suite_checkpoint_budget(plan['store'],selected,ledger)
+        ledger_file.write_text(json.dumps(ledger,indent=2))
     extra=sum(a['size'] for a,_,target in stage_items if not file_has_size(target,a))
     if extra:
         plan['store'].mkdir(parents=True,exist_ok=True)
         free=shutil.disk_usage(plan['store']).free
-        if free<extra+2*2**30:
+        pending_bytes=sum(a['size'] for a,source in plan['locations'] if not file_has_size(source,a))
+        if free<extra+pending_bytes+2*2**30:
             raise RuntimeError(f'Fast local staging needs {extra/2**30:.2f} GiB plus 2 GiB reserve, '
                                f'but {plan["store"]} has {free/2**30:.2f} GiB. No attached files were changed.')
     staged={}
