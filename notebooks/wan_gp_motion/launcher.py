@@ -125,8 +125,9 @@ def launch(runtime, output, port=7860, job_minutes=20, session_hours=8, scratch_
                    PYTHONPATH=str(runtime), JJP_OUTPUT=str(output), GRADIO_ANALYTICS_ENABLED='False')
         atomic_json(output/'startup.json', {'hardware': hardware, 'scratch': scratch,
                                           'model_bytes': model_bytes, 'revision': WANGP_REVISION})
-        bounded([sys.executable, runtime/'common.py', 'stage', runtime/'assets.json', '/kaggle/input', cache],
-                output/'models.log', 1200, env=env)
+        stage_command = [sys.executable, runtime/'common.py', 'stage', runtime/'assets.json', '/kaggle/input', cache]
+        if speed_mode != 'sage':
+            bounded(stage_command, output/'models.log', 1200, env=env)
         from bootstrap import ensure_environment
         python, uv = ensure_environment(scratch, output, env)
         app = scratch/'WanGP'
@@ -155,9 +156,11 @@ def launch(runtime, output, port=7860, job_minutes=20, session_hours=8, scratch_
         patch_h3_dtype(app/'models/minimax_h3/minimax_h3_handler.py')
         patch_h3_numerics(app)
         patch_h3_attention(app)
-        bounded([python, runtime/'gpu_probe.py'], output/'gpu-probe.log', 120, cwd=app, env=env)
         from h3_attention import choose
         env['JJP_H3_ATTENTION'] = choose(runtime, output, python, uv, app, env, speed_mode)
+        bounded([python, runtime/'gpu_probe.py'], output/'gpu-probe.log', 120, cwd=app, env=env)
+        if speed_mode == 'sage':
+            bounded(stage_command, output/'models.log', 1200, env=env)
         print('H3 attention:', env['JJP_H3_ATTENTION'], '| Qwen and VAE: SDPA. Numerical safeguards retained.', flush=True)
         config = output/'config'
         settings = output/'settings'

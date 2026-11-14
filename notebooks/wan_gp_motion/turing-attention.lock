@@ -1,0 +1,4 @@
+# Isolated optional runtime, Python 3.11/Linux x86_64. Never resolve/replace Torch.
+# WanGP docs/INSTALLATION.md specifies Triton 3.2 + Sage 1.0.6 for Turing.
+triton @ https://files.pythonhosted.org/packages/a7/2e/757d2280d4fefe7d33af7615124e7e298ae7b8e3bc4446cdb8e88b0f9bab/triton-3.2.0-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl --hash=sha256:8009a1fb093ee8546495e96731336a33fb8856a38e45bb4ab6affd6dbc3ba220
+sageattention @ https://files.pythonhosted.org/packages/53/06/f7b47adb766bcb38b3f88763374a3e8dffea05ee9b556bc24dbcbd60fd29/sageattention-1.0.6-py3-none-any.whl --hash=sha256:fafc66569bed62a16839e820c2612141b5a20accf55b876d941bab9c0ac5d888

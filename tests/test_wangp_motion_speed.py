@@ -133,5 +133,84 @@ class OptionalAccelerationTests(unittest.TestCase):
         self.assertIsNone(h3_attention.speed_preflight('sdpa'))
 
 
+class TuringAccelerationTests(unittest.TestCase):
+    def setUp(self):
+        self.temporary = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temporary.cleanup)
+        self.output = Path(self.temporary.name)
+
+    def test_isolated_install_is_hash_pinned_and_reused_without_changing_parent_path(self):
+        python = self.output/'venv/bin/python'
+        target = self.output/'venv/jjp-turing-attention'
+        env = {'PYTHONPATH': 'runtime:native'}
+
+        def install(command, log, timeout, **kwargs):
+            self.assertEqual(timeout, 300)
+            self.assertIn('--no-deps', command)
+            self.assertIn('--require-hashes', command)
+            self.assertEqual(command[command.index('--target')+1], target)
+            for name in ('triton-3.2.0.dist-info', 'sageattention-1.0.6.dist-info', 'triton', 'sageattention'):
+                (target/name).mkdir(parents=True)
+
+        with patch.object(h3_attention, 'bounded', side_effect=install) as stage:
+            self.assertEqual(h3_attention.prepare_turing_runtime(SOURCE, self.output, python, 'uv', env), target)
+            stage.assert_called_once()
+            h3_attention.prepare_turing_runtime(SOURCE, self.output, python, 'uv', env)
+            stage.assert_called_once()
+        self.assertTrue(env['PYTHONPATH'].startswith(str(target)+os.pathsep))
+        self.assertEqual(env['JJP_TURING_ATTENTION'], '1')
+
+    def choose(self, report=None, error=None):
+        def probe(command, *args, **kwargs):
+            if error:
+                raise error
+            (self.output/'attention-probe.json').write_text(json.dumps(report))
+        with patch.object(h3_attention, 'prepare_turing_runtime'), \
+             patch.object(h3_attention, 'bounded', side_effect=probe):
+            return h3_attention.choose(SOURCE, self.output, 'python', 'uv', 'app', {}, 'sage')
+
+    def test_sage_requires_compatible_compiler_and_measured_kernel_improvement(self):
+        report = {'selected': 'sage', 'triton': '3.2.0', 'benchmark': {'sdpa_ms': 10, 'sage_ms': 4}}
+        self.assertEqual(self.choose(report), 'sage')
+        self.assertIsNone(h3_attention.speed_preflight('sage'))
+
+    def test_incompatible_slow_missing_or_failed_probe_never_falls_back(self):
+        for report in (
+            {'selected': 'sage', 'triton': '3.6.0', 'benchmark': {'sdpa_ms': 10, 'sage_ms': 4}},
+            {'selected': 'sage', 'triton': '3.2.0', 'benchmark': {'sdpa_ms': 10, 'sage_ms': 11}},
+            {'selected': 'sage', 'triton': '3.2.0', 'benchmark': {'sdpa_ms': 10, 'sage_ms': 9.8}},
+            {'selected': 'sage', 'triton': '3.2.0', 'benchmark': {'sdpa_ms': float('inf'), 'sage_ms': 4}},
+            {'selected': 'sage', 'triton': '3.2.0', 'benchmark': None},
+            {'selected': 'sdpa'},
+        ):
+            with self.subTest(report=report), self.assertRaisesRegex(RuntimeError, 'no automatic SDPA'):
+                self.choose(report)
+            self.assertIsNone(json.loads((self.output/'attention-probe.json').read_text())['selected'])
+        with self.assertRaisesRegex(RuntimeError, 'no automatic SDPA'):
+            self.choose(error=TimeoutError('bounded probe expired'))
+
+    def test_failed_sage_startup_does_not_copy_models_or_start_gpu_render(self):
+        import ctypes.util
+        import bootstrap
+        import patch as source_patch
+        scratch = self.output/'scratch'
+        (scratch/'WanGP').mkdir(parents=True)
+        identity = h3_attention.sha256(SOURCE/'requirements.lock')+'-torch210cu128-py31113'
+        (scratch/'dependencies.ready').write_text(identity)
+        with patch.object(launcher, 'hardware_preflight', return_value={}), \
+             patch.object(launcher, 'choose_scratch', return_value=scratch), \
+             patch.object(launcher.shutil, 'which', return_value='/installed'), \
+             patch.object(ctypes.util, 'find_library', return_value='installed'), \
+             patch.object(bootstrap, 'ensure_environment', return_value=('python', 'uv')), \
+             patch.object(launcher.subprocess, 'check_output', return_value=launcher.WANGP_REVISION), \
+             patch.object(source_patch, 'patch_wgp'), patch.object(source_patch, 'patch_h3_dtype'), \
+             patch.object(source_patch, 'patch_h3_numerics'), patch.object(source_patch, 'patch_h3_attention'), \
+             patch.object(h3_attention, 'choose', side_effect=RuntimeError('Sage accuracy check failed')), \
+             patch.object(launcher, 'bounded', side_effect=AssertionError('No staging or GPU probe after failure')) as stage:
+            with self.assertRaisesRegex(RuntimeError, 'Sage accuracy check failed'):
+                launcher.launch(SOURCE, self.output/'output', port=0, speed_mode='sage')
+            stage.assert_not_called()
+
+
 if __name__ == '__main__':
     unittest.main()

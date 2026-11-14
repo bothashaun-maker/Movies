@@ -326,7 +326,7 @@ class ArtifactTests(unittest.TestCase):
             payload = next(n.value for n in tree.body if isinstance(n, ast.Assign)
                            and any(isinstance(t, ast.Name) and t.id == 'PAYLOAD' for t in n.targets))
             with zipfile.ZipFile(io.BytesIO(base64.b64decode(ast.literal_eval(payload)))) as archive:
-                for filename in ('guard.py', 'h3_safe_fp16.py', 'h3_attention.py', 'sage-requirements.lock', 'patch.py', 'launcher.py', 'gpu_probe.py'):
+                for filename in ('guard.py', 'h3_safe_fp16.py', 'h3_attention.py', 'sage-requirements.lock', 'turing-attention.lock', 'patch.py', 'launcher.py', 'gpu_probe.py'):
                     self.assertEqual(archive.read(filename), (SOURCE/filename).read_bytes())
 
     def test_replaced_single_cell_evicts_its_old_runtime_modules(self):

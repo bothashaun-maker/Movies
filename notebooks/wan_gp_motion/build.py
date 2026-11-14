@@ -59,30 +59,34 @@ for name in ('launcher', 'patch', 'settings', 'common', 'bootstrap', 'guard', 'h
 
 def build():
     encoded = payload()
-    intro = '''**Build: RENDER-v1.8 · 14 November 2026.** Starts normally using the FP16/SDPA rendering path that produced Test 2. The failed Sage accelerator is not installed or probed on the default path. The default no longer blocks startup. Your existing model Dataset and numerical safeguards are retained. No repair cells or setting changes are required.
+    intro = '''**Build: TURING-SAGE-v1.9 · 14 November 2026.** Implements the requested Sage acceleration path with the compiler WanGP specifies for Turing: isolated **Triton 3.2 + SageAttention 1.0.6**. The exact SM75 attention kernel compiles locally with INT8/FP16 Tensor Core instructions; native CPU checks pass. **Full-clip GPU speed and quality on this path remain unmeasured.** No 2–3 minute render claim is made.
 
 **WanGP native GUI through Cloudflare. One executable cell.**
 
 1. Attach your existing **ONE JJP WanGP Motion Models Dataset** through Add Input → Your Datasets. No new Dataset or builder run is needed. If Kaggle shows **Adding data**, wait for it to finish.
-2. Select **GPU T4 ×2**, **Internet ON**. Run the single code cell below. It verifies/stages existing weights, sets up the isolated runtime and opens WanGP through a printed Cloudflare link. Keep that cell running while using WanGP.
+2. Select **GPU T4 ×2**, **Internet ON**. The single cell prepares the isolated runtime and checks Sage accuracy, native staged H3 attention and attention timing **before copying the 40.53 GiB of model files**. It requires Sage to beat SDPA by at least 10% in a small warmed-up device benchmark. This measures attention only, not whole-clip speed. A failed check stops clearly; it does not silently render with SDPA. A passing check continues through model staging and the Cloudflare GUI. Keep that cell running while using WanGP.
 3. Upload your original appearance reference. Generate **A: image only** first. The supplied prompt requests Jesus in front of the wood, the main crucifix on the left, foreground soldiers/mourners and the original storm composition. Inspect/edit the prompt if using a different image.
 4. Defaults remain **864×480, 124 frames, 24 fps, PDD 8 steps/Euler, seed 8675309**. Press Generate in the GUI. The notebook does not render automatically.
 5. Save the finished MP4 and settings. For Movavi, mute native H3 audio; keep your song outside H3. Outputs/logs are under `/kaggle/working/jjp-wangp-motion`. Download/save outputs before ending a session.
 
 **Motion guides:** Test 2 was image-only. Establish a satisfactory appearance baseline before adding a Blender guide. A guide must match the shot's front side and framing. The bundled centered bare-cross guide does not match this crowded, left-framed crucifixion image. Reference-video camera fidelity remains unproven.
 
-**Runtime:** GPU 0 only; the second T4 does not pool memory. Profile 5, SDPA, INT8 weights and the working FP16/FP32 numerical protections are unchanged. The same 13-file model catalog is used. Actual scratch capacity is measured; the initial local mirror requirement is about **52.54 GiB**. No missing model downloads during inference. No Sage installation or GPU acceleration experiment is attempted in the default configuration.
+**Runtime:** GPU 0 only; the second T4 does not pool memory. Profile 5, INT8 weights and the working FP16/FP32 numerical protections are retained. Sage is scoped to H3; Qwen and VAE retain SDPA. The GUI's global header still says SDPA; the notebook's **H3 attention** line and `attention-probe.json` identify the actual H3 backend. The base Torch 2.10/CUDA 12.8 environment stays pinned. Its normal Triton 3.6 dependency is overridden only in the Sage child processes by a separate, hash-pinned import directory following WanGP's Turing instructions. This is an explicit compatibility exception; PyTorch compilation stays disabled.
 
-**Limits:** model staging 20 min, Torch install 20 min, app install 30 min, GUI startup 5 min, tunnel 2 min, render 20 min. Non-finite values stop before export; sustained low host RAM stops the server. Stopping the cell terminates owned processes. Completed outputs are preserved. The single cell reloads its own runtime modules when reused; run one launcher at a time.
+The same 13-file model catalog is used. Actual scratch capacity is measured; the initial local mirror requirement is about **52.54 GiB**, including room for the optional compiler directory. Models come from your attached Dataset. Startup additionally installs the small Sage package and its **241 MiB compiler wheel**; these are software packages, not new models or a new Dataset.
 
-**What is verified:** The user produced non-black full-size video with this rendering backend. The revised scene prompt still requires visual review; exact fidelity is not guaranteed. SDPA has not become faster: reported runs remain roughly 15–18 minutes. This restores rendering, not a claimed speedup. Development checks are recorded in `notebooks/wan_gp_motion/VALIDATION.md`.
+**Supported settings:** Keep eight-step PDD/Euler and caching off. The current PDD checkpoint is not a four-step Turbo model. SageAttention 2 is not a T4 fallback. Generic Profile 4/TeaCache/compile claims and multiplied speed estimates are not validated for this setup. `SPEED_MODE='sdpa'` remains an explicit way to use the earlier slow rendering backend without installing/probing Sage.
+
+**Limits:** model staging 20 min, Torch install 20 min, app install 30 min, optional attention installation 5 min, device check 2 min, GUI startup 5 min, tunnel 2 min, render 20 min. These are failure deadlines, not expected render durations. Non-finite values stop before export; sustained low host RAM stops the server. Stopping the cell terminates owned processes. Completed outputs are preserved. The single cell reloads its own runtime modules when reused; run one launcher at a time.
+
+**What is verified:** The user produced non-black full-size video on the prior SDPA backend. Locally, the actual Sage kernel compiles for SM75 under Triton 3.2, whereas 3.6 reproduced the uploaded compiler failure. CPU native import/arithmetic/dispatch checks pass with 3.2 selected. Those checks do not execute a GPU kernel or establish full-size speed, memory fit or image fidelity. The automatic device check establishes those small-kernel measurements only in the session where it runs. The revised scene prompt still requires visual review; exact fidelity is not guaranteed. See `notebooks/wan_gp_motion/VALIDATION.md` for evidence and limits.
 '''
     code = '''# JJP WanGP Motion Test Kit — one executable cell
 PORT = 7860
 JOB_TIMEOUT_MINUTES = 20
 SESSION_HOURS = 8
 SCRATCH_ROOT = ''  # Auto: measured /kaggle/temp, /tmp, /kaggle/working. Optional writable local override.
-SPEED_MODE = 'sdpa'  # Working render backend. No failed Sage installation/probe and no blocked default.
+SPEED_MODE = 'sage'  # Isolated Turing compiler + accuracy/timing gate before model copying. No silent SDPA fallback.
 '''+extraction(encoded)+'''
 from launcher import launch
 launch(RUNTIME, OUTPUT, PORT, JOB_TIMEOUT_MINUTES, SESSION_HOURS, SCRATCH_ROOT, SPEED_MODE)
