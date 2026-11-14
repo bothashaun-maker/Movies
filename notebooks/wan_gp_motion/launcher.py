@@ -49,6 +49,36 @@ def monitor_health(active, ram, now, limit, low_count):
     return ('Available host RAM stayed below 1.5 GiB for three checks.' if low_count >= 3 else None), low_count
 
 
+def headless_environment(parent=None):
+    """The child is a standalone server, so it must not inherit Jupyter's inline backend."""
+    env = dict(os.environ if parent is None else parent)
+    env['MPLBACKEND'] = 'Agg'
+    return env
+
+
+def native_command(python, app, scratch, config, settings, port):
+    """One command definition for the shipped launcher and CPU GUI checks."""
+    return [python, '-u', Path(app)/'wgp.py', '--offline', '--gpu', 'cuda:0', '--profile', '5',
+            '--fp16', '--attention', 'sdpa', '--vram-allocator', 'default', '--ram-allocator', 'default',
+            '--preload', '0', '--perc-reserved-mem-max', '0.10', '--max-vram', '14',
+            '--max-ram', '24', '--vae-config', '3', '--lock-config',
+            '--config', config, '--settings', settings, '--loras', Path(scratch)/'loras',
+            '--server-name', '127.0.0.1', '--server-port', str(port), '--no-mcp-webui', '--advanced']
+
+
+def startup_error(process, log_path):
+    """Keep the actual Python traceback/exit code in the notebook output on failure."""
+    log_path = Path(log_path)
+    try:
+        with log_path.open('rb') as stream:
+            stream.seek(max(0, log_path.stat().st_size-10000))
+            tail = stream.read().decode(errors='replace')
+    except OSError as error:
+        tail = f'Could not read the startup log: {error}'
+    return RuntimeError(f'WanGP GUI exited with code {process.poll()}. Log: {log_path}\n'
+                        f'Last startup output:\n{tail}')
+
+
 def launch(runtime, output, port=7860, job_minutes=20, session_hours=8, scratch_root=''):
     runtime, output = Path(runtime), Path(output)
     output.mkdir(parents=True, exist_ok=True)
@@ -84,7 +114,7 @@ def launch(runtime, output, port=7860, job_minutes=20, session_hours=8, scratch_
         reusable = [('models/'+a['file'], a['bytes']) for a in catalog['assets']]
         scratch = choose_scratch(model_bytes+12*GIB, roots, 'jjp-wangp-motion-v1', reusable)
         cache = scratch/'models'
-        env = os.environ.copy()
+        env = headless_environment()
         env.update(PYTHONUNBUFFERED='1', PYTHONNOUSERSITE='1', CUDA_VISIBLE_DEVICES='0',
                    OMP_NUM_THREADS='2', OPENBLAS_NUM_THREADS='2', MKL_NUM_THREADS='2',
                    NUMBA_NUM_THREADS='2', TOKENIZERS_PARALLELISM='false',
@@ -144,12 +174,7 @@ def launch(runtime, output, port=7860, job_minutes=20, session_hours=8, scratch_
         bounded([sys.executable, runtime/'bootstrap.py', 'cloudflare', cloudflared], output/'cloudflare-install.log', 180, env=env)
         cloudflared.chmod(0o700)
         atomic_json(output/'active-job.json', {'active': False})
-        command = [python, '-u', app/'wgp.py', '--offline', '--gpu', 'cuda:0', '--profile', '5',
-                   '--fp16', '--attention', 'sdpa', '--vram-allocator', 'default', '--ram-allocator', 'default',
-                   '--preload', '0', '--perc-reserved-mem-max', '0.10', '--max-vram', '14',
-                   '--max-ram', '24', '--vae-config', '3', '--lock-config',
-                   '--config', config, '--settings', settings, '--loras', scratch/'loras',
-                   '--server-name', '127.0.0.1', '--server-port', str(port), '--no-mcp-webui', '--advanced']
+        command = native_command(python, app, scratch, config, settings, port)
         with open(output/'wangp.log', 'a', buffering=1) as log:
             server = subprocess.Popen(list(map(str, command)), cwd=app, env=env, stdout=log,
                                       stderr=subprocess.STDOUT, start_new_session=True)
@@ -158,7 +183,7 @@ def launch(runtime, output, port=7860, job_minutes=20, session_hours=8, scratch_
         deadline = time.monotonic()+300
         while time.monotonic() < deadline:
             if server.poll() is not None:
-                raise RuntimeError('WanGP failed to start. See '+str(output/'wangp.log'))
+                raise startup_error(server, output/'wangp.log')
             try:
                 with urllib.request.urlopen(local_url+'/config', timeout=3) as response:
                     info = json.load(response)

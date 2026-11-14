@@ -53,7 +53,9 @@ sys.path.insert(0, str(RUNTIME))
 
 def build():
     encoded = payload()
-    intro = '''**WanGP GUI → Cloudflare. No ComfyUI. No automatic generation.**
+    intro = '''**Build: GUI-STARTUP-v1.3 · 14 November 2026.** Standalone WanGP uses Matplotlib's `Agg` backend; Kaggle's notebook-only inline backend is not inherited. Startup failures include the actual log tail and exit code.
+
+**WanGP GUI → Cloudflare. No ComfyUI. No automatic generation.**
 
 1. Run **JJP_WanGP_Motion_Models.ipynb** once with **Accelerator: None, Internet ON**. It automatically submits **ONE private Dataset** with all 13 required files (40.53 GiB). Use Kaggle Secrets as described in that notebook.
 2. Import a fresh copy of this notebook. Select **GPU T4 ×2**, **Internet ON**. Add Input → Your Datasets → attach that **ONE JJP WanGP Motion Models Dataset**. Do not substitute Director, H3 Next or Image Studio packs.

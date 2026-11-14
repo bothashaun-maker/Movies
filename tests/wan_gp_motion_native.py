@@ -23,6 +23,7 @@ sys.path.insert(0, str(source))
 from common import atomic_json
 from settings import MODEL, server_settings, shot_settings
 from patch import patch_wgp, patch_h3_dtype
+from launcher import native_command, headless_environment
 work.mkdir(parents=True, exist_ok=True)
 patch_wgp(app/'wgp.py')
 patch_h3_dtype(app/'models/minimax_h3/minimax_h3_handler.py')
@@ -31,6 +32,7 @@ config.mkdir(exist_ok=True)
 saved.mkdir(exist_ok=True)
 atomic_json(config/'wgp_config.json', server_settings(work/'models', work/'output'))
 atomic_json(saved/(MODEL+'_settings.json'), shot_settings())
+os.environ.update(headless_environment())
 os.environ.update(GRADIO_ANALYTICS_ENABLED='False', JJP_OUTPUT=str(work/'output'))
 os.chdir(app)
 sys.path.insert(0, str(app))
@@ -42,11 +44,9 @@ torch.cuda.get_device_properties = lambda *a, **kw: types.SimpleNamespace(
     name='SIMULATED T4', total_memory=15*1024**3, major=7, minor=5, multi_processor_count=40)
 torch.cuda.mem_get_info = lambda *a, **kw: (14*1024**3, 15*1024**3)
 torch.cuda.current_device = lambda: 0
-sys.argv = ['wgp.py', '--offline', '--profile', '5', '--fp16', '--attention', 'sdpa',
-            '--ram-allocator', 'default', '--vram-allocator', 'default', '--config', str(config),
-            '--settings', str(saved), '--no-mcp-webui', '--lock-config', '--advanced']
+command = native_command(sys.executable, app, work, config, saved, arguments.serve or 7871)
+sys.argv = list(map(str, command[2:]))
 if arguments.serve:
-    sys.argv += ['--server-name', '127.0.0.1', '--server-port', str(arguments.serve)]
     runpy.run_path(str(app/'wgp.py'), run_name='__main__')
 else:
     import wgp

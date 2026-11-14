@@ -1,5 +1,7 @@
 """Executed in the isolated runtime with CUDA_VISIBLE_DEVICES=0 before GUI launch."""
 import importlib.metadata
+import matplotlib
+assert matplotlib.get_backend().lower() == 'agg', 'Standalone WanGP requires the Agg Matplotlib backend'
 import torch
 
 assert torch.__version__ == '2.10.0+cu128', torch.__version__

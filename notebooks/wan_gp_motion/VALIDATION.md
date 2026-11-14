@@ -2,6 +2,14 @@
 
 This records what was executed. A simulated GPU identity is not evidence of GPU computation.
 
+## GUI startup correction — 14 November 2026
+
+The user's first T4 startup advanced through local model staging, package installation/checks and the CUDA/kernel/import probe. The standalone WanGP server then exited while importing Matplotlib through `models.wan.scail.scail_pose_draw`. Kaggle had supplied `MPLBACKEND=module://matplotlib_inline.backend_inline`, but the isolated server environment does not contain that notebook-only backend. This is a process-environment integration failure, before GUI readiness and before a user-requested render.
+
+Reproduced the **exact same Matplotlib ValueError** locally with the supplied environment value and the installed video dependencies, using CPU only. GUI-STARTUP-v1.3 now sets `MPLBACKEND=Agg` in a copied child environment and preserves the notebook kernel's environment. The runtime probe checks the effective Matplotlib backend before GPU checks. A regression test imports Matplotlib and draws with Agg in an isolated child process while its supplied parent environment contains the failing Kaggle value.
+
+The native CPU GUI harness now uses the launcher's complete command definition, including memory budgets, allocator choices and GPU argument, rather than a reduced set of flags. With the failing Kaggle backend value supplied to the harness, the corrected child reached native `/config` readiness and opened in Chromium. Hardware metadata is still explicitly simulated; CUDA-only startup paths and video inference are not established by this CPU test. **25 regression tests passed** in the video test environment. Startup failures now also print the real log tail and process exit code in notebook output. The model catalog and saved Dataset are unchanged.
+
 ## CPU builder correction — 14 November 2026
 
 The user's Kaggle run exposed a missing `six` dependency before any model transfer. Reproduced the exact failure in a new Python 3.11.13 environment containing only the original CPU lock. The previous SDK inspection had run inside the much larger video environment, which already included `six`; that was an insufficient check of the CPU builder's package environment.

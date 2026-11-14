@@ -2,6 +2,8 @@
 
 The two new notebooks are separate from Director, H3 Next, Image Studio and the Movie Upscaler. Existing notebooks are unchanged.
 
+**GPU GUI startup correction — GUI-STARTUP-v1.3, 14 November 2026:** The standalone child forces Matplotlib's headless `Agg` backend. This fixes the reproduced crash caused by inheriting Kaggle's `module://matplotlib_inline.backend_inline` setting into the isolated video environment. Startup errors include the actual traceback tail and exit code. Reuse the already-created model Dataset; no model changes or Dataset rebuild is required for this correction.
+
 **CPU builder correction, 14 November 2026 — CPU-BUILDER-v1.2:** The model builder now uses the same notebook Python and installed Kaggle SDK as the user's working H3 Next builder. It does not create a separate CPU virtual environment or replace a working SDK. An import preflight checks the real uploader and generated `UploadFile` model; a missing `six` is installed explicitly in that same interpreter before any weights are downloaded. The independent CPU requirements file remains available for clean-environment regression checks. The WanGP-only model catalog is unchanged; none of H3 Next's Singularity, DenoMix, Molmo or Sol weights is added.
 
 1. Import [`JJP_WanGP_Motion_Models.ipynb`](../../JJP_WanGP_Motion_Models.ipynb) into Kaggle. **CPU / Accelerator None, Internet ON**. Enable `KAGGLE_API_TOKEN`, or `KAGGLE_USERNAME` and `KAGGLE_KEY`, in Kaggle Secrets. Set `DATASET_OWNER` if needed. Run its single cell; it automatically submits **one private Dataset**.

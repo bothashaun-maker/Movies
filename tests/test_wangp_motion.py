@@ -88,6 +88,33 @@ class StorageTests(unittest.TestCase):
 
 
 class ProcessTests(unittest.TestCase):
+    def test_notebook_backend_is_replaced_only_in_the_child_environment(self):
+        parent = {'MPLBACKEND': 'module://matplotlib_inline.backend_inline', 'UNCHANGED': 'yes'}
+        child = launcher.headless_environment(parent)
+        self.assertEqual(child['MPLBACKEND'], 'Agg')
+        self.assertEqual(child['UNCHANGED'], 'yes')
+        self.assertEqual(parent['MPLBACKEND'], 'module://matplotlib_inline.backend_inline')
+
+    @unittest.skipUnless(importlib.util.find_spec('matplotlib'), 'Requires the video environment for real Matplotlib import')
+    def test_actual_matplotlib_import_with_kaggle_backend_environment(self):
+        parent = dict(os.environ, MPLBACKEND='module://matplotlib_inline.backend_inline')
+        code = ('import matplotlib; assert matplotlib.get_backend().lower() == "agg"; '
+                'from matplotlib.figure import Figure; '
+                'from matplotlib.backends.backend_agg import FigureCanvasAgg; '
+                'FigureCanvasAgg(Figure()).draw(); print("Agg import and drawing passed")')
+        result = subprocess.run([sys.executable, '-I', '-c', code], env=launcher.headless_environment(parent),
+                                text=True, capture_output=True, timeout=30)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn('Agg import and drawing passed', result.stdout)
+
+    def test_gui_startup_failure_includes_real_error_and_exit_code(self):
+        with tempfile.TemporaryDirectory() as d:
+            log = Path(d)/'wangp.log'
+            log.write_text('Traceback:\nModuleNotFoundError: missing_runtime_library\n')
+            error = launcher.startup_error(types.SimpleNamespace(poll=lambda: 1), log)
+            self.assertIn('exited with code 1', str(error))
+            self.assertIn('ModuleNotFoundError: missing_runtime_library', str(error))
+
     def test_deadline_kills_owned_process(self):
         with tempfile.TemporaryDirectory() as d:
             started = time.monotonic()
