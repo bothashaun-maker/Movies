@@ -38,7 +38,7 @@ def payload():
 
 def extraction(encoded):
     return '''from pathlib import Path
-import base64, io, os, sys, zipfile
+import base64, importlib, io, os, sys, zipfile
 OUTPUT = Path('/kaggle/working/jjp-wangp-motion')
 RUNTIME = OUTPUT/'runtime'
 RUNTIME.mkdir(parents=True, exist_ok=True)
@@ -48,27 +48,33 @@ with zipfile.ZipFile(io.BytesIO(base64.b64decode(PAYLOAD))) as archive:
         assert Path(name).name == name
         (RUNTIME/name).write_bytes(archive.read(name))
 sys.path.insert(0, str(RUNTIME))
+# Reusing a Kaggle kernel must import the freshly extracted launcher/patches.
+importlib.invalidate_caches()
+for name in ('launcher', 'patch', 'settings', 'common', 'bootstrap', 'guard', 'h3_safe_fp16', 'dataset', 'check_dataset_runtime'):
+    cached = sys.modules.get(name)
+    if cached is not None and Path(getattr(cached, '__file__', '')).resolve().parent == RUNTIME.resolve():
+        sys.modules.pop(name, None)
 '''
 
 
 def build():
     encoded = payload()
-    intro = '''**Build: GENERATE-FIX-v1.4 · 14 November 2026.** Preserves WanGP's keyword `state` when dispatching Generate. Includes the GUI-STARTUP-v1.3 headless `Agg` backend and startup traceback reporting.
+    intro = '''**Build: SAFE-FP16-v1.5 · 14 November 2026.** Adds H3 FP32 condition projection/residuals and scaled FP16 branch projections after the reported NaN/black render. Stops immediately on non-finite values. Includes GENERATE-FIX-v1.4 and GUI-STARTUP-v1.3. Reuse the existing Dataset; no model changes.
 
 **WanGP GUI → Cloudflare. No ComfyUI. No automatic generation.**
 
-1. Run **JJP_WanGP_Motion_Models.ipynb** once with **Accelerator: None, Internet ON**. It automatically submits **ONE private Dataset** with all 13 required files (40.53 GiB). Use Kaggle Secrets as described in that notebook.
+1. Reuse your existing **JJP WanGP Motion Models Dataset**. Only if you do not have it yet, run **JJP_WanGP_Motion_Models.ipynb** once with **Accelerator: None, Internet ON**. It automatically submits **ONE private Dataset** with all 13 required files (40.53 GiB). Use Kaggle Secrets as described in that notebook.
 2. Import a fresh copy of this notebook. Select **GPU T4 ×2**, **Internet ON**. Add Input → Your Datasets → attach that **ONE JJP WanGP Motion Models Dataset**. Do not substitute Director, H3 Next or Image Studio packs.
 3. Run the single cell below. It verifies/stages weights, installs the pinned isolated runtime, probes the actual T4, and opens **WanGP's native GUI** through a printed Cloudflare URL. Keep the cell running.
 4. Upload ONE Qwen appearance still. The default is **A: image only**. Keep seed `8675309`, `864×480`, `124 frames`, `24 fps`, **PDD 8 steps / Euler**. Press Generate.
 5. For **B**, keep every setting and the same image/prompt/seed. Select **Use One Reference Video** and upload a **silent 124-frame 864×480 / 24 fps Blender guide**. Press Generate. Do not use In-Context Guide, Video-to-Video Edit or ControlNet for this test.
 6. Compare camera arc, image fidelity, cross geometry, proxy leakage, time and VRAM. Export/save the MP4s and settings from the GUI and **Save Version with outputs before ending the session**. Files live under `/kaggle/working/jjp-wangp-motion`. Native generated audio should be muted in Movavi; never upload the song master to H3.
 
-**Hardware/storage checks:** GPU 0 only; the second T4 does not pool memory. FP16 + SDPA, INT8 weights, Profile 5 offloading, no compilation/CUDA graphs, conservative VAE tiling. The 864×480 uploaded guide is internally reduced to **288×160** using WanGP's native reference-size control; output stays 864×480. All weights are mirrored to local scratch to avoid the Dataset-read stalls seen in Director. The initial free-space gate is **52.54 GiB** (40.53 GiB models + 8 GiB runtime allowance + 4 GiB reserve). Actual free space is measured; if no scratch mount has room, startup stops before model load. Attached Dataset space is separate from local scratch.
+**Hardware/storage checks:** GPU 0 only; the second T4 does not pool memory. Safe FP16 branches + FP32 condition projection/residuals, SDPA, INT8 weights, Profile 5 offloading, no torch.compile/CUDA graphs, conservative VAE tiling. Upstream may still compile its small Triton kernels. The GPU probe includes a tiny overflow-control calculation on the actual device. The 864×480 uploaded guide is internally reduced to **288×160** using WanGP's native reference-size control; output stays 864×480. All weights are mirrored to local scratch to avoid the Dataset-read stalls seen in Director. The initial free-space gate is **52.54 GiB** (40.53 GiB models + 8 GiB runtime allowance + 4 GiB reserve). Actual free space is measured; if no scratch mount has room, startup stops before model load. Attached Dataset space is separate from local scratch.
 
-**Bounded failures:** model staging 20 min; Torch install 20 min; application install 30 min; GUI readiness 5 min; tunnel 2 min; each requested render 20 min. The supervisor stops WanGP if the render deadline expires or available host RAM stays below 1.5 GiB. Stopping the notebook cell also terminates its owned processes. Logs and completed clips are retained; a stopped render is not resumed automatically.
+**Bounded failures:** model staging 20 min; Torch install 20 min; application install 30 min; GUI readiness 5 min; tunnel 2 min; each requested render 20 min. Non-finite conditioning, predictions, latents or decoded RGB stop the job with a stage-specific error and `numerical-error.json`, before integer conversion/export. The supervisor stops WanGP if the render deadline expires or available host RAM stays below 1.5 GiB. Stopping the notebook cell also terminates its owned processes. Logs and completed clips are retained; a stopped render is not resumed automatically. When replacing the code in an existing session, cancel the earlier launcher cell first; the updated cell reloads its own runtime modules and reuses verified models/environment files.
 
-**Validation boundary:** CPU package installation, native GUI/browser checks, model-manifest/source checks, Blender export and watchdog tests are recorded in `notebooks/wan_gp_motion/VALIDATION.md`. They do not establish T4 model fit, generation speed or camera accuracy. Actual Kaggle H3 inference and private Dataset creation remain unverified until run with your GPU/account. The notebook is a guarded experiment, not a measured GPU guarantee.
+**Validation boundary:** CPU package installation, native GUI/browser checks, model-manifest/source checks, Blender export, watchdog and overflow tests are recorded in `notebooks/wan_gp_motion/VALIDATION.md`. The user's previous T4 run completed sampling/export but produced a black clip with an invalid-value warning after step 1. The corrected path passes CPU overflow/native miniature-model checks; its full-size T4 memory fit, speed and non-black output remain unverified. The notebook is a guarded experiment, not a measured GPU guarantee.
 '''
     code = '''# JJP WanGP Motion Test Kit — one executable cell
 PORT = 7860

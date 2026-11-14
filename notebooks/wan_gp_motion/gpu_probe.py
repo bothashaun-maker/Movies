@@ -23,6 +23,10 @@ definition = family_handler.query_model_def('minimax_h3_ref2va_pruned',
                                           {'pdd': True, 'name': 'MiniMax H3 Ref2VA Pruned PDD 8-Step 20B'})
 assert definition['dtype'] == 'fp16'
 assert definition['reference_video_max_size'] == (160, 288)
+from models.minimax_h3.transformer import MiniMaxH3Model
+assert MiniMaxH3Model._jjp_safe_fp16_installed, 'Safe FP16 H3 transformer adaptation missing'
+from h3_safe_fp16 import self_test
+self_test('cuda')
 print('PASS: T4 FP16 matmul, FP16 SDPA, FP16 Conv3D, native H3 handler and Gradio imports')
 print('Versions:', {n: importlib.metadata.version(n) for n in ('torch', 'gradio', 'transformers', 'optimum-quanto')})
 print('This is a kernel/import probe, not a model inference benchmark.')

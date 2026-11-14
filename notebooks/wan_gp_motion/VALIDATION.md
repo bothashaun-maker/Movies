@@ -2,6 +2,22 @@
 
 This records what was executed. A simulated GPU identity is not evidence of GPU computation.
 
+## Black output / safe FP16 correction — 14 November 2026
+
+Inspected the user's `Test.mp4` with FFprobe and FFmpeg signal statistics: valid H.264/yuv420p, 864×480, 24 fps, 124 decoded frames / 5.166667 s of video, plus stereo AAC. Every video frame has YMIN=YMAX=16, U=V=128 and zero frame difference: the encoded picture is entirely black, independently of the GUI/player. The subsequent `wangp (1).log` shows a successful GUI restart after the state repair, native model/LoRA/encoder/VAE loading, 56 s prompt encoding, and 8 denoising steps in 650 s. An `invalid value encountered in cast` warning occurs at the latent preview after step 1. The run exports an MP4 despite invalid intermediate numbers. This is evidence of a real but failed T4 inference attempt, not a successful video render or a decoder-only failure. The log does not identify the first internal operation producing a NaN.
+
+[WanGP issue 2156](https://github.com/deepbeepmeep/WanGP/issues/2156) documents the same raw-FP16/pre-Ampere failure with Ref2VA pruned rank-8 INT8: condition projection, residual streams and branch output projections exceed 65504. Its native adaptation proposal and [Amduraznak's MIT reference implementation](https://github.com/Amduraznak/minimax-h3-fp16-fix) were read directly. The previous kit changed the dtype without these protections; that adaptation was incomplete. External reported GPU results are not kit benchmarks.
+
+SAFE-FP16-v1.5 installs the adapted native path before model construction and MMGP loading. Condition projection and residuals/norms stay FP32; normalized Attention/MLP branch inputs and large branch weights stay FP16. SwiGLU pointwise math is FP32. Native linear/LoRA calls use power-of-two scaling (64 for Attention out_proj; 256 for MLP fc2), recovering the gain during FP32 accumulation in row chunks of at most 512. This avoids full-size FP32 branch buffers and retains destructive list handoffs. The selected model has bias-free branch projections. Native PDD heads, schedule and reference packing remain in place. BF16 model construction retains the original path. The same Dataset/catalog and package locks are reused.
+
+Stage-specific finite checks stop invalid Qwen conditioning, reference VAE encoding, denoising predictions/updates and decoded RGB before integer conversion/export. They write `numerical-error.json`; the existing guard writes the per-shot error and releases the model. They do not sanitize NaNs into zeros or silently retry. The actual GPU startup probe now includes a tiny real FP16 overflow control and corrected projection comparison. It does not load H3 weights.
+
+Executed eight CPU numerical regressions with actual FP16/FP32 arithmetic: raw projection/SwiGLU overflow controls, corrected FP32 results, segmented gates/bias, NaN/±Inf rejection/receipt, native miniature condition projection reaching 96,000, native FP32 residuals over 65,504, native MMGP safetensors loading preserving dtype locks, BF16-path retention, and complete miniature transformer forward passes with image/video reference packing and native PDD heads. Miniature weights are synthetic, not the production checkpoint. Only native import-time GPU metadata is simulated; tensor calculations execute on CPU. These checks establish arithmetic and native API compatibility, not corrected T4 memory fit, speed, conditioning quality or successful full-size output. FP32 residuals use more activation memory; the existing resource/deadline limits remain mandatory.
+
+The notebook also invalidates and removes its own cached runtime modules after extraction, so replacing the single cell in an existing kernel imports the updated launcher/patches. Cancel the prior launcher cell first. This avoids relying on a second repair cell or a model Dataset rebuild.
+
+All **37 regression tests passed** in the full CPU video environment, including the native miniature arithmetic and MMGP checks. The standalone CPU builder environment passes its 28 applicable checks (nine video-only checks skipped). The native A/B validation/workspace/download dispatch harness also passes with safe-FP16 installation asserted and zero production model loads. Both notebook payloads include the current numerical code/probe/launcher. The same-kernel extraction regression verifies eviction of the old owned launcher while retaining unrelated modules.
+
 ## Generate dispatch correction — 14 November 2026
 
 The next user-supplied `wangp.log` confirms the GUI starts. Both Generate attempts then fail at `workspace_storage.py` while reading `kwargs['state']`. The kit's guard had rebound the call using `inspect.signature.bind` and forwarded `bound.args` / `bound.kwargs`. Python moves supplied keyword arguments into positional slots in `bound.args`; that breaks WanGP's outer workspace decorator, which explicitly requires `state` in its keyword dictionary. This failure is in the kit's call adapter, before model inference.
@@ -45,13 +61,13 @@ After this correction, **22 tests passed** in the standalone CPU dependency envi
 | Cloudflare binary | Pinned 2026.10.7 binary downloaded, exact byte count and SHA256 verified, `--version` executed. |
 | Live Cloudflare tunnel | **Blocked in this development environment:** quick-tunnel request to `https://api.trycloudflare.com/tunnel` failed with TCP connection refused at `104.16.231.132:443`. This does not establish Kaggle connectivity. The launcher requires a registered edge connection and a successful public `/config` response before printing a ready URL; it stops after the deadline otherwise. |
 | Live private Dataset creation | **Not executed:** no user's Kaggle API credentials in this environment. Installed Kaggle 2.2.5 uploader/create method signatures were inspected; streaming behavior tested with a mock. A mock submission is not a saved Dataset. |
-| Actual Kaggle T4 H3 render | **Not executed:** this development executor has no CUDA GPU / `nvidia-smi`. Memory fit, render time, numerical behavior under full model load, frame output and camera fidelity remain unmeasured. The shipped runtime probes actual T4 kernels/imports before opening the GUI. |
+| Actual Kaggle T4 H3 render | User subsequently completed a failed real eight-step render: 650 s denoising, invalid preview after step 1, 124 black frames. See the SAFE-FP16-v1.5 correction above. This executor has no CUDA GPU; corrected full-size output, fit, speed and camera fidelity remain unverified. |
 
 ## Reproduction
 
 ```bash
 python notebooks/wan_gp_motion/build.py
-python -m unittest discover -s tests -p test_wangp_motion.py -v
+python -m unittest discover -s tests -p 'test_wangp_motion*.py' -v
 ```
 
 For native CPU integration, use a disposable checkout of WanGP at the pinned commit, CPU PyTorch 2.10.0 and the locked application dependencies. The harness applies the kit's source patches to that checkout:
@@ -64,3 +80,9 @@ python tests/wan_gp_motion_native.py \
 ```
 
 Add `--serve 7871` to exercise the real GUI with simulated hardware metadata. This harness deliberately requires a CPU-only environment and does not exist in the notebook payload. Actual T4 validation must use the notebook's unsimulated `gpu_probe.py` and requested H3 renders.
+
+To include native miniature-model numerical regressions in the CPU video environment:
+
+```bash
+JJP_WANGP_TEST_APP=/path/to/disposable/WanGP python -m unittest discover -s tests -p 'test_wangp_motion*.py' -v
+```

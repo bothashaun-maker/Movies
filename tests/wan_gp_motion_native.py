@@ -23,11 +23,12 @@ source = Path(__file__).resolve().parents[1]/'notebooks/wan_gp_motion'
 sys.path.insert(0, str(source))
 from common import atomic_json
 from settings import MODEL, server_settings, shot_settings
-from patch import patch_wgp, patch_h3_dtype
+from patch import patch_wgp, patch_h3_dtype, patch_h3_numerics
 from launcher import native_command, headless_environment
 work.mkdir(parents=True, exist_ok=True)
 patch_wgp(app/'wgp.py')
 patch_h3_dtype(app/'models/minimax_h3/minimax_h3_handler.py')
+patch_h3_numerics(app)
 config, saved = work/'config', work/'settings'
 config.mkdir(exist_ok=True)
 saved.mkdir(exist_ok=True)
@@ -98,7 +99,10 @@ else:
         assert reached[-1]['state'] is dispatch_state
         assert reached[-1]['output_filename'].startswith('JJP_B-guided_' if guided else 'JJP_A-baseline_')
     assert wgp.wan_model is None
+    from models.minimax_h3.transformer import MiniMaxH3Model
+    assert MiniMaxH3Model._jjp_safe_fp16_installed
     atomic_json(work/'native-validation.json', {'baseline': True, 'guided': True, 'compute_dtype': 'fp16',
+                                            'safe_fp16_installed': True,
                                             'resolution_locked': True, 'reference_video_hw': dimensions, 'model_loaded': False,
                                             'native_decorator_dispatches': len(reached),
                                             'hardware_metadata_simulated': True, 'gpu_inference_tested': False})

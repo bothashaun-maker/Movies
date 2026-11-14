@@ -148,9 +148,10 @@ def launch(runtime, output, port=7860, job_minutes=20, session_hours=8, scratch_
             marker.write_text(identity)
         # This probe must pass on the actual T4 before opening the GUI.
         env['PYTHONPATH'] = str(runtime)+os.pathsep+str(app)
-        from patch import patch_wgp, patch_h3_dtype
+        from patch import patch_wgp, patch_h3_dtype, patch_h3_numerics
         patch_wgp(app/'wgp.py')
         patch_h3_dtype(app/'models/minimax_h3/minimax_h3_handler.py')
+        patch_h3_numerics(app)
         bounded([python, runtime/'gpu_probe.py'], output/'gpu-probe.log', 120, cwd=app, env=env)
         config = output/'config'
         settings = output/'settings'

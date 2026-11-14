@@ -326,7 +326,24 @@ class ArtifactTests(unittest.TestCase):
             payload = next(n.value for n in tree.body if isinstance(n, ast.Assign)
                            and any(isinstance(t, ast.Name) and t.id == 'PAYLOAD' for t in n.targets))
             with zipfile.ZipFile(io.BytesIO(base64.b64decode(ast.literal_eval(payload)))) as archive:
-                self.assertEqual(archive.read('guard.py'), (SOURCE/'guard.py').read_bytes())
+                for filename in ('guard.py', 'h3_safe_fp16.py', 'patch.py', 'launcher.py', 'gpu_probe.py'):
+                    self.assertEqual(archive.read(filename), (SOURCE/filename).read_bytes())
+
+    def test_replaced_single_cell_evicts_its_old_runtime_modules(self):
+        notebook = json.loads((ROOT/'JJP_WanGP_Motion_Test_Kit.ipynb').read_text())
+        code = ''.join(next(c for c in notebook['cells'] if c['cell_type'] == 'code')['source'])
+        extraction = code.split('\nfrom launcher import launch\n')[0]
+        with tempfile.TemporaryDirectory() as d:
+            old_launcher = types.ModuleType('launcher')
+            old_launcher.__file__ = str(Path(d)/'runtime/launcher.py')
+            unrelated = types.ModuleType('bootstrap')
+            unrelated.__file__ = str(Path(d)/'another-package/bootstrap.py')
+            extraction = extraction.replace("Path('/kaggle/working/jjp-wangp-motion')", 'Path('+repr(d)+')')
+            with patch.dict(sys.modules, {'launcher': old_launcher, 'bootstrap': unrelated}), patch.object(sys, 'path', list(sys.path)):
+                exec(compile(extraction, 'single-cell-extraction', 'exec'), {})
+                self.assertNotIn('launcher', sys.modules)
+                self.assertIs(sys.modules['bootstrap'], unrelated)
+                self.assertEqual((Path(d)/'runtime/h3_safe_fp16.py').read_bytes(), (SOURCE/'h3_safe_fp16.py').read_bytes())
 
 
 if __name__ == '__main__':
