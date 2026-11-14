@@ -79,17 +79,19 @@ launch(RUNTIME, OUTPUT, PORT, JOB_TIMEOUT_MINUTES, SESSION_HOURS, SCRATCH_ROOT)
 '''
     studio = notebook('JJP WanGP Motion Test Kit', intro, code)
     studio['metadata']['kaggle'].update(accelerator='nvidiaTeslaT4', isGpuEnabled=True)
-    models_intro = '''**Run once on CPU: Accelerator None, Internet ON.** This creates **ONE private reusable Dataset**, automatically, using the working Image Studio streaming-uploader method. It includes all 13 pinned files: Ref2VA pruned rank-8 INT8, Qwen3-VL layer-50 GGUF Q4_K_M + six tokenizer/config files, Ref2VA PDD heads + LoRA, FP16 video VAE, FP32 audio VAE and native latent upscaler. Total: **40.53 GiB**.
+    models_intro = '''**Build: CPU-BUILDER-v1.2 · 14 November 2026.** Uses the notebook's existing Python/Kaggle packages, matching the working H3 Next builder. Checks the real uploader imports (including `six`) before model downloads; no separate CPU virtual environment.
+
+**Run once on CPU: Accelerator None, Internet ON.** This creates **ONE private reusable Dataset**, automatically, using the working Image Studio streaming-uploader method. It includes all 13 pinned files: Ref2VA pruned rank-8 INT8, Qwen3-VL layer-50 GGUF Q4_K_M + six tokenizer/config files, Ref2VA PDD heads + LoRA, FP16 video VAE, FP32 audio VAE and native latent upscaler. Total: **40.53 GiB**.
 
 Enable Kaggle Secret **KAGGLE_API_TOKEN**, or **KAGGLE_USERNAME** + **KAGGLE_KEY**, for this notebook. Set `DATASET_OWNER` below if token authentication does not expose your Kaggle username. Credentials are passed privately to the child; none are written to the notebook or logs. No `datasets.get/status` permission prerequisite is added.
 
-Run the one cell. Authentication is checked before model downloads. The creator uploads one verified file at a time through Kaggle's own SDK, then releases only its own uploaded temporary download. Existing attached models are reused without copying/deleting them. Peak missing-model storage is **19.61 GiB + 2 GiB for the small CPU environment and reserve**, measured on local scratch, rather than a second 40 GiB copy. The largest file will not fit a 19.5 GiB-only mount, so the notebook checks `/kaggle/temp` and `/tmp` too and stops clearly if none has room.
+Run the one cell. The existing notebook Python and installed Kaggle SDK are reused, as in H3 Next; a missing SDK or `six` is installed only if needed. Authentication is checked before model downloads. The creator uploads one verified file at a time through Kaggle's own SDK, then releases only its own uploaded temporary download. Existing attached models are reused without copying/deleting them. Peak missing-model storage is **19.61 GiB + 2 GiB reserve**, measured on local scratch, rather than a second 40 GiB copy. The largest file will not fit a 19.5 GiB-only mount, so the notebook checks `/kaggle/temp` and `/tmp` too and stops clearly if none has room.
 
 When **PRIVATE DATASET SUBMITTED** appears, wait for Kaggle processing. In the GPU notebook: Add Input → Your Datasets → attach this **ONE Dataset**. No manual PC download/upload, and no manual Save Version is required for Dataset submission. An upload receipt means submitted, not that Kaggle has finished processing.
 
 Model sources, exact revisions, byte sizes and SHA256 values are embedded. All component licenses remain in force. Live Kaggle upload is not claimed from mock tests.
 '''
-    models_code = '''# JJP WanGP Motion Models — CPU only, one saved Dataset
+    models_code = '''# JJP WanGP Motion Models — CPU-BUILDER-v1.2 — one saved Dataset
 DATASET_OWNER = ''  # Your Kaggle username if not auto-detected.
 '''+extraction(encoded)+'''
 # Resolve secrets in the Kaggle kernel; kaggle_secrets is not inside the isolated child environment.
@@ -111,16 +113,14 @@ if not os.environ.get('KAGGLE_API_TOKEN') and not os.environ.get('KAGGLE_KEY'):
     raise RuntimeError('Enable KAGGLE_API_TOKEN or KAGGLE_USERNAME + KAGGLE_KEY in Kaggle Secrets. No model downloads started.')
 import json
 from common import GIB, bounded, choose_scratch
-from bootstrap import ensure_environment
 catalog = json.loads((RUNTIME/'assets.json').read_text())
 largest = max(a['bytes'] for a in catalog['assets'])
 scratch = choose_scratch(largest+2*GIB, ['/kaggle/temp','/tmp','/kaggle/working'], 'jjp-wangp-model-builder-v1')
 env = os.environ.copy()
-env.update(UV_PYTHON_INSTALL_DIR=str(scratch/'python'), UV_NO_CACHE='1',
-           JJP_DATASET_OWNER=DATASET_OWNER, PYTHONUNBUFFERED='1', PYTHONNOUSERSITE='1')
-python, uv = ensure_environment(scratch, OUTPUT, env)
-bounded([uv,'pip','install','--python',python,'-r',RUNTIME/'cpu-requirements.lock'], OUTPUT/'dataset-install.log', 300, env=env)
-bounded([python,RUNTIME/'dataset.py',RUNTIME/'assets.json',OUTPUT/'model-dataset','/kaggle/input',scratch/'download-cache'],
+env.update(JJP_DATASET_OWNER=DATASET_OWNER, PYTHONUNBUFFERED='1')
+# H3 Next's working CPU setup: use the notebook interpreter and its Kaggle SDK.
+bounded([sys.executable,RUNTIME/'check_dataset_runtime.py'], OUTPUT/'dataset-runtime-check.log', 300, env=env)
+bounded([sys.executable,RUNTIME/'dataset.py',RUNTIME/'assets.json',OUTPUT/'model-dataset','/kaggle/input',scratch/'download-cache'],
         OUTPUT/'dataset-create.log', 4*3600, env=env)
 receipt = json.loads((OUTPUT/'model-dataset'/'dataset-upload.json').read_text())
 print('PRIVATE DATASET SUBMITTED:', receipt['url'])

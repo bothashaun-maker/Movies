@@ -2,6 +2,8 @@
 
 The two new notebooks are separate from Director, H3 Next, Image Studio and the Movie Upscaler. Existing notebooks are unchanged.
 
+**CPU builder correction, 14 November 2026 — CPU-BUILDER-v1.2:** The model builder now uses the same notebook Python and installed Kaggle SDK as the user's working H3 Next builder. It does not create a separate CPU virtual environment or replace a working SDK. An import preflight checks the real uploader and generated `UploadFile` model; a missing `six` is installed explicitly in that same interpreter before any weights are downloaded. The independent CPU requirements file remains available for clean-environment regression checks. The WanGP-only model catalog is unchanged; none of H3 Next's Singularity, DenoMix, Molmo or Sol weights is added.
+
 1. Import [`JJP_WanGP_Motion_Models.ipynb`](../../JJP_WanGP_Motion_Models.ipynb) into Kaggle. **CPU / Accelerator None, Internet ON**. Enable `KAGGLE_API_TOKEN`, or `KAGGLE_USERNAME` and `KAGGLE_KEY`, in Kaggle Secrets. Set `DATASET_OWNER` if needed. Run its single cell; it automatically submits **one private Dataset**.
 2. Wait for Dataset processing. Import [`JJP_WanGP_Motion_Test_Kit.ipynb`](../../JJP_WanGP_Motion_Test_Kit.ipynb), choose **T4 ×2 / Internet ON**, and attach that **one Dataset** through Add Input → Your Datasets. Run its single cell and open the printed Cloudflare URL.
 3. In native WanGP, upload one appearance still. Generate the baseline with seed `8675309`, **864×480 / 124 frames / 24 fps / PDD 8 steps / Euler**. The factory prompt describes the cross orbit; replace it for another scene if desired, keeping the same prompt for both tests.
@@ -42,7 +44,7 @@ Two small pinned-source patches surround native generation with validation/job r
 
 All weights are staged locally before GUI launch to avoid Dataset-mounted checkpoint reads, a documented failure in Director. Initial storage gate: **52.54 GiB free on one writable local filesystem** (40.53 GiB models + 8 GiB runtime allowance + 4 GiB reserve). Existing local model files count toward this requirement and are reverified. The code measures `/kaggle/temp`, `/tmp` and `/kaggle/working`; it does not assume a Kaggle quota. A 19.5 GiB-only writable runtime cannot hold this local mirror. It stops clearly before model load in that case; a different notebook cannot create missing disk capacity.
 
-The CPU Dataset maker needs room for only the largest missing file, **19.61 GiB**, plus a 2 GiB CPU-runtime/reserve allowance. It uses the previously working Image Studio native streaming upload method, with no preflight `datasets.get/status` permission requirement, no second pack copy and no zip of large models. Only successfully uploaded files in its own download cache are removed. Existing inputs remain untouched. Live upload requires the user's Kaggle credentials and is not claimed from mocked tests.
+The CPU Dataset maker needs room for only the largest missing file, **19.61 GiB**, plus a 2 GiB reserve. It reuses H3 Next's working notebook-interpreter/installed-SDK setup and Image Studio's native streaming upload method, with no preflight `datasets.get/status` permission requirement, no second pack copy and no zip of large models. Only successfully uploaded files in its own download cache are removed. Existing inputs remain untouched. Live upload requires the user's Kaggle credentials and is not claimed from mocked tests.
 
 ## Deadlines and retained diagnostics
 

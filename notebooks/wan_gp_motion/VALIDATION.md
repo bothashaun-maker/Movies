@@ -2,6 +2,18 @@
 
 This records what was executed. A simulated GPU identity is not evidence of GPU computation.
 
+## CPU builder correction — 14 November 2026
+
+The user's Kaggle run exposed a missing `six` dependency before any model transfer. Reproduced the exact failure in a new Python 3.11.13 environment containing only the original CPU lock. The previous SDK inspection had run inside the much larger video environment, which already included `six`; that was an insufficient check of the CPU builder's package environment.
+
+Compared `notebooks/h3_next/dataset.py` and the generated H3 Next model-pack notebook directly. The user confirms that Dataset builder works. It uses the notebook's own Python/Kaggle packages. CPU-BUILDER-v1.2 now uses that same setup, with an explicit import preflight and a same-interpreter `six` repair only if missing. The working H3 Next notebook/source is unchanged. The GPU application still uses its separate pinned environment.
+
+Standalone CPU requirements now explicitly include `six==1.17.0`. Installed only those 34 CPU packages in a second fresh environment; the actual Kaggle API and generated `UploadFile.to_dict()` imported/executed successfully. New SDK integration tests exercise real `dataset_create_new`, `upload_files`, filesystem symlink handling, `UploadFile`, native file-token conversion and private-request construction. Only remote status/blob/create operations are stubbed, with socket access forbidden and dummy credentials. Test both success and rejected creation, source retention, absence of a false success receipt, and reuse of existing SDK packages without reinstalling them. These tests do not establish a live authenticated upload.
+
+The model allowlist remains exactly the 13 files in `assets.json` for WanGP Ref2VA Pruned PDD8; tests reject adding H3 Next's model families. A notebook-payload regression check verifies that the actual delivered notebook contains the corrected uploader, dependency probe, CPU lock and unchanged model catalog.
+
+After this correction, **22 tests passed** in the standalone CPU dependency environment, including four real-SDK integration checks. Both regenerated notebooks passed nbformat/schema and Python compilation checks. The same-interpreter dependency probe also completed successfully in the environment that originally reproduced the missing-`six` failure. No live Dataset upload or GPU render is claimed from these checks.
+
 | Check | Result and boundary |
 | --- | --- |
 | Existing Movies notebooks | All 45 existing `.ipynb` files indexed/scanned at `17a61d90de0958675ff3e69b78a8d007d818d663`, including aliases. Their hashes remain unchanged. Relevant runtime/storage/upload sources reviewed directly. |

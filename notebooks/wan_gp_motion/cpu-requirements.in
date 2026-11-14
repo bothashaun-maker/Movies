@@ -1,0 +1,5 @@
+# Kaggle 2.2.5 imports six from its generated UploadFile model but omits it
+# from package dependencies. Keep this explicit runtime dependency when locking.
+kaggle==2.2.5
+kagglesdk==0.1.38
+six==1.17.0

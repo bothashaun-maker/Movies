@@ -27,7 +27,8 @@ def authenticated_api():
         except Exception:
             pass
     # Resolve Kaggle Secrets in the parent notebook: its module is not in this isolated env.
-    from kaggle.api.kaggle_api_extended import KaggleApi
+    from check_dataset_runtime import check_runtime
+    KaggleApi = check_runtime()
     api = KaggleApi()
     api.authenticate()
     return api

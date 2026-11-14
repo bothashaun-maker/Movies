@@ -1,8 +1,11 @@
 """CPU regression tests for failures that must stop before GPU allocation."""
 from pathlib import Path
 import copy
+import ast
+import base64
 import hashlib
 import importlib.util
+import io
 import json
 import os
 import subprocess
@@ -11,6 +14,7 @@ import tempfile
 import time
 import types
 import unittest
+import zipfile
 from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -213,6 +217,15 @@ class ArtifactTests(unittest.TestCase):
         assets = catalog['assets']
         self.assertEqual(len(assets), 13)
         self.assertEqual(len({a['name'] for a in assets}), 13)
+        self.assertEqual({a['name'] for a in assets}, {
+            'MiniMax-H3-Ref2VA-pruned_rank8_int8_convrot.safetensors',
+            'qwen3vl-32B-MiniMax-H3-Q4_K_M.gguf',
+            'minimax_h3_ref2va_pdd_8step_heads_bf16.safetensors',
+            'minimax_h3_ref2va_pdd_8step_lora_bf16.safetensors',
+            'MiniMax-H3-video_vae_fp16.safetensors', 'MiniMax-H3-audio_vae_fp32.safetensors',
+            'minimax_h3_latent_upscaler_3d_bf16.safetensors',
+            'config.json', 'tokenizer.json', 'tokenizer_config.json', 'preprocessor_config.json',
+            'vocab.json', 'chat_template.json'})
         for record in assets:
             self.assertRegex(record['sha256'], '^[0-9a-f]{64}$')
             self.assertIn(catalog['revision'], record['source'])
@@ -225,6 +238,18 @@ class ArtifactTests(unittest.TestCase):
             self.assertEqual(len(cells), 1)
             compile(''.join(cells[0]['source']), name, 'exec')
             self.assertFalse(cells[0]['outputs'])
+
+    def test_shipped_notebook_embeds_the_current_cpu_builder(self):
+        notebook = json.loads((ROOT/'JJP_WanGP_Motion_Models.ipynb').read_text())
+        code = ''.join(next(c for c in notebook['cells'] if c['cell_type'] == 'code')['source'])
+        tree = ast.parse(code)
+        payload = next(n.value for n in tree.body if isinstance(n, ast.Assign)
+                       and any(isinstance(t, ast.Name) and t.id == 'PAYLOAD' for t in n.targets))
+        with zipfile.ZipFile(io.BytesIO(base64.b64decode(ast.literal_eval(payload)))) as archive:
+            for name in ('cpu-requirements.lock', 'dataset.py', 'check_dataset_runtime.py', 'assets.json'):
+                self.assertEqual(archive.read(name), (SOURCE/name).read_bytes())
+        self.assertIn('bounded([sys.executable,RUNTIME/', code)
+        self.assertNotIn('ensure_environment(', code)
 
 
 if __name__ == '__main__':
