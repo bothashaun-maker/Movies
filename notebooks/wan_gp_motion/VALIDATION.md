@@ -2,6 +2,10 @@
 
 This records what was executed. A simulated GPU identity is not evidence of GPU computation.
 
+## Runnable default restored — RENDER-v1.8
+
+The user explicitly rejected the blocked v1.7 notebook and further experimental GPU runs. The notebook code cell and launcher now default to `sdpa`, reaching the rendering path that produced Test 2 without manual mode changes. The existing SDPA regression verifies no optional package install/probe is invoked. Model catalog, existing package locks, reference-matching prompt, numerical safeguards, settings and resource limits are unchanged. There is no new speed claim or full GPU rerender here. One self-contained notebook is delivered; repair cells are unnecessary.
+
 ## Real T4 Sage compiler failure / quota guard — 14 November 2026
 
 The user's startup output explicitly reports a failed optional Sage probe and `H3 attention: sdpa`. Their attention-probe.log identifies `arith.extf` applied to an INT8 dot operand, followed by `TritonGPUAccelerateMatmul` / `PassManager::run failed`, in SageAttention 1.0.6's `_attn_fwd_inner`, targeting `cuda:75`. Quantization kernels compiled; the attention kernel did not. This is a compiler incompatibility, not a Dataset problem or measured Sage render. The earlier CPU application environment had Triton 3.9.0; package/import/arithmetic checks there did not exercise the GPU lock's exact 3.6.0 target compiler. That was an insufficient compatibility boundary.

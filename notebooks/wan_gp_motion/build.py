@@ -59,29 +59,30 @@ for name in ('launcher', 'patch', 'settings', 'common', 'bootstrap', 'guard', 'h
 
 def build():
     encoded = payload()
-    intro = '''**Build: SPEED-CHECK-v1.7 · 14 November 2026.** The real T4 run exposed a SageAttention 1 / Triton 3.6 compiler failure. That exact failure is now reproduced offline. **There is no verified faster backend for this pinned stack.** Default `SPEED_MODE='auto'` stops immediately before hardware checks, model staging or installs; it will not lead into another slow fallback render. `SPEED_MODE='sdpa'` explicitly selects the existing slow working renderer. Keep the same Dataset and reference-matching prompt. This update prevents another wasted acceleration test; it is not a speed fix.
+    intro = '''**Build: RENDER-v1.8 · 14 November 2026.** Starts normally using the FP16/SDPA rendering path that produced Test 2. The failed Sage accelerator is not installed or probed on the default path. The default no longer blocks startup. Your existing model Dataset and numerical safeguards are retained. No repair cells or setting changes are required.
 
-**WanGP GUI → Cloudflare. No ComfyUI. No automatic generation.**
+**WanGP native GUI through Cloudflare. One executable cell.**
 
-1. Reuse your existing **JJP WanGP Motion Models Dataset**. Only if you do not have it yet, run **JJP_WanGP_Motion_Models.ipynb** once with **Accelerator: None, Internet ON**. It automatically submits **ONE private Dataset** with all 13 required files (40.53 GiB). Use Kaggle Secrets as described in that notebook.
-2. **Do not allocate GPU time to repeat the failed Sage speed test.** The default cell reports the known incompatibility immediately. Only if you explicitly choose the existing slow renderer, set `SPEED_MODE='sdpa'`, select **GPU T4 ×2 / Internet ON**, and attach the same **ONE Dataset**. Do not substitute other model packs.
-3. In explicit SDPA mode, run the single cell. It verifies/stages weights, reuses/installs the pinned runtime, probes the T4 and opens **WanGP's native GUI** through Cloudflare. Keep the cell running only while needed; save outputs before ending the session.
-4. Upload ONE Qwen appearance still. The default is **A: image only**. The supplied prompt now describes the user's crucifixion reference: Jesus in front of the wood, main crucifix on the left, soldiers/mourners in the foreground, distant crosses on the right and the original storm lighting. Inspect/edit this prompt for any different image. Keep seed `8675309`, `864×480`, `124 frames`, `24 fps`, **PDD 8 steps / Euler**. Press Generate.
-5. Establish a satisfactory **A** before **B**. A Blender guide must match the shot's framing/front side; the bundled centered bare-cross guide was made for the original isolated-cross test and conflicts with this crowd composition. For a matching guide, keep every setting and the same image/prompt/seed, select **Use One Reference Video**, upload a **silent 124-frame 864×480 / 24 fps guide**, and Generate B. Do not use In-Context Guide, Video-to-Video Edit or ControlNet for this test.
-6. Compare camera arc, image fidelity, cross geometry, proxy leakage, time and VRAM. Export/save the MP4s and settings from the GUI and **Save Version with outputs before ending the session**. Files live under `/kaggle/working/jjp-wangp-motion`. Native generated audio should be muted in Movavi; never upload the song master to H3.
+1. Attach your existing **ONE JJP WanGP Motion Models Dataset** through Add Input → Your Datasets. No new Dataset or builder run is needed. If Kaggle shows **Adding data**, wait for it to finish.
+2. Select **GPU T4 ×2**, **Internet ON**. Run the single code cell below. It verifies/stages existing weights, sets up the isolated runtime and opens WanGP through a printed Cloudflare link. Keep that cell running while using WanGP.
+3. Upload your original appearance reference. Generate **A: image only** first. The supplied prompt requests Jesus in front of the wood, the main crucifix on the left, foreground soldiers/mourners and the original storm composition. Inspect/edit the prompt if using a different image.
+4. Defaults remain **864×480, 124 frames, 24 fps, PDD 8 steps/Euler, seed 8675309**. Press Generate in the GUI. The notebook does not render automatically.
+5. Save the finished MP4 and settings. For Movavi, mute native H3 audio; keep your song outside H3. Outputs/logs are under `/kaggle/working/jjp-wangp-motion`. Download/save outputs before ending a session.
 
-**Hardware/storage checks in SDPA mode:** GPU 0 only; the second T4 does not pool memory. Safe FP16 branches + FP32 condition projection/residuals, INT8 weights, Profile 5 offloading, no torch.compile/CUDA graphs and conservative VAE tiling are unchanged. No Sage install/probe is attempted in this mode. Upstream may still compile its ordinary small Triton kernels. The 864×480 guide is internally reduced to **288×160**; output stays 864×480. The initial local scratch gate remains **52.54 GiB**. Models, Dataset and existing package locks are unchanged.
+**Motion guides:** Test 2 was image-only. Establish a satisfactory appearance baseline before adding a Blender guide. A guide must match the shot's front side and framing. The bundled centered bare-cross guide does not match this crowded, left-framed crucifixion image. Reference-video camera fidelity remains unproven.
 
-**Bounded failures:** the known-bad speed request stops before any expensive setup. Explicit SDPA mode retains model staging 20 min, Torch install 20 min, app install 30 min, GUI readiness 5 min, tunnel 2 min and render 20 min limits. Non-finite values stop before export. Available RAM below 1.5 GiB for three checks stops the server. Stopping the cell terminates owned processes. No automatic rerenders. When replacing code, cancel the earlier launcher first; owned runtime imports and verified files are reused.
+**Runtime:** GPU 0 only; the second T4 does not pool memory. Profile 5, SDPA, INT8 weights and the working FP16/FP32 numerical protections are unchanged. The same 13-file model catalog is used. Actual scratch capacity is measured; the initial local mirror requirement is about **52.54 GiB**. No missing model downloads during inference. No Sage installation or GPU acceleration experiment is attempted in the default configuration.
 
-**Validation boundary:** Test 2 confirms non-black image-only output from the working FP16/SDPA path, with scene/orientation drift. The subsequent speed probe failed before a Sage render. The exact SM75 compiler failure is reproducible without a GPU; prior CPU arithmetic checks did not cover it. No new speedup is established. The revised prompt is unproven for exact scene geometry. Do not treat a passing CPU test count as a successful full GPU render.
+**Limits:** model staging 20 min, Torch install 20 min, app install 30 min, GUI startup 5 min, tunnel 2 min, render 20 min. Non-finite values stop before export; sustained low host RAM stops the server. Stopping the cell terminates owned processes. Completed outputs are preserved. The single cell reloads its own runtime modules when reused; run one launcher at a time.
+
+**What is verified:** The user produced non-black full-size video with this rendering backend. The revised scene prompt still requires visual review; exact fidelity is not guaranteed. SDPA has not become faster: reported runs remain roughly 15–18 minutes. This restores rendering, not a claimed speedup. Development checks are recorded in `notebooks/wan_gp_motion/VALIDATION.md`.
 '''
     code = '''# JJP WanGP Motion Test Kit — one executable cell
 PORT = 7860
 JOB_TIMEOUT_MINUTES = 20
 SESSION_HOURS = 8
 SCRATCH_ROOT = ''  # Auto: measured /kaggle/temp, /tmp, /kaggle/working. Optional writable local override.
-SPEED_MODE = 'auto'  # Block known-incompatible acceleration before setup. 'sdpa' explicitly permits the slow working renderer.
+SPEED_MODE = 'sdpa'  # Working render backend. No failed Sage installation/probe and no blocked default.
 '''+extraction(encoded)+'''
 from launcher import launch
 launch(RUNTIME, OUTPUT, PORT, JOB_TIMEOUT_MINUTES, SESSION_HOURS, SCRATCH_ROOT, SPEED_MODE)

@@ -79,7 +79,7 @@ def startup_error(process, log_path):
                         f'Last startup output:\n{tail}')
 
 
-def launch(runtime, output, port=7860, job_minutes=20, session_hours=8, scratch_root='', speed_mode='auto'):
+def launch(runtime, output, port=7860, job_minutes=20, session_hours=8, scratch_root='', speed_mode='sdpa'):
     from h3_attention import speed_preflight
     speed_preflight(speed_mode)
     runtime, output = Path(runtime), Path(output)
