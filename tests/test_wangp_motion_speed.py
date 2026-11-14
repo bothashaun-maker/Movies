@@ -11,6 +11,7 @@ from unittest.mock import patch
 SOURCE = Path(__file__).resolve().parents[1]/'notebooks/wan_gp_motion'
 sys.path.insert(0, str(SOURCE))
 import h3_attention
+import launcher
 
 
 class AttentionScopeTests(unittest.TestCase):
@@ -119,6 +120,17 @@ class OptionalAccelerationTests(unittest.TestCase):
         with patch.object(h3_attention, 'bounded', side_effect=AssertionError('Invalid mode must not start setup')):
             with self.assertRaisesRegex(ValueError, 'SPEED_MODE'):
                 self.choose('fastest')
+
+    def test_known_bad_speed_stack_stops_before_hardware_or_any_setup(self):
+        with patch.object(launcher, 'hardware_preflight', side_effect=AssertionError('Do not start GPU setup')), \
+             patch.object(launcher, 'bounded', side_effect=AssertionError('Do not stage/install anything')), \
+             patch.object(h3_attention, 'bounded', side_effect=AssertionError('Do not repeat the GPU probe')):
+            with self.assertRaisesRegex(RuntimeError, 'reproduced offline'):
+                launcher.launch(SOURCE, self.output, speed_mode='auto')
+        self.assertEqual(list(self.output.iterdir()), [])
+
+    def test_explicit_sdpa_passes_the_speed_gate(self):
+        self.assertIsNone(h3_attention.speed_preflight('sdpa'))
 
 
 if __name__ == '__main__':

@@ -80,8 +80,8 @@ def startup_error(process, log_path):
 
 
 def launch(runtime, output, port=7860, job_minutes=20, session_hours=8, scratch_root='', speed_mode='auto'):
-    if speed_mode not in ('auto', 'sdpa'):
-        raise ValueError("SPEED_MODE must be 'auto' or 'sdpa'.")
+    from h3_attention import speed_preflight
+    speed_preflight(speed_mode)
     runtime, output = Path(runtime), Path(output)
     output.mkdir(parents=True, exist_ok=True)
     lock = open(output/'studio.lock', 'w')

@@ -10,6 +10,20 @@ import sys
 from common import atomic_json, bounded
 
 
+def speed_preflight(mode):
+    """Reject the reproduced SM75 compiler failure before any costly setup."""
+    if mode not in ('auto', 'sdpa'):
+        raise ValueError("SPEED_MODE must be 'auto' or 'sdpa'.")
+    if mode == 'auto':
+        raise RuntimeError(
+            'Sage speed mode is blocked for this pinned T4/Triton 3.6/SageAttention 1.0.6 stack. '
+            'The T4 target compiler fails in the INT8 attention dot product (arith.extf / PassManager::run failed). '
+            'This was reproduced offline. No model staging, package installation, GPU probe or GUI was started. '
+            "SPEED_MODE='sdpa' explicitly selects the existing slow working backend; it is not a speed fix. "
+            'Do not repeat GPU speed tests with this stack.'
+        )
+
+
 @contextmanager
 def attention_scope(state, mode):
     missing = object()
