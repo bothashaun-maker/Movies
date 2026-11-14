@@ -2,6 +2,14 @@
 
 This records what was executed. A simulated GPU identity is not evidence of GPU computation.
 
+## Generate dispatch correction — 14 November 2026
+
+The next user-supplied `wangp.log` confirms the GUI starts. Both Generate attempts then fail at `workspace_storage.py` while reading `kwargs['state']`. The kit's guard had rebound the call using `inspect.signature.bind` and forwarded `bound.args` / `bound.kwargs`. Python moves supplied keyword arguments into positional slots in `bound.args`; that breaks WanGP's outer workspace decorator, which explicitly requires `state` in its keyword dictionary. This failure is in the kit's call adapter, before model inference.
+
+Reproduced the exact `KeyError: 'state'` in two CPU regressions before fixing the guard. GENERATE-FIX-v1.4 preserves the original argument layout and changes only the output filename, including when the filename was supplied positionally. Validation, unique filenames, job receipts, model release and watchdog behavior remain in place. Both shipped notebooks embed the corrected guard; the GPU notebook displays the new build marker. The CPU builder remains CPU-BUILDER-v1.2 and the 13-file model catalog is unchanged.
+
+The expanded native CPU harness executes the real pinned `workspace_generation` and `generation_downloads` decorator chain for both A and B, using the actual `generate_media` signature and full shot validation. A sentinel replaces only the final generation function, and model release is mocked. Both calls retain the same `state` object, receive the appropriate unique output filename and complete without loading models. **28 regression tests passed** in the full CPU video environment. These checks establish corrected dispatch and artifact packaging; actual T4 H3 rendering, memory fit and motion fidelity remain unverified. No new Dataset build is required.
+
 ## GUI startup correction — 14 November 2026
 
 The user's first T4 startup advanced through local model staging, package installation/checks and the CUDA/kernel/import probe. The standalone WanGP server then exited while importing Matplotlib through `models.wan.scail.scail_pose_draw`. Kaggle had supplied `MPLBACKEND=module://matplotlib_inline.backend_inline`, but the isolated server environment does not contain that notebook-only backend. This is a process-environment integration failure, before GUI readiness and before a user-requested render.

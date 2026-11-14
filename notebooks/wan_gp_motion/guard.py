@@ -107,6 +107,17 @@ def guarded(function):
         output = Path(os.environ['JJP_OUTPUT'])
         run_id = time.strftime('%Y%m%d-%H%M%S')+'-'+uuid.uuid4().hex[:8]
         bound.arguments['output_filename'] = 'JJP_'+label+'_'+run_id
+        # BoundArguments.args would move complete keyword arguments into positional
+        # slots. WanGP's outer workspace decorator specifically reads kwargs['state'].
+        # Preserve the caller's argument layout and replace only the output name.
+        call_args, call_kwargs = list(args), dict(kwargs)
+        positional = [name for name, parameter in signature.parameters.items()
+                      if parameter.kind in (inspect.Parameter.POSITIONAL_ONLY, inspect.Parameter.POSITIONAL_OR_KEYWORD)]
+        filename_position = positional.index('output_filename') if 'output_filename' in positional else None
+        if filename_position is not None and filename_position < len(call_args):
+            call_args[filename_position] = inputs['output_filename']
+        else:
+            call_kwargs['output_filename'] = inputs['output_filename']
         report = output/'shots'/run_id
         report.mkdir(parents=True)
         started = time.time()
@@ -120,7 +131,7 @@ def guarded(function):
                     media[key] = {'path': path, 'sha256': sha256(path)}
             atomic_json(report/'settings.json', {'label': label, 'model_type': model_type, 'settings': simple,
                                                 'media': media, 'started': started})
-            result = function(*bound.args, **bound.kwargs)
+            result = function(*call_args, **call_kwargs)
             atomic_json(report/'result.json', {'native_return': result, 'elapsed_seconds': time.time()-started})
             return result
         except BaseException as error:

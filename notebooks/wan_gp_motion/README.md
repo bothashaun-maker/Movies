@@ -2,7 +2,9 @@
 
 The two new notebooks are separate from Director, H3 Next, Image Studio and the Movie Upscaler. Existing notebooks are unchanged.
 
-**GPU GUI startup correction — GUI-STARTUP-v1.3, 14 November 2026:** The standalone child forces Matplotlib's headless `Agg` backend. This fixes the reproduced crash caused by inheriting Kaggle's `module://matplotlib_inline.backend_inline` setting into the isolated video environment. Startup errors include the actual traceback tail and exit code. Reuse the already-created model Dataset; no model changes or Dataset rebuild is required for this correction.
+**Generate correction — GENERATE-FIX-v1.4, 14 November 2026:** The user's latest log confirms the GUI opens, then Generate fails with `KeyError: 'state'`. The kit's guard now preserves the caller's keyword arguments when entering WanGP's workspace wrapper, while still assigning a unique output filename. Both baseline and guided dispatch passed through the actual native workspace/download wrappers with generation replaced by a CPU sentinel. This verifies call handling, not model inference. Reuse the already-created Dataset.
+
+Includes **GUI-STARTUP-v1.3**: the standalone child forces Matplotlib's headless `Agg` backend, fixing the reproduced inherited notebook-backend crash. Startup errors include the actual traceback tail and exit code.
 
 **CPU builder correction, 14 November 2026 — CPU-BUILDER-v1.2:** The model builder now uses the same notebook Python and installed Kaggle SDK as the user's working H3 Next builder. It does not create a separate CPU virtual environment or replace a working SDK. An import preflight checks the real uploader and generated `UploadFile` model; a missing `six` is installed explicitly in that same interpreter before any weights are downloaded. The independent CPU requirements file remains available for clean-environment regression checks. The WanGP-only model catalog is unchanged; none of H3 Next's Singularity, DenoMix, Molmo or Sol weights is added.
 

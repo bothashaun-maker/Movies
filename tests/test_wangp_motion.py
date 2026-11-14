@@ -1,6 +1,7 @@
 """CPU regression tests for failures that must stop before GPU allocation."""
 from pathlib import Path
 import copy
+import functools
 import ast
 import base64
 import hashlib
@@ -178,6 +179,45 @@ class ShotTests(unittest.TestCase):
                 guard.probe_guide('guide')
 
 
+class GuardDispatchTests(unittest.TestCase):
+    def test_keyword_state_survives_the_guard_and_workspace_wrapper(self):
+        state = {'gen': {}}
+        seen = {}
+
+        def native(task, send_cmd, state, output_filename='', plugin_data=None):
+            seen.update(state=state, filename=output_filename, plugin_data=plugin_data)
+            return True
+
+        @functools.wraps(native)
+        def workspace(task, *args, **kwargs):
+            self.assertIs(kwargs['state'], state)
+            return native(task, *args, **kwargs)
+
+        with tempfile.TemporaryDirectory() as d, patch.dict(os.environ, {'JJP_OUTPUT': d}), \
+             patch.object(guard, 'check_shot', return_value='A-baseline'):
+            self.assertTrue(guard.guarded(workspace)({}, lambda *a: None, state=state, plugin_data={'sentinel': 1}))
+            self.assertIs(seen['state'], state)
+            self.assertEqual(seen['plugin_data'], {'sentinel': 1})
+            self.assertTrue(seen['filename'].startswith('JJP_A-baseline_'))
+            self.assertFalse(json.loads((Path(d)/'active-job.json').read_text())['active'])
+
+    def test_positional_filename_is_replaced_without_moving_keyword_state(self):
+        state = {'gen': {}}
+
+        def native(task, send_cmd, output_filename, state):
+            return output_filename
+
+        @functools.wraps(native)
+        def workspace(task, *args, **kwargs):
+            self.assertIs(kwargs['state'], state)
+            return native(task, *args, **kwargs)
+
+        with tempfile.TemporaryDirectory() as d, patch.dict(os.environ, {'JJP_OUTPUT': d}), \
+             patch.object(guard, 'check_shot', return_value='A-baseline'):
+            filename = guard.guarded(workspace)({}, lambda *a: None, 'old-name', state=state)
+            self.assertTrue(filename.startswith('JJP_A-baseline_'))
+
+
 class UploadTests(unittest.TestCase):
     def test_one_native_private_request_and_no_source_deletion(self):
         with tempfile.TemporaryDirectory() as d:
@@ -277,6 +317,16 @@ class ArtifactTests(unittest.TestCase):
                 self.assertEqual(archive.read(name), (SOURCE/name).read_bytes())
         self.assertIn('bounded([sys.executable,RUNTIME/', code)
         self.assertNotIn('ensure_environment(', code)
+
+    def test_both_notebooks_embed_the_current_generation_guard(self):
+        for name in ('JJP_WanGP_Motion_Test_Kit.ipynb', 'JJP_WanGP_Motion_Models.ipynb'):
+            notebook = json.loads((ROOT/name).read_text())
+            code = ''.join(next(c for c in notebook['cells'] if c['cell_type'] == 'code')['source'])
+            tree = ast.parse(code)
+            payload = next(n.value for n in tree.body if isinstance(n, ast.Assign)
+                           and any(isinstance(t, ast.Name) and t.id == 'PAYLOAD' for t in n.targets))
+            with zipfile.ZipFile(io.BytesIO(base64.b64decode(ast.literal_eval(payload)))) as archive:
+                self.assertEqual(archive.read('guard.py'), (SOURCE/'guard.py').read_bytes())
 
 
 if __name__ == '__main__':

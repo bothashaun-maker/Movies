@@ -5,6 +5,7 @@ against CPU PyTorch. Never use this harness as a GPU benchmark.
 """
 from pathlib import Path
 import argparse
+import inspect
 import json
 import os
 import runpy
@@ -66,8 +67,39 @@ else:
     dimensions = wgp.get_reference_video_dimensions(str(Path(arguments.guide).resolve()), 480, 864,
                                                    wgp.get_model_def(MODEL)['reference_video_max_size'], 32)
     assert dimensions == (160, 288), dimensions
+    # Exercise the real workspace + download decorators with the real generation
+    # signature, stopping at a CPU sentinel instead of entering model inference.
+    from shared.utils.workspace_storage import workspace_generation
+    from shared.utils.download import generation_downloads
+    from guard import guarded
+    from unittest.mock import patch
+    native_signature = inspect.signature(wgp.generate_media)
+    reached = []
+
+    def sentinel(*args, **kwargs):
+        bound = native_signature.bind(*args, **kwargs)
+        reached.append(bound.arguments)
+        return True
+
+    sentinel.__signature__ = native_signature
+    dispatch = guarded(workspace_generation(generation_downloads(lambda state: state['gen'])(sentinel)))
+    dispatch_state = {'model_type': MODEL, 'gen': {}}
+    for guided in (False, True):
+        shot = dict(inputs)
+        shot.update(shot_settings(guided))
+        shot['image_refs'] = [str(image)]
+        shot['video_guide'] = str(Path(arguments.guide).resolve()) if guided else None
+        params = {name: shot.get(name) for name in native_signature.parameters
+                  if name not in ('task', 'send_cmd')}
+        params.update(state=dispatch_state, model_type=MODEL, mode='generate', plugin_data=None)
+        with patch.object(wgp, 'release_model') as release:
+            assert dispatch({'params': {'model_type': MODEL}}, lambda *a: None, **params) is True
+            release.assert_called_once()
+        assert reached[-1]['state'] is dispatch_state
+        assert reached[-1]['output_filename'].startswith('JJP_B-guided_' if guided else 'JJP_A-baseline_')
     assert wgp.wan_model is None
     atomic_json(work/'native-validation.json', {'baseline': True, 'guided': True, 'compute_dtype': 'fp16',
                                             'resolution_locked': True, 'reference_video_hw': dimensions, 'model_loaded': False,
+                                            'native_decorator_dispatches': len(reached),
                                             'hardware_metadata_simulated': True, 'gpu_inference_tested': False})
-    print('PASS: real WanGP A/B validation, FP16 selection, locked resolution, zero model loads. CPU metadata simulation only.')
+    print('PASS: real WanGP A/B validation and native workspace/download dispatch, FP16 selection, locked resolution, zero model loads. CPU metadata simulation only.')

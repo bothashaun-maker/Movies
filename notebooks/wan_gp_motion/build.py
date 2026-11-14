@@ -53,7 +53,7 @@ sys.path.insert(0, str(RUNTIME))
 
 def build():
     encoded = payload()
-    intro = '''**Build: GUI-STARTUP-v1.3 · 14 November 2026.** Standalone WanGP uses Matplotlib's `Agg` backend; Kaggle's notebook-only inline backend is not inherited. Startup failures include the actual log tail and exit code.
+    intro = '''**Build: GENERATE-FIX-v1.4 · 14 November 2026.** Preserves WanGP's keyword `state` when dispatching Generate. Includes the GUI-STARTUP-v1.3 headless `Agg` backend and startup traceback reporting.
 
 **WanGP GUI → Cloudflare. No ComfyUI. No automatic generation.**
 
