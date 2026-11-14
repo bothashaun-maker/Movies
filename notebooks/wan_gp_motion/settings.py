@@ -1,18 +1,27 @@
 """Native WanGP settings for the two otherwise-identical orbit tests."""
 MODEL = 'minimax_h3_ref2va_pruned_pdd'
 PROMPT = '''subject_definitions:
-<Subject 1> is the wooden cross and its environment in <Picture 1>.
+<Subject 1> is the complete crucifixion scene in <Picture 1>, including Jesus,
+the wooden cross, Roman soldiers, mourners, distant crosses and storm landscape.
 summary:
-[reference generation] A single steady cinematic camera arc around <Subject 1>.
+[reference generation] Preserve <Subject 1> while making one gentle front-side camera arc.
 retention_analysis:
-<Subject 1> (appears in [Shot 1]): fully_preserved - preserve the cross's proportions,
-materials, lighting, grass, hilltop and surrounding environment from <Picture 1>.
+<Subject 1> (appears in [Shot 1]): fully_preserved - match the people, faces, clothing,
+cross geometry, body-to-cross attachment, composition, storm clouds and lighting of <Picture 1>.
 detailed_description:
-[Shot 1] Slow, steady camera arc around the cross, 30 degrees left to right,
-constant height and distance, locked 50 mm focal length. The cross stays centered
-and unchanged. Preserve the visual appearance of <Picture 1> throughout.
-Soft wind in the grass. No cuts, zoom, lens breathing or changes to cross geometry.
-overall_soundscape: Gentle wind and distant birds.
+[Shot 1] Begin from the same front three-quarter viewpoint and framing as <Picture 1>.
+Jesus remains on the camera-facing side of the cross: his face, chest, abdomen,
+arms and legs are visible in front of the wood; the upright and crossbar remain behind him.
+His hands, feet and body keep the same attachment points and orientation as the reference.
+Keep the main crucifix on the left side of the composition at the reference scale.
+Preserve the foreground soldiers and mourners, their positions relative to the crucifix,
+their costumes and faces, and the two distant crosses on the right hillside.
+The camera makes a slow, steady 30-degree left-to-right arc entirely on this same
+front side, at constant height and distance with a locked focal length.
+Maintain an unobstructed view of Jesus and the crowd, allowing only natural parallax.
+Preserve the dark storm lighting and clouds from the reference. Subtle wind moves fabric.
+One continuous shot with stable anatomy, stable cross proportions and unchanged identities.
+overall_soundscape: Quiet wind and distant rolling thunder.
 non_diegetic_music: N/A'''
 
 

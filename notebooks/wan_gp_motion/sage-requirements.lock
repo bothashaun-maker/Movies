@@ -1,0 +1,2 @@
+# Optional SageAttention 1 wheel only. Keep the existing Torch/Triton stack.
+sageattention @ https://files.pythonhosted.org/packages/53/06/f7b47adb766bcb38b3f88763374a3e8dffea05ee9b556bc24dbcbd60fd29/sageattention-1.0.6-py3-none-any.whl --hash=sha256:fafc66569bed62a16839e820c2612141b5a20accf55b876d941bab9c0ac5d888

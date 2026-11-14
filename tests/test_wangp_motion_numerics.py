@@ -74,8 +74,9 @@ class NativeOverflowTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         sys.path.insert(0, APP)
-        from patch import patch_h3_numerics
+        from patch import patch_h3_numerics, patch_h3_attention
         patch_h3_numerics(APP)
+        patch_h3_attention(APP)
         import torch
         assert not torch.cuda.is_available(), 'These numerical regressions intentionally run on CPU'
         # Native shared.attention reads hardware metadata at import. Arithmetic
@@ -169,6 +170,27 @@ class NativeOverflowTests(unittest.TestCase):
             self.assertEqual(restored.blocks[0].norm1.weight.dtype, torch.float32)
             self.assertEqual(restored.blocks[0].attn.out_proj.weight.dtype, torch.float16)
             self.assertEqual(restored.blocks[0].mlp.fc2.weight.dtype, torch.float16)
+
+    def test_native_split_attention_accepts_the_probe_rope_layout(self):
+        from models.minimax_h3.transformer import Attention
+        torch = self.torch
+        fused = Attention(256, 2, 128, 1e-5, dtype=torch.float16)
+        split = Attention(256, 2, 128, 1e-5, dtype=torch.float16)
+        split.load_state_dict(fused.state_dict())
+        fused._jjp_safe_fp16 = split._jjp_safe_fp16 = True
+        with torch.no_grad():
+            for name, weight in zip(('q_proj', 'k_proj', 'v_proj'), fused.qkv_proj.weight.chunk(3, dim=0)):
+                layer = torch.nn.Linear(256, 256, bias=False, dtype=torch.float16)
+                layer.weight.copy_(weight)
+                setattr(split, name, layer)
+            del split.qkv_proj
+            inputs = torch.randn(257, 256, dtype=torch.float16)
+            rope = torch.zeros(1, 257, 1, 64, 2, dtype=torch.float32)
+            rope[..., 0] = 1.0
+            reference = fused([inputs.clone()], rope=rope)
+            result = split([inputs.clone()], rope=rope)
+            self.assertTrue(bool(torch.isfinite(result).all()))
+            torch.testing.assert_close(result, reference, rtol=0.01, atol=0.001)
 
 
 if __name__ == '__main__':

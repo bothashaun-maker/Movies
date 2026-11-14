@@ -25,6 +25,7 @@ assert definition['dtype'] == 'fp16'
 assert definition['reference_video_max_size'] == (160, 288)
 from models.minimax_h3.transformer import MiniMaxH3Model
 assert MiniMaxH3Model._jjp_safe_fp16_installed, 'Safe FP16 H3 transformer adaptation missing'
+assert getattr(MiniMaxH3Model.forward, '_jjp_h3_attention', False), 'H3-local attention scope missing'
 from h3_safe_fp16 import self_test
 self_test('cuda')
 print('PASS: T4 FP16 matmul, FP16 SDPA, FP16 Conv3D, native H3 handler and Gradio imports')

@@ -50,7 +50,7 @@ with zipfile.ZipFile(io.BytesIO(base64.b64decode(PAYLOAD))) as archive:
 sys.path.insert(0, str(RUNTIME))
 # Reusing a Kaggle kernel must import the freshly extracted launcher/patches.
 importlib.invalidate_caches()
-for name in ('launcher', 'patch', 'settings', 'common', 'bootstrap', 'guard', 'h3_safe_fp16', 'dataset', 'check_dataset_runtime'):
+for name in ('launcher', 'patch', 'settings', 'common', 'bootstrap', 'guard', 'h3_safe_fp16', 'h3_attention', 'dataset', 'check_dataset_runtime'):
     cached = sys.modules.get(name)
     if cached is not None and Path(getattr(cached, '__file__', '')).resolve().parent == RUNTIME.resolve():
         sys.modules.pop(name, None)
@@ -59,31 +59,32 @@ for name in ('launcher', 'patch', 'settings', 'common', 'bootstrap', 'guard', 'h
 
 def build():
     encoded = payload()
-    intro = '''**Build: SAFE-FP16-v1.5 · 14 November 2026.** Adds H3 FP32 condition projection/residuals and scaled FP16 branch projections after the reported NaN/black render. Stops immediately on non-finite values. Includes GENERATE-FIX-v1.4 and GUI-STARTUP-v1.3. Reuse the existing Dataset; no model changes.
+    intro = '''**Build: MOTION-SPEED-v1.6 · 14 November 2026.** Preserves the SAFE-FP16-v1.5 path that produced the user's non-black clip. Optional SageAttention 1 is enabled for H3 only after an actual T4 precision/compatibility probe; failure falls back to SDPA. Qwen/VAE remain SDPA. The shot prompt now preserves Jesus in front of the wood, the foreground crowd and the reference composition. Reuse the existing Dataset; no model changes.
 
 **WanGP GUI → Cloudflare. No ComfyUI. No automatic generation.**
 
 1. Reuse your existing **JJP WanGP Motion Models Dataset**. Only if you do not have it yet, run **JJP_WanGP_Motion_Models.ipynb** once with **Accelerator: None, Internet ON**. It automatically submits **ONE private Dataset** with all 13 required files (40.53 GiB). Use Kaggle Secrets as described in that notebook.
 2. Import a fresh copy of this notebook. Select **GPU T4 ×2**, **Internet ON**. Add Input → Your Datasets → attach that **ONE JJP WanGP Motion Models Dataset**. Do not substitute Director, H3 Next or Image Studio packs.
 3. Run the single cell below. It verifies/stages weights, installs the pinned isolated runtime, probes the actual T4, and opens **WanGP's native GUI** through a printed Cloudflare URL. Keep the cell running.
-4. Upload ONE Qwen appearance still. The default is **A: image only**. Keep seed `8675309`, `864×480`, `124 frames`, `24 fps`, **PDD 8 steps / Euler**. Press Generate.
-5. For **B**, keep every setting and the same image/prompt/seed. Select **Use One Reference Video** and upload a **silent 124-frame 864×480 / 24 fps Blender guide**. Press Generate. Do not use In-Context Guide, Video-to-Video Edit or ControlNet for this test.
+4. Upload ONE Qwen appearance still. The default is **A: image only**. The supplied prompt now describes the user's crucifixion reference: Jesus in front of the wood, main crucifix on the left, soldiers/mourners in the foreground, distant crosses on the right and the original storm lighting. Inspect/edit this prompt for any different image. Keep seed `8675309`, `864×480`, `124 frames`, `24 fps`, **PDD 8 steps / Euler**. Press Generate.
+5. Establish a satisfactory **A** before **B**. A Blender guide must match the shot's framing/front side; the bundled centered bare-cross guide was made for the original isolated-cross test and conflicts with this crowd composition. For a matching guide, keep every setting and the same image/prompt/seed, select **Use One Reference Video**, upload a **silent 124-frame 864×480 / 24 fps guide**, and Generate B. Do not use In-Context Guide, Video-to-Video Edit or ControlNet for this test.
 6. Compare camera arc, image fidelity, cross geometry, proxy leakage, time and VRAM. Export/save the MP4s and settings from the GUI and **Save Version with outputs before ending the session**. Files live under `/kaggle/working/jjp-wangp-motion`. Native generated audio should be muted in Movavi; never upload the song master to H3.
 
-**Hardware/storage checks:** GPU 0 only; the second T4 does not pool memory. Safe FP16 branches + FP32 condition projection/residuals, SDPA, INT8 weights, Profile 5 offloading, no torch.compile/CUDA graphs, conservative VAE tiling. Upstream may still compile its small Triton kernels. The GPU probe includes a tiny overflow-control calculation on the actual device. The 864×480 uploaded guide is internally reduced to **288×160** using WanGP's native reference-size control; output stays 864×480. All weights are mirrored to local scratch to avoid the Dataset-read stalls seen in Director. The initial free-space gate is **52.54 GiB** (40.53 GiB models + 8 GiB runtime allowance + 4 GiB reserve). Actual free space is measured; if no scratch mount has room, startup stops before model load. Attached Dataset space is separate from local scratch.
+**Hardware/storage checks:** GPU 0 only; the second T4 does not pool memory. Safe FP16 branches + FP32 condition projection/residuals, INT8 weights, Profile 5 offloading, no torch.compile/CUDA graphs, conservative VAE tiling. `SPEED_MODE='auto'` tries the pinned 20 KB SageAttention 1.0.6 wheel without changing Torch/Triton or models. A separate bounded T4 probe compares native head-128 attention with SDPA, including large values. Only a passing probe enables H3-local Sage; Qwen/VAE remain SDPA and attention state is restored on success/error. `SPEED_MODE='sdpa'` retains the proven arithmetic/backend. Upstream may still compile small Triton kernels. The 864×480 guide is internally reduced to **288×160**; output stays 864×480. All weights are mirrored to local scratch. The initial free-space gate is **52.54 GiB** (40.53 GiB models + 8 GiB runtime allowance + 4 GiB reserve). Actual free space is measured; attached Dataset space is separate.
 
-**Bounded failures:** model staging 20 min; Torch install 20 min; application install 30 min; GUI readiness 5 min; tunnel 2 min; each requested render 20 min. Non-finite conditioning, predictions, latents or decoded RGB stop the job with a stage-specific error and `numerical-error.json`, before integer conversion/export. The supervisor stops WanGP if the render deadline expires or available host RAM stays below 1.5 GiB. Stopping the notebook cell also terminates its owned processes. Logs and completed clips are retained; a stopped render is not resumed automatically. When replacing the code in an existing session, cancel the earlier launcher cell first; the updated cell reloads its own runtime modules and reuses verified models/environment files.
+**Bounded failures:** model staging 20 min; Torch install 20 min; application install 30 min; optional Sage install 90 s / probe 120 s; GUI readiness 5 min; tunnel 2 min; each requested render 20 min. Optional acceleration failures fall back to SDPA; an interrupted cell is never treated as permission to continue. Non-finite tensors stop with `numerical-error.json` before export. The supervisor stops WanGP at the render deadline or sustained host RAM below 1.5 GiB. Stopping the cell terminates owned processes. Logs/clips are retained; no silent retries. When replacing code in an existing session, cancel the earlier launcher first; the updated cell reloads owned runtime modules and reuses verified models/environment files.
 
-**Validation boundary:** CPU package installation, native GUI/browser checks, model-manifest/source checks, Blender export, watchdog and overflow tests are recorded in `notebooks/wan_gp_motion/VALIDATION.md`. The user's previous T4 run completed sampling/export but produced a black clip with an invalid-value warning after step 1. The corrected path passes CPU overflow/native miniature-model checks; its full-size T4 memory fit, speed and non-black output remain unverified. The notebook is a guarded experiment, not a measured GPU guarantee.
+**Validation boundary:** The user's Test 2 confirms non-black 124-frame output after SAFE-FP16-v1.5, using the image only. It also shows scene/orientation drift, so this is not proof of appearance fidelity or Blender motion transfer. CPU checks are recorded in `notebooks/wan_gp_motion/VALIDATION.md`. Sage is approximate attention; its full-shot speed/quality on this T4 run remain unmeasured. The revised prompt cannot guarantee exact geometry. No speed multiplier or corrected scene is claimed before an actual render.
 '''
     code = '''# JJP WanGP Motion Test Kit — one executable cell
 PORT = 7860
 JOB_TIMEOUT_MINUTES = 20
 SESSION_HOURS = 8
 SCRATCH_ROOT = ''  # Auto: measured /kaggle/temp, /tmp, /kaggle/working. Optional writable local override.
+SPEED_MODE = 'auto'  # Try H3-only SageAttention 1 after a T4 probe; 'sdpa' retains the working backend.
 '''+extraction(encoded)+'''
 from launcher import launch
-launch(RUNTIME, OUTPUT, PORT, JOB_TIMEOUT_MINUTES, SESSION_HOURS, SCRATCH_ROOT)
+launch(RUNTIME, OUTPUT, PORT, JOB_TIMEOUT_MINUTES, SESSION_HOURS, SCRATCH_ROOT, SPEED_MODE)
 '''
     studio = notebook('JJP WanGP Motion Test Kit', intro, code)
     studio['metadata']['kaggle'].update(accelerator='nvidiaTeslaT4', isGpuEnabled=True)

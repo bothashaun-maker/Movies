@@ -109,6 +109,20 @@ def patch_h3_numerics(app):
         path.write_text(source)
 
 
+def patch_h3_attention(app):
+    """Scope an optional backend to H3 forward calls; Qwen and VAE stay SDPA."""
+    path = Path(app)/'models/minimax_h3/transformer.py'
+    source = path.read_text()
+    marker = '# JJP_H3_LOCAL_ATTENTION_V1'
+    if marker in source:
+        return
+    anchor = '    def forward(self, video_x, audio_x, sigma_video, sigma_audio, context, payload, spectrum=None, first_block_cache=None):'
+    assert source.count(anchor) == 1, 'Pinned H3 forward signature changed'
+    source = marker+'\nfrom h3_attention import h3_only as _jjp_h3_only\n'+source.replace(anchor, '    @_jjp_h3_only\n'+anchor, 1)
+    compile(source, str(path), 'exec')
+    path.write_text(source)
+
+
 if __name__ == '__main__':
     import sys
     patch_wgp(sys.argv[1])

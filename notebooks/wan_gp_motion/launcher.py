@@ -79,7 +79,9 @@ def startup_error(process, log_path):
                         f'Last startup output:\n{tail}')
 
 
-def launch(runtime, output, port=7860, job_minutes=20, session_hours=8, scratch_root=''):
+def launch(runtime, output, port=7860, job_minutes=20, session_hours=8, scratch_root='', speed_mode='auto'):
+    if speed_mode not in ('auto', 'sdpa'):
+        raise ValueError("SPEED_MODE must be 'auto' or 'sdpa'.")
     runtime, output = Path(runtime), Path(output)
     output.mkdir(parents=True, exist_ok=True)
     lock = open(output/'studio.lock', 'w')
@@ -148,11 +150,15 @@ def launch(runtime, output, port=7860, job_minutes=20, session_hours=8, scratch_
             marker.write_text(identity)
         # This probe must pass on the actual T4 before opening the GUI.
         env['PYTHONPATH'] = str(runtime)+os.pathsep+str(app)
-        from patch import patch_wgp, patch_h3_dtype, patch_h3_numerics
+        from patch import patch_wgp, patch_h3_dtype, patch_h3_numerics, patch_h3_attention
         patch_wgp(app/'wgp.py')
         patch_h3_dtype(app/'models/minimax_h3/minimax_h3_handler.py')
         patch_h3_numerics(app)
+        patch_h3_attention(app)
         bounded([python, runtime/'gpu_probe.py'], output/'gpu-probe.log', 120, cwd=app, env=env)
+        from h3_attention import choose
+        env['JJP_H3_ATTENTION'] = choose(runtime, output, python, uv, app, env, speed_mode)
+        print('H3 attention:', env['JJP_H3_ATTENTION'], '| Qwen and VAE: SDPA. Numerical safeguards retained.', flush=True)
         config = output/'config'
         settings = output/'settings'
         config.mkdir(exist_ok=True)
