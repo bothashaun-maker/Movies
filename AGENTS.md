@@ -96,6 +96,16 @@ chat transcript. Update it when the user changes these instructions.
 
 ## H3 Next experiment (2026-11-07)
 
+- Sampling memory fix v1 (2026-11-15) is based on the user's uploaded newer notebook,
+  which already included Molmo INT8 layout/fallback/probes and local diffusion staging.
+  Preserve those fixes. Its diagnostics confirm preparation completed, then the
+  optional unsplit single-GPU reference block OOMed beside the resident TP shards
+  (832.62 MiB request). `h3_next/patch_tp_check.py` caps that diagnostic at 4,096
+  tokens, preserving small comparisons and the production TP/numerical checks.
+  H3 Next removes its unused PDD registration and retains root exceptions in error
+  summaries. Model packs/catalogs are unchanged. CPU control-flow/source checks
+  are not a full-size T4 render result; later fit, speed and quality remain unverified.
+
 - User authorized building and pushing the new research-based notebook. `H3_Next_T4.ipynb` is separate from the existing four collections; regenerate only with `python notebooks/build_h3_next.py`. Sources are `notebooks/h3_next/`.
 - Installs three visible 18-node canvases: Singularity/Pika four-step, Singularity/Pika two-step draft, DenoMix eight-step. Molmo2 INT8 uses an experimental FP16/SDPA adaptation for T4; Sol INT8 decodes output video. Original H3 VAE handles reference images. Optional motion dial defaults to zero. No upscaler, sparse attention, SCAIL motion-transfer or Director timeline is implied.
 - Preserve three isolated preparation/sampling/decoding processes and exact conditioning/reference checkpoints. Molmo2 must exit before loading diffusion weights to reduce Kaggle host RAM pressure. Include new code identity in retry keys. Prefix/scale adaptation must remain a reader operation, never a second full checkpoint copy.

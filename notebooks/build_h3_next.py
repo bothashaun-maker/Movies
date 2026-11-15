@@ -17,10 +17,14 @@ settings=settings.replace("SAMPLING_PRESET = 'turbo4'", "SAMPLING_PRESET = 'turb
 # Reuse storage and download verification without changing the old notebooks/catalog.
 asset_code=r(B/'assets.py')+'\n'+r(S/'assets.py')+'\nASSETS = '+repr(assets)+'\nSUITE_ASSETS = ASSETS\n'
 asset_code+='\ndef selected_model_assets():\n    return [a for a in SUITE_ASSETS if a.get("pack")=="molmo" or a.get("pack")=="singularity" or Path(a["file"]).name in '+repr(['pika_h3_flex_turbo_4step_ref2va.safetensors','minimax_h3_sol_vae_int8_convrot.safetensors','minimax_h3_video_vae_int8_convrot.safetensors','minimax_h3_audio_vae_fp32.safetensors'])+']\n'
-plugin=r(B/'diagnostics.py')+'\n'+r(B/'checkpoint_nodes.py')+'\nCHECKPOINT_NODE_MAPPINGS=NODE_CLASS_MAPPINGS.copy()\n'+r(B/'browser_node.py')+'\n'+r(S/'nodes.py')+'\n'+r(N/'nodes.py')
+diagnostics=r(B/'diagnostics.py').replace("('sampling.log','decoding.log'", "('preparation.log','sampling.log','decoding.log'")+'\n'+r(N/'error_summary.py')
+browser_node=r(B/'browser_node.py').replace("'H3 render failed; saved latents are retained. Log: '", "'H3 Next stopped; inspect the phase error below. Log: '").replace("log_path.read_text()[-8000:]", "next_failure_summary(log_path)")
+plugin=diagnostics+'\n'+r(B/'checkpoint_nodes.py')+'\nCHECKPOINT_NODE_MAPPINGS=NODE_CLASS_MAPPINGS.copy()\n'+browser_node+'\n'+r(S/'nodes.py')+'\n'+r(N/'nodes.py')
+# H3 Next has no PDD nodes; do not advertise an unavailable upstream wrapper.
+plugin += "\nNODE_CLASS_MAPPINGS.pop('H3SuitePDDApply', None)\n"
 # Include code identity in checkpoint keys; never reuse latents across different patches.
 job=r(S/'job.py').replace("'suite_version':1", "'suite_version':'h3-next-v1', 'extension_pins':"+repr(pins)).replace("'H3SuiteCLIPLoader'}", "'H3SuiteCLIPLoader','H3NextMolmo','H3NextReference','H3NextMotion'}")
-code_identity=hashlib.sha256((plugin+r(N/'job.py')+r(N/'patch_molmo.py')+r(N/'weight_reader.py')+repr(pins)).encode()).hexdigest()
+code_identity=hashlib.sha256((plugin+r(N/'job.py')+r(N/'patch_molmo.py')+r(N/'weight_reader.py')+r(N/'patch_tp_check.py')+r(N/'molmo_probe.py')+asset_code+repr(pins)).encode()).hexdigest()
 settings+='\nNEXT_CODE_IDENTITY = '+repr(code_identity)+'\n'
 worker=settings+'\n'+asset_code+'\n'+r(B/'graphs.py')+'\n'+r(B/'runtime.py')+'\n'+r(B/'browser_job.py')+'\n'+r(S/'preflight.py')+'\n'+job+'\n'+r(N/'job.py')+'''
 job=json.loads(Path(sys.argv[1]).read_text())
@@ -50,12 +54,15 @@ if old in s:
     p.write_text(s)
 else:assert new in s,'Unexpected TP source reader.'
 '''
+install+=r(N/'patch_tp_check.py')+"\npatch_tp_check(MGPU)\n"
 install+=f"pinned_checkout('https://github.com/alisson-anjos/ComfyUI-Molmo2-H3.git',{pins['molmo']!r},COMFY/'custom_nodes/ComfyUI-Molmo2-H3')\n"
 install+=f"pinned_checkout('https://github.com/matlowai/ComfyUI-Dials.git',{pins['dials']!r},COMFY/'custom_nodes/ComfyUI-Dials')\n"
 install+="run([PY,'-m','pip','install','-c',constraints,'accelerate==1.15.0','molmo-utils==0.0.1'])\n"+r(N/'patch_molmo.py')+"\npatch_molmo(COMFY/'custom_nodes/ComfyUI-Molmo2-H3')\n"
 # Check Molmo's actual INT8 kernel on its encoder GPU before downloading any weights.
 install+='''
-run([PY,'-c',"import torch; a=torch.ones((32,256),dtype=torch.int8,device='cuda:0'); b=torch.ones((256,256),dtype=torch.int8,device='cuda:0'); assert (torch._int_mm(a,b)==256).all(); print('Molmo INT8 GEMM probe passed')"])
+molmo_probe=ROOT/'molmo_int8_probe.py'
+molmo_probe.write_text('''+repr(r(N/'molmo_probe.py'))+''')
+run([PY,molmo_probe,COMFY/'custom_nodes/ComfyUI-Molmo2-H3/quantization/convrot_runtime.py'])
 run([PY,'-m','pip','check'])
 plugin_source='''+repr(plugin)+'\nworker_source='+repr(worker)+'\ncanvases='+repr(canvases)+'\n'+'''
 plugin_dir=COMFY/'custom_nodes/H3KaggleBrowser';plugin_dir.mkdir(parents=True,exist_ok=True)
@@ -74,9 +81,9 @@ access=r(B/'cloudflare.py').replace("assert 'H3IsolatedSaveVideo' in api_request
 stages={'catalog':r(B/'processes.py')+'\n'+asset_code,'install':install,'weights':'suite_prepare_assets(selected_model_assets())\n','workflow':r(B/'graphs.py')+'\n'+r(B/'runtime.py'),'access':access}
 for name,src in [*stages.items(),('plugin',plugin),('worker',worker)]:compile(src,name,'exec')
 entry=settings+'\n_H3_PIPELINE_SOURCES = '+pformat(stages,sort_dicts=False,width=110)+'\n'+r(B/'pipeline.py')+'\nrun_pipeline(_H3_PIPELINE_SOURCES,globals())\n'
-intro='''# H3 Next — Molmo2 · Sol · Pika · Singularity · DenoMix
+intro='''# H3 Next — Sampling memory fix v1 · Molmo2 · Sol · Pika
 
-**New experimental notebook for Kaggle T4 ×2. Existing notebooks are unchanged.**
+**Sampling memory fix v1 · Kaggle T4 ×2. Existing collections are unchanged.**\n\nThe optional single-GPU comparison is capped at 4,096 tokens to avoid running an extra full block beside the two-GPU shards. The Molmo INT8 compatibility fix and checkpoint staging from the supplied notebook are preserved. Full-size T4 rendering remains unverified after this change.
 
 1. Set **GPU T4 ×2** and **Internet ON**.
 2. Attach private Datasets from **H3_Next_Model_Packs.ipynb** if you have prepared them. Otherwise, missing files download automatically. The old H3 packs supply the shared reference/audio VAEs but do not contain the new models.

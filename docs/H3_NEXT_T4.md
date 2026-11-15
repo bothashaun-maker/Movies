@@ -4,6 +4,26 @@
 
 This is a separate notebook. Your Current Working, Pixa, Director and Three-Step notebooks remain unchanged. H3 Next contains three full, editable ComfyUI workflows:
 
+**Sampling memory fix v1 (15 November 2026):** the supplied run completed preparation,
+then failed inside the optional single-GPU comparison with an 832.62 MiB allocation
+request on GPU 0. The comparison was running an unsplit block while the two-GPU
+shards were resident. It is now capped at 4,096 tokens; larger production sequences
+skip only that diagnostic and log the decision. Small comparisons and finite
+conditioning/latent checks remain. This removes the reported extra full-block
+allocation, but does not establish that every later sampling/decode allocation fits.
+
+The uploaded notebook's Molmo INT8 dispatch/fallback and production-shape startup
+probe are preserved, along with local diffusion staging. The unused PDD wrapper
+is no longer advertised by H3 Next, avoiding the unrelated
+`MiniMaxH3PDDAccApply` catalog error. Error summaries retain root exception lines
+before the traceback tail. Existing model Datasets require no rebuild.
+
+Import the updated notebook into Kaggle; an already imported copy does not update
+from GitHub. Stop the previous launcher/server before starting the replacement
+cell. Keep the same model inputs and preserve completed outputs and logs. The new
+code identity invalidates old job keys, so preparation runs again for a new job.
+CPU regression checks do not verify corrected full-size T4 inference, fit or speed.
+
 | ComfyUI workflow menu | Intended use |
 | --- | --- |
 | Singularity - Pika 4 Step Final | Start here; four-step generation |

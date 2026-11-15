@@ -42,6 +42,7 @@ class NextNotebook(unittest.TestCase):
             p=Path(tmp)/'tp_source.py';p.write_text('from collections import OrderedDict\ndef open_weights(source):\n    return safe_open(source, framework="pt", device="cpu")\n')
             body=[];active=False
             for s in tree.body:
+                if active and isinstance(s,ast.FunctionDef) and s.name=='patch_tp_check':break
                 if isinstance(s,ast.Assign) and isinstance(s.value,ast.BinOp) and ast.unparse(s.value)=="MGPU / 'tp_source.py'":active=True
                 if active and isinstance(s,ast.Expr) and isinstance(s.value,ast.Call) and isinstance(s.value.func,ast.Name) and s.value.func.id=='pinned_checkout':break
                 if active:body.append(s)
@@ -54,7 +55,7 @@ class NextNotebook(unittest.TestCase):
         mod=module(N/'patch_molmo.py','next_patch')
         with tempfile.TemporaryDirectory() as tmp:
             root=Path(tmp);p=root/'quantization/convrot_runtime.py';p.parent.mkdir()
-            p.write_text('import torch\nfrom torch import nn\ndef load_model(device):\n    weight=torch.empty(1,dtype=torch.bfloat16)\n    quant=torch.empty(1,dtype=torch.int8)\n    return model.eval().to(device)\n')
+            p.write_text('import torch\nfrom torch import nn\ndef forward(self,q,n):\n            q = F.pad(q, (0,0,0,max(32, ((n+7)//8)*8)-n))\n            y = torch._int_mm(q.contiguous(), self.qweight.t().contiguous())[:n].float()\ndef load_model(device):\n    weight=torch.empty(1,dtype=torch.bfloat16)\n    quant=torch.empty(1,dtype=torch.int8)\n    return model.eval().to(device)\n')
             mod.patch_molmo(root);once=p.read_text();mod.patch_molmo(root)
             self.assertEqual(once,p.read_text());compile(once,'molmo','exec')
             self.assertIn('dtype=torch.int8',once);self.assertIn('value.dtype == torch.bfloat16',once)
