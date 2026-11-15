@@ -1,5 +1,30 @@
 # User preferences and project continuity
 
+## AIQuest native camera Dataset edition — 15 November 2026
+
+- User explicitly rejected another ComfyUI engine adaptation and selected the
+  actual AIQuest Wan2GP/Gradio implementation. This supersedes the visible
+  ComfyUI-graph requirement for this separate pair only. Retain AIQuest credit.
+- Build only `JJP_H3_Native_Camera.ipynb` and `JJP_H3_Camera_Models.ipynb` with
+  `python notebooks/h3_camera/build.py`. Existing notebooks and H3-Next Datasets
+  must remain unchanged. The earlier local Blender-reference experiment was not
+  published and is not this renderer.
+- User requires ONE separate complete private Dataset, created automatically
+  with the working native streaming uploader/authentication method. Its 13 pinned
+  files total 37.956 GiB: native FL2VA INT8, Qwen GGUF plus six configuration files,
+  video/audio VAEs, PDMD four-step adapter and camera/orbit adapters. Do not require
+  H3-Next packs or add unrelated models. Credentials stay in Kaggle Secrets.
+- Preserve AIQuest's inference/numerical/tensor-parallel code and interface.
+  `integrate.py` verifies the source Git blob and enforces identical inference AST,
+  apart from the two camera catalog entries and resolving saved local adapters.
+  Setup changes cover Dataset verification/staging and owned-process cleanup only.
+- Use Pixaroma's first-frame, first/last-frame and reference formats for the
+  actual input mode. A Start frame is not a loose character reference. Blender
+  is optional, not a prerequisite for camera motion. Do not claim guaranteed
+  camera degrees, first-pass success or tested T4 speed/quality from CPU checks.
+- Local tests use the real Kaggle SDK with remote operations stubbed. They do
+  not constitute an authenticated Kaggle upload or a full-model GPU render.
+
 These instructions record the user's explicit requests from the MiniMax H3
 Kaggle notebook conversation, saved on 2026-10-25.
 

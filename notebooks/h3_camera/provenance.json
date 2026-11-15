@@ -1,0 +1,10 @@
+{
+  "upstream_blob": "c0cb628304f4e736760c5db09db2ab53136faf4d",
+  "original_engine_sha256": "97a413e6d64473609dc3d548bee8e31fd877eaf3cb344a2b75d6dbed5939b8fe",
+  "changes": [
+    "only camera/orbit catalog choices",
+    "resolve adapters from verified saved files",
+    "owned process cleanup",
+    "Dataset verification/staging; original inference/UI preserved"
+  ]
+}
