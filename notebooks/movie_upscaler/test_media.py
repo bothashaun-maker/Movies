@@ -102,6 +102,18 @@ class MediaChecks(unittest.TestCase):
         self.assertEqual(Fraction(result['streams'][0]['avg_frame_rate']),Fraction(30000,1001))
     def test_changed_settings_separate_job(self):
         self.assertNotEqual(self.job()['job'],self.job(settings={'scale':2,'seed':43})['job'])
+    def test_lossless_export_preserves_exact_processed_rgb_and_audio(self):
+        meta=self.job();self.complete(meta)
+        target=media.export(meta,'mkv',lossless=True)
+        chunks=b''.join(media.run(['ffmpeg','-v','error','-i',Path(meta['job'])/f'chunk-{i:06d}.mkv','-f','rawvideo','-pix_fmt','rgb24','-threads','1','-']) for i in range(meta['chunks']))
+        actual=media.run(['ffmpeg','-v','error','-i',target,'-f','rawvideo','-pix_fmt','rgb24','-threads','1','-'])
+        self.assertEqual(chunks,actual)
+        self.assertEqual(media.export(meta,'mkv',lossless=True),target)
+        mp4=media.export(meta,'mp4',crf=14,preset='slow')
+        self.assertNotEqual(target,mp4)
+        other=media.export(meta,'mp4',crf=16,preset='medium')
+        self.assertNotEqual(other,mp4)
+        self.assertTrue(target.exists() and mp4.exists() and other.exists())
     def test_seek_with_nonzero_start_and_audio_offset(self):
         shifted=self.root/'shifted.mkv'
         make_video(shifted,frames=37,extra=['-g','12','-output_ts_offset','5'])

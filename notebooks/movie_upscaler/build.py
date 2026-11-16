@@ -20,30 +20,36 @@ def workflow(seed=True):
         links.append([i, a, slot, b, inp, typ])
         nodes[a-1]['outputs'][slot]['links'].append(i)
         nodes[b-1]['inputs'][inp]['link'] = i
-    source = add('MovieStudioChunk', [0, 0], ['/kaggle/input/your-video/clip.mp4', 2, 17, 4 if seed else 0, 1920, 0], [],
-                 [('frames', 'IMAGE'), ('job', 'MOVIE_JOB'), ('target_short_edge', 'INT')], '1 • Set movie path; 2× default; resumes saved chunks')
+    upload = add('MovieStudioUpload', [-470, 0], [''], [], [('source_path', 'STRING')], '1 • Upload clip from your computer')
+    source = add('MovieStudioChunk', [0, 0], ['', 2, 17, 4 if seed else 0, 1920, 0], [('source_path', 'STRING')],
+                 [('frames', 'IMAGE'), ('job', 'MOVIE_JOB'), ('target_short_edge', 'INT'), ('four_x_downscale', 'FLOAT')], '2 • 2× quality target / resumable chunks')
+    nodes[source-1]['inputs'][0]['widget'] = {'name': 'source_path'}
+    link(upload, 0, source, 0)
     if seed:
         dit = add('SeedVR2LoadDiTModel', [390, 0], ['seedvr2_ema_3b-Q8_0.gguf', 'cuda:0', 32, True, 'cpu', True, 'sdpa'], [],
-                  [('SEEDVR2_DIT', 'SEEDVR2_DIT')], '2 • 3B Q8 / CPU block swapping / T4')
-        vae = add('SeedVR2LoadVAEModel', [390, 450], ['ema_vae_fp16.safetensors', 'cuda:0', True, 512, 64, True, 512, 64, 'false', 'cpu', True], [],
-                  [('SEEDVR2_VAE', 'SEEDVR2_VAE')], '3 • FP16 VAE; tiled encode and decode')
+                  [('SEEDVR2_DIT', 'SEEDVR2_DIT')], '3 • 3B Q8 / T4 / memory offload')
+        vae = add('SeedVR2LoadVAEModel', [390, 450], ['ema_vae_fp16.safetensors', 'cuda:1', True, 512, 128, True, 512, 128, 'false', 'cpu', True], [],
+                  [('SEEDVR2_VAE', 'SEEDVR2_VAE')], '4 • FP16 VAE / 512 tiles / 128 overlap')
         up = add('SeedVR2VideoUpscaler', [800, 0], [42, 'fixed', 1024, 0, 5, True, 'lab', 2, 0, 0.0, 0.0, 'cpu', True],
                  [('image', 'IMAGE'), ('dit', 'SEEDVR2_DIT'), ('vae', 'SEEDVR2_VAE'), ('resolution', 'INT')], [('IMAGE', 'IMAGE')],
-                 '4 • Temporal video restoration; target comes from source × scale')
+                 '5 • Temporal quality / uniform 5 frames / overlap 2')
         # Connected resolution retains its serialized widget position; the link supplies its actual value.
         nodes[up-1]['inputs'][3]['widget'] = {'name': 'resolution'}
         link(source, 0, up, 0); link(dit, 0, up, 1); link(vae, 0, up, 2); link(source, 2, up, 3)
     else:
-        loader = add('UpscaleModelLoader', [390, 420], ['RealESRGAN_x4plus.pth'], [], [('UPSCALE_MODEL', 'UPSCALE_MODEL')], '2 • Verified Real-ESRGAN checkpoint')
-        up4 = add('ImageUpscaleWithModel', [390, 0], [], [('upscale_model', 'UPSCALE_MODEL'), ('image', 'IMAGE')], [('IMAGE', 'IMAGE')], '3 • Native tiled 4× model')
+        loader = add('UpscaleModelLoader', [390, 420], ['RealESRGAN_x4plus.pth'], [], [('UPSCALE_MODEL', 'UPSCALE_MODEL')], '3 • Real-ESRGAN x4plus')
+        up4 = add('ImageUpscaleWithModel', [390, 0], [], [('upscale_model', 'UPSCALE_MODEL'), ('image', 'IMAGE')], [('IMAGE', 'IMAGE')], '4 • Native tiled 4× model')
         link(loader, 0, up4, 0); link(source, 0, up4, 1)
-        up = add('ImageScaleBy', [800, 0], ['lanczos', 0.5], [('image', 'IMAGE')], [('IMAGE', 'IMAGE')], '4 • 4× → 2×; set scale_by=1 for a 4× job')
-        link(up4, 0, up, 0)
-    save = add('MovieStudioCommit', [1210, 0], ['mp4', True], [('frames', 'IMAGE'), ('job', 'MOVIE_JOB')], [('status', 'STRING')],
-               '5 • Save chunk → continue → final movie with original audio')
+        up = add('ImageScaleBy', [800, 0], ['lanczos', 0.5], [('image', 'IMAGE'), ('scale_by', 'FLOAT')], [('IMAGE', 'IMAGE')], '5 • Lanczos / automatic exact target size')
+        nodes[up-1]['inputs'][1]['widget'] = {'name': 'scale_by'}
+        link(up4, 0, up, 0); link(source, 3, up, 1)
+    save = add('MovieStudioCommit', [1210, 0], ['lossless_mkv', 14, 'slow', True], [('frames', 'IMAGE'), ('job', 'MOVIE_JOB')], [('status', 'STRING')],
+               '6 • Lossless RGB master / optional high-quality MP4 / original audio')
     link(up, 0, save, 0); link(source, 1, save, 1)
+    for node in nodes:
+        node['pos'][0] += 500  # Keep the upload button visible on first open.
     return {'last_node_id': len(nodes), 'last_link_id': len(links), 'nodes': nodes, 'links': links, 'groups': [], 'config': {},
-            'extra': {'ds': {'scale': 0.65, 'offset': [80, 80]}}, 'version': 0.4}
+            'extra': {'ds': {'scale': 0.6, 'offset': [120, 220]}}, 'version': 0.4}
 
 def notebook(title, guide, code):
     compile(code, title, 'exec')
@@ -55,14 +61,15 @@ def notebook(title, guide, code):
 
 def build():
     workflows = {'Movie Studio - SeedVR2': workflow(True), 'Movie Studio - RealESRGAN': workflow(False)}
-    files = {'media.py': (ROOT/'media.py').read_text(), 'nodes.py': (ROOT/'nodes.py').read_text(),
-             '__init__.py': 'from .nodes import NODE_CLASS_MAPPINGS, NODE_DISPLAY_NAME_MAPPINGS\nWEB_DIRECTORY = "web"\n',
+    files = {'uploads.py': (ROOT/'uploads.py').read_text(), 'web/upload.js': (ROOT/'upload.js').read_text(), 'media.py': (ROOT/'media.py').read_text(), 'nodes.py': (ROOT/'nodes.py').read_text(),
+             '__init__.py': 'from .nodes import NODE_CLASS_MAPPINGS, NODE_DISPLAY_NAME_MAPPINGS\nfrom .uploads import register_routes\nimport folder_paths\nfrom server import PromptServer\nfrom pathlib import Path\nWEB_DIRECTORY = "web"\nif getattr(PromptServer, "instance", None) is not None:\n    register_routes(PromptServer.instance.routes, Path(folder_paths.get_input_directory())/"movie-clips")\n',
              'web/open.js': (ROOT/'open.js').read_text()}
     payload = 'FILES = '+repr(files)+'\nWORKFLOWS = '+repr(workflows)+'\nCF_SIZE = 40274445\n'
     assets = (ROOT/'assets.py').read_text()
     code = assets+'\n'+(ROOT/'launcher.py').read_text().replace('EMBEDDED_PAYLOAD = None', payload)
     nb = notebook('Movie Upscaler', (ROOT/'intro.md').read_text(), code)
-    (REPO/'Movie_Upscaler_Kaggle_v1.ipynb').write_text(json.dumps(nb, indent=1)+'\n')
+    for name in ('Movie_Upscaler_Kaggle_v2.ipynb', 'Movie_Upscaler_Kaggle_v1.ipynb'):
+        (REPO/name).write_text(json.dumps(nb, indent=1)+'\n')
     guide = '''# Movie Upscaler — automatic private Dataset creator
 
 Select **Accelerator: None**, **Internet ON**. Enable a private Kaggle Secret named

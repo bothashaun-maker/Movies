@@ -30,12 +30,10 @@ Kaggle notebook conversation, saved on 2026-10-25.
 
 ## Notebook changes and GitHub
 
-- The user instructed: "Whenever changes are made to the notebook, automatically
-  write it to my github."
-- After changing a notebook, run the relevant checks, commit the intended
-  changes, and push to `bothashaun-maker/Movies` on `main` without asking for
-  another confirmation. If the local branch has another name, use
-  `git push origin HEAD:main`.
+- The user superseded the earlier automatic-push preference: push to GitHub only
+  when explicitly requested. Do not infer publication permission from a review,
+  error report, attachment or local edit. For the Movie Upscaler v2 rewrite on
+  16 November 2026, the user explicitly requested a push after validation.
 - Preserve unrelated user changes. Do not force-push. Reconcile remote updates
   if necessary, and report any validation or publication blocker honestly.
 - Give the user the updated GitHub notebook link. Do not claim a successful push
@@ -107,6 +105,21 @@ chat transcript. Update it when the user changes these instructions.
 - `H3_Model_Packs.ipynb` prepares all four notebooks’ default weights as four CPU-only reusable outputs (`ref2va`, `fl2va`, `encoder`, `support`). Regenerate with `python notebooks/build_h3_model_packs.py` when catalogs change. Each pack is below 20 GiB; combined storage is about 73 GiB. Attach saved outputs through Add Input; temporary renderer files/symlinks are not durable datasets.
 
 ## Movie upscaler (2026-11-07)
+
+- Movie Upscaler v2 (16 November 2026): user explicitly requested a notebook
+  rewrite with a real clip-upload node, reviewed quality settings in both native
+  workflows and GitHub publication. AIQuest is reference-only and must not change.
+  Rebuild `Movie_Upscaler_Kaggle_v2.ipynb` and its identical v1 renderer alias with
+  `python notebooks/movie_upscaler/build.py`; the existing model builder/Dataset
+  and catalog are unchanged. Upload uses streamed 8 MiB requests into working
+  storage. Default 2×, 5-frame uniform temporal batches / overlap 2, 512-pixel
+  VAE tiles / overlap 128; VAE uses GPU 1 if present, otherwise GPU 0. DiT stays
+  on GPU 0 with CPU swapping. This is stage placement, not pooled memory.
+  Real-ESRGAN scale is connected automatically. Default output is FFV1 lossless
+  RGB8 MKV; optional MP4 exposes CRF 14 / slow. Completed jobs can re-export
+  without upscaling again. See `QUALITY_SETTINGS.md` for exact controls/rationale.
+  Browser upload, pinned schemas, exact lossless RGB/media tests and tiny actual
+  Real-ESRGAN CPU inference passed; full-size T4/SeedVR2 inference is unverified.
 
 - User now requested a separate Kaggle movie upscaler and explicitly authorized
   building and pushing it. This supersedes the earlier CapCut-only preference

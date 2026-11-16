@@ -17,7 +17,7 @@ import urllib.request
 REQUIRE_ATTACHED_MODELS = True
 ENABLE_SEEDVR2 = True
 PORT = 8188
-BASE = Path('/kaggle/temp/movie-studio-v1')
+BASE = Path('/kaggle/temp/movie-studio-v2')
 OUT = Path('/kaggle/working/movie-studio')
 COMFY_REV = '1332fabfcc507aa7c548cd5152071ed494c207e8'
 SEED_REV = '4490bd1f482e026674543386bb2a4d176da245b9'
@@ -81,7 +81,7 @@ try:
     if free < 10*1024**3:
         raise RuntimeError('GPU 0 needs at least 10 GiB free; stop other GPU processes first.')
     print('GPU 0:', torch.cuda.get_device_name(0), 'Torch:', torch.__version__, flush=True)
-    print('This version uses GPU 0. A second T4 does not pool its memory.', flush=True)
+    print('DiT / Real-ESRGAN: GPU 0. SeedVR2 VAE: GPU 1 when available, otherwise GPU 0. Memories do not pool.', flush=True)
     comfy = BASE/'ComfyUI'
     checkout('https://github.com/comfyanonymous/ComfyUI.git', comfy, COMFY_REV)
     seed = comfy/'custom_nodes/SeedVR2'
@@ -97,6 +97,9 @@ try:
     text = (comfy/'requirements.txt').read_text()
     if ENABLE_SEEDVR2:
         text += '\n'+(seed/'requirements.txt').read_text()
+    # Versions exercised with the pinned ComfyUI/SeedVR2 graph and real loader imports.
+    # Torch/CUDA and the Kaggle numerical stack remain protected by constraints.
+    text += '\ntransformers==4.57.6\ndiffusers==0.39.0\npeft==0.21.3\n'
     requirements.write_text(text)
     fingerprint = hashlib.sha256((text+constraints.read_text()+sys.version+SEED_REV).encode()).hexdigest()
     marker = BASE/'setup.complete'
@@ -119,6 +122,11 @@ try:
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_text(text)
     workflows = {k: v for k, v in WORKFLOWS.items() if ENABLE_SEEDVR2 or 'SeedVR2' not in k}
+    if torch.cuda.device_count() < 2:
+        for graph in workflows.values():
+            for node in graph['nodes']:
+                if node['type'] == 'SeedVR2LoadVAEModel':
+                    node['widgets_values'][1] = 'cuda:0'
     wf_dir = comfy/'user/default/workflows'
     wf_dir.mkdir(parents=True, exist_ok=True)
     for name, graph in workflows.items():
@@ -134,8 +142,10 @@ try:
     cf.chmod(0o700)
     env = os.environ.copy()
     env['MOVIE_STUDIO_URL'] = f'http://127.0.0.1:{PORT}'
+    env['MPLBACKEND'] = 'Agg'
+    (OUT/'input').mkdir(exist_ok=True)
     server = spawn([python, comfy/'main.py', '--listen', '127.0.0.1', '--port', PORT, '--lowvram', '--force-fp16',
-                    '--preview-method', 'none', '--cache-none', '--output-directory', OUT, '--disable-auto-launch'], OUT/'comfy.log', env)
+                    '--preview-method', 'none', '--cache-none', '--input-directory', OUT/'input', '--output-directory', OUT, '--disable-auto-launch'], OUT/'comfy.log', env)
     deadline = time.monotonic()+240
     while True:
         if server.poll() is not None:
@@ -156,13 +166,13 @@ try:
                                                   'torch': torch.__version__, 'gpu': torch.cuda.get_device_name(0)}, indent=2))
     with open(OUT/'packages.txt', 'w') as f:
         run([sys.executable, '-m', 'pip', '--python', python, 'freeze'], stdout=f)
-    tunnel = spawn([cf, 'tunnel', '--url', f'http://127.0.0.1:{PORT}', '--no-autoupdate'], OUT/'tunnel.log')
+    tunnel = spawn([cf, 'tunnel', '--url', f'http://127.0.0.1:{PORT}', '--no-autoupdate', '--protocol', 'http2'], OUT/'tunnel.log')
     deadline = time.monotonic()+90
     url = None
     while time.monotonic() < deadline:
         matches = re.findall(r'https://[a-z0-9-]+\.trycloudflare\.com', (OUT/'tunnel.log').read_text())
         if matches:
-            url = matches[-1]+'/?movie_studio=v1'
+            url = matches[-1]+'/?movie_studio=v2'
             break
         if tunnel.poll() is not None:
             raise RuntimeError('Cloudflare stopped; see tunnel.log.')
@@ -171,7 +181,8 @@ try:
         raise RuntimeError('No studio URL received; see tunnel.log.')
     (OUT/'studio-url.txt').write_text(url)
     print('\nOPEN MOVIE STUDIO:', url, flush=True)
-    print('Set source_path in the leftmost node to your attached MP4/MKV, then press Run.')
+    print('Click Upload clip in the leftmost node, choose your video, wait for Ready, then press Run.')
+    print('Both workflows default to 2× and lossless RGB MKV. Choose high_quality_mp4 in the save node for CRF 14 / slow MP4.')
     videos = [p for p in Path('/kaggle/input').rglob('*') if p.is_file() and p.suffix.lower() in ('.mp4', '.mkv', '.mov', '.webm', '.avi')]
     for movie in videos[:20]: print('Attached video:', movie)
     print('No processing has started. Use queue count 1; turn OFF frontend Auto Queue.')

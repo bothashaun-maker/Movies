@@ -1,33 +1,21 @@
-# Movie Upscaler v1 — Kaggle T4 / ComfyUI
+# Movie Upscaler v2 — Upload clip · T4 quality settings
 
-Two visible connected workflows: **SeedVR2 temporal restoration** and **Real-ESRGAN fast enlargement**.
-Single-cell startup; no movie runs automatically. Uses **GPU 0** (one T4), leaving the second GPU unused.
+1. Attach your **existing Movie Upscaler model Dataset**. No new model pack is required.
+2. Select **GPU T4 ×2**, Internet ON. Stop any older studio first. Run this single startup cell and open **MOVIE STUDIO**.
+3. In **Movie • Upload clip**, click **Upload clip** and choose your MP4/MKV/MOV/WEBM/AVI/M4V. Wait for **Ready**. The source connection is automatic; no Kaggle clip Dataset or path copying is needed.
+4. Use **Movie Studio - SeedVR2** for temporal restoration, or choose **Movie Studio - RealESRGAN** from Workflows. Upload/select a clip in the workflow you use.
+5. Press **Run once**, queue count **1**, frontend **Auto Queue OFF**. The save node continues through the clip. To pause: **Interrupt, then Clear Queue**. Run again to resume.
 
-1. Run **Movie_Upscaler_Model_Packs.ipynb** with **Accelerator: None**, Internet ON and private Kaggle API authentication. It automatically uploads a private Dataset and prints its link.
-2. Import this notebook; select **T4 GPU**, Internet ON. After Dataset processing, attach it via **Add Input → Your Datasets**. Saved Notebook Outputs also remain supported.
-3. Attach your source video (or copy an H3 output to accessible Kaggle storage). Set `source_path` in the leftmost ComfyUI node to its full path.
-4. Run this single startup cell and open the printed **MOVIE STUDIO** link. It loads SeedVR2's graph directly.
-5. Press **Run once** in ComfyUI. Keep frontend **Auto Queue OFF** and queue count **1**. The save node queues one next chunk until finished.
-6. To pause, **Interrupt then Clear Queue**. Run the same graph/settings again to resume verified chunks. Set `auto_continue=false` for manual one-chunk-at-a-time processing.
-7. Final movies and checkpoints are under `/kaggle/working/movie-studio/movie-jobs/`. **Save Version with output files** or preserve these files before ending Kaggle.
+Both workflows default to **2×**, a **1920-pixel longest-edge cap**, and **lossless RGB MKV** export. This avoids a final lossy encode; it does not invent detail missing from the source. For a smaller, widely compatible video, select **high_quality_mp4** in the save node: **CRF 14 / slow** are already set. Lower CRF increases file size. Lossless ignores MP4 CRF/preset. Both retain original audio where the container supports it; MP4 may convert incompatible audio to AAC.
 
-## Settings
+**SeedVR2 defaults:** existing **3B Q8** model; **FP16 VAE**; SDPA; full 32-block CPU swapping; 17-frame saved chunks with 4 context frames on each side; **5-frame temporal batches**, **uniform final batch**, **overlap 2**; **LAB** colour matching; **zero injected noise**; fixed seed 42; tiled encode/decode **512 / overlap 128**. DiT uses GPU 0; VAE uses GPU 1 when available, otherwise GPU 0. These are separate processing stages, not pooled VRAM or a promised speedup. No unsupported FP8/Sage/Flash/compilation path is enabled.
 
-- **SeedVR2:** 3B Q8 model, FP16 tiled VAE, CPU offloading, 5-frame temporal batches, overlap 2. Source chunks have 4 context frames on each side; these are cropped before saving, with no duplicated output frames. Context reduces boundary risks but does not guarantee invisible seams. Defaults to 2×, with an explicit 1920-pixel longest-edge cap. Increase the cap only after testing a short clip; VAE tiling does not bound transformer attention memory.
-- **Real-ESRGAN:** select it from Workflows. Defaults to 2× (4× model then downsample). For **4×**, set source `scale=4` AND `ImageScaleBy.scale_by=1`. Mismatched dimensions fail before checkpoint commit. This model processes frames independently and can flicker.
-- `chunk_frames=17` bounds the images in each ComfyUI execution; increasing it uses more RAM. Changing restoration, chunk, context, or target settings starts a distinct checkpoint job. Changing auto-continuation/export container does not discard restored chunks.
-- Models must be attached by default. `REQUIRE_ATTACHED_MODELS=False` deliberately allows online model downloads. `ENABLE_SEEDVR2=False` runs only Real-ESRGAN and needs only its checkpoint. The image pack's VAE/Real-ESRGAN files can be reused, but its native INT8 SeedVR2 model is **not** the Q8 GGUF used here.
+**Real-ESRGAN defaults:** existing **x4plus** model, native tiled upscaling, then **Lanczos** to the exact target. Changing source **scale** from 2 to 4 automatically changes the final resize factor; there is no second scale setting to synchronize. Context is 0 because this model processes frames independently. It can flicker.
 
-## Media and storage
+The connected SeedVR2 **resolution** is the source short edge × scale. Leave the connection intact. `max_resolution=0` prevents a silent secondary resize; the source node enforces the explicit target cap. Raising batch size, tile size or target resolution is not a guaranteed quality upgrade or a proven T4 fit. Larger temporal batches increase memory; 5 retains temporal processing within a conservative budget. VAE tiling does not tile DiT attention.
 
-This version supports **SDR constant-frame-rate, square-pixel video**, producing RGB8 checkpoints and H.264 YUV420 output. HDR, variable-rate input, and display rotation must be converted explicitly first. High-bit-depth SDR is reduced to 8-bit; this is not an HDR preservation pipeline. Input timestamps are checked before inference.
+Uploads show progress and use small HTTP chunks. Failed uploads never replace a completed clip. Uploaded clips live under `/kaggle/working/movie-studio/input/movie-clips/`; restored chunks and final movies are under `/kaggle/working/movie-studio/movie-jobs/`. Completion shows the exact output path in the save node and log. Save Version with output files before ending Kaggle. Re-running a completed graph reuses restored chunks; changing only export format/CRF/preset re-exports without upscaling again.
 
-Frame count, rational frame rate, dimensions and audio-stream count are checked. Original audio streams are copied when supported. MP4 falls back to AAC if stream-copy fails; MKV keeps supported original audio and subtitles. Video is re-encoded at CRF 18. No frame interpolation or automatic face redrawing. Metadata/chapters are copied; arbitrary attachments/data tracks are not retained.
+This remains an **SDR, constant-frame-rate, square-pixel, RGB8** workflow, not HDR/10-bit preservation. Lossless means exact preservation of the processed RGB8 frames. Output frame count, resolution and audio-stream count are checked. Disk checks reserve space for checkpoints and the final lossless master. A scene cut should be processed as a separate clip to avoid temporal mixing across shots.
 
-Lossless FFV1 chunk files cost disk space. Startup checks measured free space against a conservative full-job checkpoint estimate and reserve. Nothing automatically deletes source files, other jobs or completed checkpoints. Chunk decoding seeks with a short preroll and selects validated source timestamps, avoiding a full prefix decode for every chunk. Full-length films may exceed Kaggle time/disk quotas; start with a short representative clip.
-
-Same-session interruptions resume automatically. Across sessions, restore the saved `movie-jobs` directory to the configured working output path before Run. Models are reused through the automatically created Dataset or saved Notebook Outputs. Software and tunnel setup still need Internet. Keep the startup cell running; anyone with its temporary URL can access the studio.
-
-## Validation status
-
-See `notebooks/movie_upscaler/README.md` for completed checks and remaining limits. Local CPU/media checks cannot establish T4 speed, memory fit, or visual restoration quality. No 4K or real-time performance promise is made.
+Settings rationale and validation are in `notebooks/movie_upscaler/QUALITY_SETTINGS.md`. Upload/browser/media tests are not evidence of full-size T4 SeedVR2 inference, memory fit, speed or comparative quality. AIQuest was read for upload/interaction reference and remains unchanged. Your model Dataset and model builder are unchanged.

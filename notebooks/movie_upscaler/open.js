@@ -3,12 +3,12 @@ app.registerExtension({
   name: "MovieStudio.Open",
   setup() {
     const url = new URL(window.location.href);
-    if (url.searchParams.get("movie_studio") !== "v1") return;
+    if (!["v1", "v2"].includes(url.searchParams.get("movie_studio"))) return;
     void (async () => {
       try {
         const deadline = Date.now() + 60000;
         const canvasReady = () => { try { return !!app.canvas?.canvas; } catch { return false; } };
-        while (!app.vueAppReady || !app.positionConversion || !canvasReady() || !window.LiteGraph?.registered_node_types?.MovieStudioChunk || !window.LiteGraph?.registered_node_types?.MovieStudioCommit) {
+        while (!app.vueAppReady || !app.positionConversion || !canvasReady() || !window.LiteGraph?.registered_node_types?.MovieStudioUpload || !window.LiteGraph?.registered_node_types?.MovieStudioChunk || !window.LiteGraph?.registered_node_types?.MovieStudioCommit) {
           if (Date.now() > deadline) throw new Error("ComfyUI did not finish starting");
           await new Promise(r => setTimeout(r, 100));
         }

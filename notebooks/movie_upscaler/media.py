@@ -8,7 +8,7 @@ import shutil
 import subprocess
 from fractions import Fraction
 
-VERSION = 'movie-studio-v1'
+VERSION = 'movie-studio-v2'
 _HASH_CACHE = {}
 
 def run(args):
@@ -123,7 +123,8 @@ def prepare(source, root, settings, core_frames, context, scale, max_edge):
     frames = meta['info']['frames']
     raw = frames * meta['info']['width'] * meta['info']['height'] * scale**2 * 3
     existing = sum(p.stat().st_size for p in job.glob('chunk-*.mkv'))
-    reserve = max(512 * 1024**2, raw // 10)
+    # Keep space for both lossless checkpoints and a complete lossless export.
+    reserve = raw + max(512 * 1024**2, raw // 10)
     if shutil.disk_usage(job).free < max(0, raw - existing) + reserve:
         raise RuntimeError(f'Not enough disk for a conservative {raw / 1024**3:.2f} GiB checkpoint estimate plus reserve. Use a shorter clip or smaller target.')
     return meta
@@ -190,14 +191,19 @@ def save_chunk(meta, index, raw, width, height, count):
     atomic_json(base.with_suffix('.json'), {'sha256': digest(base.with_suffix('.mkv')), 'start': start, 'end': end,
                                            'width': width, 'height': height})
 
-def export(meta, container='mp4'):
+def export(meta, container='mp4', crf=14, preset='slow', lossless=False):
     if container not in ('mp4', 'mkv'):
         raise ValueError('Choose mp4 or mkv.')
+    if type(crf) is not int or not 0 <= crf <= 23 or preset not in ('medium', 'slow', 'slower'):
+        raise ValueError('Invalid export quality setting.')
+    if lossless and container != 'mkv':
+        raise ValueError('Lossless RGB export requires MKV.')
     if next_chunk(meta) is not None:
         raise RuntimeError('Cannot export incomplete chunks.')
     job = Path(meta['job'])
-    target = job / ('upscaled.'+container)
-    receipt = job / ('export-'+container+'.json')
+    encoding = 'lossless-rgb' if lossless else f'h264-crf{crf}-{preset}'
+    target = job / ('upscaled-'+encoding+'.'+container)
+    receipt = job / ('export-'+encoding+'-'+container+'.json')
     if receipt.exists():
         old = json.loads(receipt.read_text())
         if target.exists() and digest(target) == old['sha256']:
@@ -205,14 +211,18 @@ def export(meta, container='mp4'):
         raise RuntimeError('Completed export is missing or corrupt; preserve its receipt before repair.')
     listing = job / 'concat.txt'
     listing.write_text(''.join(f"file 'chunk-{i:06d}.mkv'\n" for i in range(meta['chunks'])))
-    temp = job / ('upscaled.partial.'+container)
+    temp = job / ('upscaled-'+encoding+'.partial.'+container)
     args = ['ffmpeg', '-v', 'error', '-y', '-copyts', '-f', 'concat', '-safe', '1', '-i', listing,
             '-itsoffset', str(-meta['info']['start']), '-i', meta['source'], '-map', '0:v:0', '-map', '1:a?',
-            '-map_metadata', '1', '-map_chapters', '1', '-c:v', 'libx264', '-preset', 'medium', '-crf', '18',
-            '-pix_fmt', 'yuv420p', '-r', meta['info']['fps'], '-fps_mode', 'cfr', '-c:a', 'copy']
+            '-map_metadata', '1', '-map_chapters', '1']
+    if lossless:
+        args += ['-c:v', 'ffv1', '-level', '3', '-pix_fmt', 'bgr0']
+    else:
+        args += ['-c:v', 'libx264', '-preset', preset, '-crf', str(crf), '-pix_fmt', 'yuv420p']
+    args += ['-r', meta['info']['fps'], '-fps_mode', 'cfr', '-c:a', 'copy']
     color = meta['info'].get('color', {})
     matrix = color.get('color_space')
-    if matrix in ('bt709', 'bt470bg', 'smpte170m', 'smpte240m', 'bt2020nc'):
+    if not lossless and matrix in ('bt709', 'bt470bg', 'smpte170m', 'smpte240m', 'bt2020nc'):
         args += ['-vf', 'scale=out_color_matrix='+matrix+':out_range=tv', '-colorspace', matrix, '-color_range', 'tv']
     for key, flag in [('color_transfer', '-color_trc'), ('color_primaries', '-color_primaries')]:
         value = color.get(key)
@@ -241,6 +251,6 @@ def export(meta, container='mp4'):
     if (v['width'], v['height']) != (meta['info']['width']*meta['scale'], meta['info']['height']*meta['scale']):
         raise RuntimeError('Final video dimensions failed validation.')
     temp.replace(target)
-    atomic_json(receipt, {'file': str(target), 'sha256': digest(target), 'audio_mode': audio_mode,
+    atomic_json(receipt, {'file': str(target), 'sha256': digest(target), 'audio_mode': audio_mode, 'encoding': encoding,
                           'frames': int(v['nb_read_frames']), 'fps': meta['info']['fps']})
     return target
