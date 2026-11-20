@@ -1,0 +1,126 @@
+{
+  "schema": 1,
+  "family": "JJP-LTX25-T4-v1",
+  "upstream_notebook": "https://github.com/TeamAIQ/Colab-notebooks/blob/e297aa0fb6eb1c9eaa57c855fc1cf66657b4b66b/kaggle_notebooks/ltx-2-5-22b-distilled-video-generator.ipynb",
+  "upstream_blob": "1fe403e80116e4b261a004e57b17c6a683f20d58",
+  "wangp_commit": "f02a38275fa43057ea75814e8ef4368e5530dcf2",
+  "assets": [
+    {
+      "name": "ltx-2.5-22b-distilled_diffusion_model_int8_convrot.safetensors",
+      "file": "ltx-2.5-22b-distilled_diffusion_model_int8_convrot.safetensors",
+      "repo": "DeepBeepMeep/LTX-2",
+      "revision": "1798f80b3340d2f87cffae42f9fa5367d0963d0c",
+      "source": "https://huggingface.co/DeepBeepMeep/LTX-2/resolve/1798f80b3340d2f87cffae42f9fa5367d0963d0c/ltx-2.5-22b-distilled_diffusion_model_int8_convrot.safetensors",
+      "bytes": 19483116240,
+      "sha256": "ae777a7d5ea1830a9d0acdf784a1af278bfe421f109a8a8e2f0e1f2b03af34ef"
+    },
+    {
+      "name": "gemma4-12b-ltx-v1_int8_convrot.safetensors",
+      "file": "gemma4-12b-ltx-v1/gemma4-12b-ltx-v1_int8_convrot.safetensors",
+      "repo": "DeepBeepMeep/LTX-2",
+      "revision": "1798f80b3340d2f87cffae42f9fa5367d0963d0c",
+      "source": "https://huggingface.co/DeepBeepMeep/LTX-2/resolve/1798f80b3340d2f87cffae42f9fa5367d0963d0c/gemma4-12b-ltx-v1/gemma4-12b-ltx-v1_int8_convrot.safetensors",
+      "bytes": 12923893296,
+      "sha256": "b133236860881c24fdd21aa98662cace90ee1c2d4b0d3e50918f764c34cc0f08"
+    },
+    {
+      "name": "ltx-2.5-22b_text_embedding_projection_bf16.safetensors",
+      "file": "ltx-2.5-22b_text_embedding_projection_bf16.safetensors",
+      "repo": "DeepBeepMeep/LTX-2",
+      "revision": "1798f80b3340d2f87cffae42f9fa5367d0963d0c",
+      "source": "https://huggingface.co/DeepBeepMeep/LTX-2/resolve/1798f80b3340d2f87cffae42f9fa5367d0963d0c/ltx-2.5-22b_text_embedding_projection_bf16.safetensors",
+      "bytes": 2312126712,
+      "sha256": "06b7017692b2d0d42a863d609cf40e7672243eb3d13ae7a19650a7a8294ac494"
+    },
+    {
+      "name": "ltx-2.5-22b_video_embeddings_connector_int8_convrot.safetensors",
+      "file": "ltx-2.5-22b_video_embeddings_connector_int8_convrot.safetensors",
+      "repo": "DeepBeepMeep/LTX-2",
+      "revision": "1798f80b3340d2f87cffae42f9fa5367d0963d0c",
+      "source": "https://huggingface.co/DeepBeepMeep/LTX-2/resolve/1798f80b3340d2f87cffae42f9fa5367d0963d0c/ltx-2.5-22b_video_embeddings_connector_int8_convrot.safetensors",
+      "bytes": 1615737624,
+      "sha256": "777ee157f34603232554ebf94c42eb2b6676de3db3858823742289e5b33949ad"
+    },
+    {
+      "name": "ltx-2.5-22b_video_vae_bf16.safetensors",
+      "file": "ltx-2.5-22b_video_vae_bf16.safetensors",
+      "repo": "DeepBeepMeep/LTX-2",
+      "revision": "1798f80b3340d2f87cffae42f9fa5367d0963d0c",
+      "source": "https://huggingface.co/DeepBeepMeep/LTX-2/resolve/1798f80b3340d2f87cffae42f9fa5367d0963d0c/ltx-2.5-22b_video_vae_bf16.safetensors",
+      "bytes": 1452269922,
+      "sha256": "685b06ee3d9b2039647698fc4ea33175112462fc374e2777312c907897dfce8d"
+    },
+    {
+      "name": "ltx-2.5-spatial-upscaler-x2-1.0_bf16.safetensors",
+      "file": "ltx-2.5-spatial-upscaler-x2-1.0_bf16.safetensors",
+      "repo": "DeepBeepMeep/LTX-2",
+      "revision": "1798f80b3340d2f87cffae42f9fa5367d0963d0c",
+      "source": "https://huggingface.co/DeepBeepMeep/LTX-2/resolve/1798f80b3340d2f87cffae42f9fa5367d0963d0c/ltx-2.5-spatial-upscaler-x2-1.0_bf16.safetensors",
+      "bytes": 995778752,
+      "sha256": "eb5a71fe4068ee87ccdb1c3aa635e547ca76bd2d30ae20ae889f2c325c0677e8"
+    },
+    {
+      "name": "ltx-2.5-22b_audio_embeddings_connector_int8_convrot.safetensors",
+      "file": "ltx-2.5-22b_audio_embeddings_connector_int8_convrot.safetensors",
+      "repo": "DeepBeepMeep/LTX-2",
+      "revision": "1798f80b3340d2f87cffae42f9fa5367d0963d0c",
+      "source": "https://huggingface.co/DeepBeepMeep/LTX-2/resolve/1798f80b3340d2f87cffae42f9fa5367d0963d0c/ltx-2.5-22b_audio_embeddings_connector_int8_convrot.safetensors",
+      "bytes": 405254728,
+      "sha256": "32748d125922c40a4bcf85e45605f0ff50291ab36966701f0b724c0b014e7560"
+    },
+    {
+      "name": "ltx-2.5-22b_vocoder_bf16.safetensors",
+      "file": "ltx-2.5-22b_vocoder_bf16.safetensors",
+      "repo": "DeepBeepMeep/LTX-2",
+      "revision": "1798f80b3340d2f87cffae42f9fa5367d0963d0c",
+      "source": "https://huggingface.co/DeepBeepMeep/LTX-2/resolve/1798f80b3340d2f87cffae42f9fa5367d0963d0c/ltx-2.5-22b_vocoder_bf16.safetensors",
+      "bytes": 258355696,
+      "sha256": "a865b27a492fea788dc35bed29b333103ca1fb9c280f4fd77976ad19a3b13435"
+    },
+    {
+      "name": "ltx-2.5-22b_audio_vae_bf16.safetensors",
+      "file": "ltx-2.5-22b_audio_vae_bf16.safetensors",
+      "repo": "DeepBeepMeep/LTX-2",
+      "revision": "1798f80b3340d2f87cffae42f9fa5367d0963d0c",
+      "source": "https://huggingface.co/DeepBeepMeep/LTX-2/resolve/1798f80b3340d2f87cffae42f9fa5367d0963d0c/ltx-2.5-22b_audio_vae_bf16.safetensors",
+      "bytes": 106546028,
+      "sha256": "43ed048b9a5aa7eac181cf1b5bf68382aa4fb9d98627575d01d9b187d3462028"
+    },
+    {
+      "name": "config.json",
+      "file": "gemma4-12b-ltx-v1/config.json",
+      "repo": "DeepBeepMeep/LTX-2",
+      "revision": "1798f80b3340d2f87cffae42f9fa5367d0963d0c",
+      "source": "https://huggingface.co/DeepBeepMeep/LTX-2/resolve/1798f80b3340d2f87cffae42f9fa5367d0963d0c/gemma4-12b-ltx-v1/config.json",
+      "bytes": 2498,
+      "sha256": "82ec29063791629eac6a023c662f4edc2a811e479343ae79f21b8453357caeb0"
+    },
+    {
+      "name": "tokenizer.json",
+      "file": "gemma4-12b-ltx-v1/tokenizer.json",
+      "repo": "DeepBeepMeep/LTX-2",
+      "revision": "1798f80b3340d2f87cffae42f9fa5367d0963d0c",
+      "source": "https://huggingface.co/DeepBeepMeep/LTX-2/resolve/1798f80b3340d2f87cffae42f9fa5367d0963d0c/gemma4-12b-ltx-v1/tokenizer.json",
+      "bytes": 32169626,
+      "sha256": "cc8d3a0ce36466ccc1278bf987df5f71db1719b9ca6b4118264f45cb627bfe0f"
+    },
+    {
+      "name": "tokenizer_config.json",
+      "file": "gemma4-12b-ltx-v1/tokenizer_config.json",
+      "repo": "DeepBeepMeep/LTX-2",
+      "revision": "1798f80b3340d2f87cffae42f9fa5367d0963d0c",
+      "source": "https://huggingface.co/DeepBeepMeep/LTX-2/resolve/1798f80b3340d2f87cffae42f9fa5367d0963d0c/gemma4-12b-ltx-v1/tokenizer_config.json",
+      "bytes": 3736,
+      "sha256": "794a39f8330ce05020774c70c091225bc5f031b9cacf41fc20e52eb54b4b52d8"
+    },
+    {
+      "name": "chat_template.jinja",
+      "file": "gemma4-12b-ltx-v1/chat_template.jinja",
+      "repo": "DeepBeepMeep/LTX-2",
+      "revision": "1798f80b3340d2f87cffae42f9fa5367d0963d0c",
+      "source": "https://huggingface.co/DeepBeepMeep/LTX-2/resolve/1798f80b3340d2f87cffae42f9fa5367d0963d0c/gemma4-12b-ltx-v1/chat_template.jinja",
+      "bytes": 18683,
+      "sha256": "ae53464bf3be25802b3a5b37def7fd89667067d7577049b3b2d74c4d8de4c6d4"
+    }
+  ]
+}

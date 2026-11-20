@@ -1,0 +1,15 @@
+{
+  "aiquest_blob": "1fe403e80116e4b261a004e57b17c6a683f20d58",
+  "original_engine_sha256": "c72929f3eef1f8d9038e28afbe3f44a13e7a32095424201476cd12e3c01845f4",
+  "engine_sha256": "99ed556645c02afe612d1065441fa5a9a9bd63fbd62cc933ab7e1e60bfc87fc9",
+  "changed_functions": [
+    "_t2v_ui",
+    "_wrap_conditioner",
+    "encode_text_fast",
+    "run_generation",
+    "save_mp4",
+    "set_denoising_steps"
+  ],
+  "additional_change": "Fail clearly if a pinned upstream numerical patch is missing.",
+  "unchanged": "Tensor-parallel computation, INT8 kernels, FP16 math protections, native I2V/FL2V and media implementation."
+}
