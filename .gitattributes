@@ -1,0 +1,5 @@
+# Root notebooks are generated from the sources in notebooks/<studio>/; edit those and rebuild.
+*.ipynb linguist-generated=true
+
+# Bundled upstream canvases and example media, committed complete so an import is self-contained.
+workflows/** linguist-vendored
