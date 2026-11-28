@@ -12,7 +12,7 @@ GPU-validated**. The notebook does not pad or loop audio to meet a target.
 
 The initial implementation uses native ComfyUI with the official INT8 checkpoint.
 T4 text generation uses native FP32, with staged offloading and tiled FP32 VAE
-decoding. It uses the explicitly selected GPU; two cards are not pooled or claimed
+decoding. It uses the explicitly selected GPU. Two cards are not pooled or claimed
 to be accelerated together. Cover transcription is not included in this initial
 text-to-song baseline. No public tunnel or Gradio server is required.
 
@@ -20,10 +20,10 @@ text-to-song baseline. No public tunnel or Gradio server is required.
 
 Each attempt gets a unique folder under `/kaggle/working/yue2/runs/`:
 
-- `request.json`, `api-prompt.json`: prompts, three seeds, settings and runtime identity.
+- `request.json`, `api-prompt.json`: prompts, runtime identity and settings. The files also record three seeds.
 - `score.abc`, `abc_tokens.json`: score and exact token artifact when planning is used.
 - `semantic_tokens.json`: music tokens and native ending/truncation status.
-- `*_effective.json`: actual token budgets, prefixes and sampling arguments.
+- `*_effective.json`: actual token budgets and prefixes, as well as sampling arguments.
 - `latents.safetensors`, `latents_manifest.json`: checked acoustic latents before decoding.
 - `audio.flac`, `audio.wav`: 48 kHz stereo PCM-24 exports after finite/silence checks.
 - `stages.json`, `summary.json`: actual duration, cutoff state, acoustic boundaries,
@@ -33,8 +33,8 @@ Each attempt gets a unique folder under `/kaggle/working/yue2/runs/`:
 
 The runtime root also retains package versions, hardware, node schemas, and
 `server.log`. A file only appears after its stage completes. Failed/cancelled runs
-retain earlier artifacts. A header check does not establish musical completeness;
-listen to the full song, especially the outro and reported chunk boundaries.
+retain earlier artifacts. A header check does not establish musical completeness. Listen to the full song,
+especially the outro and reported chunk boundaries.
 
 **Download the run ZIP or save a Kaggle version with outputs before stopping your
 session.** A working directory alone is not durable across all Kaggle session resets.
@@ -43,12 +43,12 @@ session.** A working directory alone is not durable across all Kaggle session re
 
 Use the notebook's recovery cell with the directory containing `request.json`:
 
-- `decode`: reuse saved latents; optionally reduce the VAE tile size.
+- `decode`: reuse saved latents. Optionally reduce the VAE tile size.
 - `tokens`: reuse matching completed token stages and recompute acoustic synthesis.
 
 Recovery writes into a new run folder and checks identities/checksums. Token
-recovery requires the same effective prompt, seeds, budgets, package identity and
-checkpoint. It intentionally refuses to reuse mismatched or corrupt artifacts.
+recovery requires the same effective prompt, three seeds, budgets, package identity
+and checkpoint. It intentionally refuses to reuse mismatched or corrupt artifacts.
 Decode recovery verifies the checkpoint and latent checksum. For a new Kaggle
 session, attach saved outputs as an input or extract the saved ZIP into working storage.
 
@@ -65,17 +65,17 @@ or restart before submitting another run.
   `96fe199377309001ed8cd26a944baeee8cc31a20ba7c36d1d3c0a7e1f4149db6`.
 - Installation uses an isolated virtual environment inheriting Kaggle's binary
   stack. Constraints preserve PyTorch/TorchVision/TorchAudio and the scientific
-  packages already installed. Transformers, Hub and SoundFile are pinned; other
+  packages already installed. Transformers, Hub and SoundFile are pinned. Other
   dependencies follow the pinned ComfyUI requirements. Installed versions are
-  recorded; this is not a complete cross-image dependency lock.
+  recorded. This is not a complete cross-image dependency lock.
 - Use a current Kaggle image with PyTorch >=2.8. Dependency/import/kernel failures
-  stop setup and need diagnosis; verification is never disabled.
+  stop setup and need diagnosis. Verification is never disabled.
 - Native ComfyUI controls precision, sampling, attention, acoustic chunking and
   its decoder's loudness adjustment. The managed nodes observe ending status,
   save recovery artifacts and validate exports. No numerical failure is replaced
   with zero-filled audio.
 - Seven/eight-minute songs can require separate acoustic chunks. Their boundaries
-  are reported for listening; a larger duration setting does not establish continuity.
+  are reported for listening. A larger duration setting does not establish continuity.
 - Models and generated outputs remain subject to their upstream license terms.
 
 ## Validation status

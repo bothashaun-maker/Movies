@@ -32,9 +32,9 @@ library_name: diffusers
 
 # BFS: Best Face Swap
 
-BFS is a collection of LoRAs for face, head, and body replacement across Qwen Image 2.1, Qwen
+BFS is a collection of LoRAs for replacing faces, heads or bodies across Qwen Image 2.1, Qwen
 Image Edit 2509/2511, Flux 2 Klein, Krea 2, and experimental LTX-2 workflows. Each release has
-its own base-model, input-order, prompt, and workflow contract. Use the guide for the exact
+its own workflow contract, which specifies the base model, input order and prompt. Use the guide for the exact
 version you are loading.
 
 ## Guides
@@ -64,9 +64,9 @@ version you are loading.
 ## General rules
 
 - Use the LoRA with its matching base model whenever possible.
-- Follow the input order in the version guide; several BFS head releases intentionally use body
+- Follow the input order in the version guide. Several BFS head releases intentionally use body
   first and reference face second.
-- Start at LoRA strength `1.0`, then adjust for the base model, resolution, and reference image.
+- Start at LoRA strength `1.0`, then adjust for the base model. Also account for resolution and reference image.
 - The examples and workflows in this repository are demonstrations, not a guarantee of identical
   results on every image.
 - Do not use or share results involving public figures or people who have not given consent.

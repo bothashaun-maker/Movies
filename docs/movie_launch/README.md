@@ -15,16 +15,16 @@ Open CSV files in Excel, Google Sheets or LibreOffice. Copy a blank template for
 | File | Use |
 | --- | --- |
 | [Episode brief](templates/episode_brief.md) | One-page creative and technical plan |
-| [Eight episode cards](templates/episode_cards.csv) | Worlds, cast, palette, ending and PDF hook windows |
-| [Shot list](templates/shot_list.csv) | Three sample shots for the first pilot; extend with your own |
-| [Render log](templates/render_log.csv) | Prompts, seeds, model provenance, timing and accepted takes |
+| [Eight episode cards](templates/episode_cards.csv) | Worlds, cast, plus palette and ending, with PDF hook windows |
+| [Shot list](templates/shot_list.csv) | Three sample shots for the first pilot. Extend the list with your own. |
+| [Render log](templates/render_log.csv) | Prompts and seeds, model provenance, timing, plus accepted takes |
 | [Upscale log](templates/upscale_log.csv) | Source mapping, restoration settings, checks and backups |
-| [Asset register](templates/asset_register.csv) | Sources, permissions and durable file locations |
-| [Weekly plan](templates/weekly_plan.csv) | Two-hour active-work blocks; record GPU time separately |
+| [Asset register](templates/asset_register.csv) | Sources and permissions, with durable file locations |
+| [Weekly plan](templates/weekly_plan.csv) | Two-hour active-work blocks. Record GPU time separately. |
 | [Release tracker](templates/release_tracker.csv) | Readiness, actual links and measured results |
-| [Release checklist](templates/release_checklist.md) | Picture, sound, scripture, rights and archive review |
+| [Release checklist](templates/release_checklist.md) | Picture and sound, scripture and rights, plus archive review |
 
-Song timings are transcribed planning inputs from the supplied PDF; verify them against your audio. No new render, model/license audit or platform-policy verification was performed for this documentation delivery. Existing runtime limitations remain in the linked technical guides.
+Song timings are transcribed planning inputs from the supplied PDF. Verify them against your audio. No new render, model/license audit or platform-policy verification was performed for this documentation delivery. Existing runtime limitations remain in the linked technical guides.
 
 ## Verification
 
@@ -32,4 +32,4 @@ The PDF has 18 pages. Local Markdown targets, all CSV row widths, the eight epis
 
 ## Rebuild the downloadable documents
 
-`build_pdf.py` reads the Markdown guide and templates. It needs Python, `reportlab==4.4.9` and DejaVu Sans system fonts. Run `python docs/movie_launch/build_pdf.py` from the repository root. It writes only the PDF and ZIP in this directory. The downloadable ZIP includes the guide, PDF and templates; its GitHub-relative Markdown links work when browsing the repository, while the PDF contains full GitHub links.
+`build_pdf.py` reads the Markdown guide and templates. It needs Python, `reportlab==4.4.9` and DejaVu Sans system fonts. Run `python docs/movie_launch/build_pdf.py` from the repository root. It writes only the PDF and ZIP in this directory. The downloadable ZIP includes the guide, PDF and templates. Its GitHub-relative Markdown links work when browsing the repository, while the PDF contains full GitHub links.

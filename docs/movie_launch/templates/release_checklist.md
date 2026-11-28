@@ -11,34 +11,34 @@ Decision: HOLD / APPROVED
 - [ ] Both leads' faces, wardrobe and apparent age remain acceptable across cuts.
 - [ ] Hands, teeth, eyes, reflections and background movement were inspected.
 - [ ] Antagonists follow the episode's non-human/faceless rule.
-- [ ] Memorial portrayal is dignified; synthetic scenes are not passed off as archival footage.
+- [ ] Memorial portrayal is dignified. Synthetic scenes are not passed off as archival footage.
 - [ ] Original source and upscaled result compared at playback and full size.
 - [ ] No upscale chunk seams, invented facial detail or visible repeated/missing frames.
-- [ ] Landscape/vertical crops preserve faces, action and readable text.
+- [ ] Wide-format/vertical crops preserve faces and action, while keeping text readable.
 
 ## Sound and text
 
-- [ ] Correct approved song version; unwanted generated audio is muted.
+- [ ] Correct approved song version. Unwanted generated audio is muted.
 - [ ] Start/middle/end audio sync checked after final export.
 - [ ] Peaks, silence drops and ending/fade checked by listening.
-- [ ] Scripture spelling, reference, context and translation checked.
+- [ ] Check scripture spelling and reference, along with context and translation.
 - [ ] Exact quotation, paraphrase and editorial tagline are distinguished.
 - [ ] WORD 4 WORD is used only after a line-by-line comparison.
-- [ ] Typography added after neural upscaling; no watermark or placeholder remains.
+- [ ] Typography added after neural upscaling. No watermark or placeholder remains.
 
 ## Rights and release
 
 - [ ] Source photos, likeness use, music, footage and any samples have documented permission/provenance.
-- [ ] Exact model and LoRA versions recorded; applicable commercial/distribution terms reviewed.
+- [ ] Exact model and LoRA versions recorded. Applicable commercial/distribution terms reviewed.
 - [ ] Required platform synthetic/altered-content disclosure selected.
-- [ ] Title, caption, thumbnail and links are accurate; platform requirements checked at upload.
-- [ ] Release date is achievable; this checklist does not automatically publish anything.
+- [ ] Title and caption are accurate. Confirm thumbnail and links are accurate. Check platform requirements at upload.
+- [ ] Release date is achievable. This checklist does not automatically publish anything.
 
 ## Archive
 
 - [ ] Clean master and final platform exports open correctly from durable storage.
 - [ ] Editor project and linked source media retained.
-- [ ] Reference stills, workflow JSON, prompts, seeds and render log retained.
+- [ ] Reference stills and workflow JSON retained. Keep the render log, prompts and seeds.
 - [ ] Needed upscale chunks/receipts and restoration settings retained for unfinished jobs.
 - [ ] Model Datasets are distinguished from project backups.
 

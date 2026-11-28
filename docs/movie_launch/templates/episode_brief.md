@@ -12,7 +12,7 @@ Scripture reference and translation (checked against lyrics):
 Whether quotations are exact, paraphrased or commentary:
 Ending: hard stop / fade / false end / decay / other
 Chosen hook start/end (checked by listening):
-Delivery: landscape episode / portrait short / both
+Delivery: wide-format episode / portrait short / both
 
 ## First scene
 

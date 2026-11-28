@@ -16,7 +16,7 @@ creates/uploads a **private named Kaggle Dataset** and prints its link. Set
 `DATASET_OWNER` to your Kaggle username if authentication cannot detect it.
 Wait for processing, then attach it through **Add Input → Your Datasets**.
 No manual Save Version is required to submit the Dataset. The model payload is
-approximately 3.94 GiB. Repeated runs reuse a recorded submission; existing
+approximately 3.94 GiB. Repeated runs reuse a recorded submission. Existing
 Datasets are never overwritten or made public. Changed model catalogs use a new
 content-derived Dataset name. This matches the automatic private saver in
 `notebooks/image_studio/asset_builder.py`.
@@ -25,14 +25,14 @@ content-derived Dataset name. This matches the automatic private saver in
 attach Notebook Outputs approach. Dataset uploads use flat hardlinks to the
 verified nested model files, avoiding another multi-gigabyte working-storage copy.
 Credentials never enter the pack metadata, upload receipts or generated notebook.
-The upload-staging hardlinks remain locally for retries; saving notebook outputs
+The upload-staging hardlinks remain locally for retries. Saving notebook outputs
 as well may store those model paths twice. Live Dataset upload is unverified here.
 
 Import [Movie_Upscaler_Kaggle_v2.ipynb](../../Movie_Upscaler_Kaggle_v2.ipynb), enable T4 GPUs and Internet, then run its one startup cell. Click **Upload clip** in the leftmost node, wait for **Ready**, and press **Run once**. No separate Kaggle Dataset for the clip is required. The same node accepts an existing attached-video path. Uploads use 8 MiB requests so large files do not require one oversized tunnel request.
 
-Both connected workflows contain upload → source/chunk controls → native model nodes → save. SeedVR2 defaults to temporal 2× restoration; Real-ESRGAN uses 4× inference followed by automatically connected Lanczos resizing to 2× or 4×. Saved outputs default to **FFV1 lossless RGB MKV**. Select `high_quality_mp4` for H.264 CRF 14 / slow. The format, CRF and encoder preset are visible in the save node. Export changes reuse the restored chunks, including after completion.
+Both connected workflows contain upload → source/chunk controls → native model nodes → save. SeedVR2 defaults to temporal 2× restoration. Real-ESRGAN uses 4× inference followed by automatically connected Lanczos resizing to 2× or 4×. Saved outputs default to **FFV1 lossless RGB MKV**. Select `high_quality_mp4` for H.264 CRF 14 / slow. The format, CRF and encoder preset are visible in the save node. Export changes reuse the restored chunks, including after completion.
 
-Keep frontend Auto Queue OFF and queue count 1. The commit node queues one next chunk. Interrupt then Clear Queue pauses. Run again to resume. Uploads live under `/kaggle/working/movie-studio/input/movie-clips/`; outputs under `/kaggle/working/movie-studio/movie-jobs/`. Save output files before ending Kaggle. Existing model inputs and the model-pack builder are unchanged. v1 remains an identical renderer alias; use v2 to avoid importing a stale copy.
+Keep frontend Auto Queue OFF and queue count 1. The commit node queues one next chunk. Interrupt then Clear Queue pauses. Run again to resume. Uploads live under `/kaggle/working/movie-studio/input/movie-clips/`. Outputs are under `/kaggle/working/movie-studio/movie-jobs/`. Save output files before ending Kaggle. Existing model inputs and the model-pack builder are unchanged. v1 remains an identical renderer alias. Use v2 to avoid importing a stale copy.
 
 Read [the complete settings rationale](QUALITY_SETTINGS.md), including exactly which defaults changed and the limits of the local validation.
 
@@ -42,40 +42,40 @@ Read [the complete settings rationale](QUALITY_SETTINGS.md), including exactly w
 batches and internal temporal overlap. Seventeen core frames plus up to four
 context frames on either side are loaded per execution. Context is cropped before
 commit, retaining exactly the original number of frames. Outer chunk boundaries
-are not crossfaded; context and upstream temporal blending reduce seam risk but
+are not crossfaded. Context and upstream temporal blending reduce seam risk but
 cannot guarantee invisible seams or prevent all scene-cut artifacts.
 
 **Real-ESRGAN:** the native ComfyUI model loader and tiled upscale node, followed
 by optional 4×→2× downsampling. It has no temporal model and can flicker. No automatic
 face enhancement, creative SDXL redraw or frame interpolation is applied.
 
-DiT and Real-ESRGAN use GPU 0. SeedVR2 VAE uses GPU 1 when available, falling back to GPU 0 on single-GPU sessions. This is phase placement, not pooled memory or simultaneous tensor-parallel inference. T4 hardware does not support BF16/FP8 arithmetic like newer GPUs;
-the upstream compatibility path, Q8 weights and FP16 fallback still need real
+DiT and Real-ESRGAN use GPU 0. SeedVR2 VAE uses GPU 1 when available, falling back to GPU 0 on single-GPU sessions. This is phase placement, not pooled memory or simultaneous tensor-parallel inference. T4 hardware does not support BF16/FP8 arithmetic like newer GPUs.
+The upstream compatibility path, Q8 weights and FP16 fallback still need real
 Kaggle inference validation. VAE tiling does not spatially tile DiT attention.
-The default longest-edge guard is 1920; 4K requires deliberately raising it and
+The default longest-edge guard is 1920. 4K requires deliberately raising it and
 is not certified to fit a T4.
 
 The source must be square-pixel SDR with one video stream and a constant frame
 rate. Input frame timestamps are scanned incrementally before inference. Unsupported
-HDR, VFR and display rotation fail early. Video is decoded to RGB8. Default FFV1/BGR0 MKV preserves those processed pixels exactly; optional H.264/YUV420 MP4 uses visible CRF/preset controls (14/slow by default). High-bit-depth SDR is reduced to 8-bit. Known source
+HDR, VFR and display rotation fail early. Video is decoded to RGB8. Default FFV1/BGR0 MKV preserves those processed pixels exactly. Optional H.264/YUV420 MP4 uses visible CRF/preset controls (14/slow by default). High-bit-depth SDR is reduced to 8-bit. Known source
 colour matrix/transfer/primary tags are retained with explicit output conversion.
 
 Lossless FFV1 checkpoints, atomically written JSON receipts and SHA-256 protect
-resume. Source content and submitted graph settings identify a job; queue ticks,
+resume. Source content and submitted graph settings identify a job. Queue ticks,
 source path spelling, auto-continuation and export-container choices do not change
 its restoration identity. All other settings do. A verified file may be reused
 from a different source path. Same-session file hashes are cached against device,
-inode, size, mtime and ctime; restarting verifies them again.
+inode, size, mtime and ctime. Restarting verifies them again.
 
-Chunk loading seeks with preroll and selects by original frame timestamps; frame
+Chunk loading seeks with preroll and selects by original frame timestamps. Frame
 counts must match before any checkpoint is committed. Export verifies geometry,
-frame count and audio-stream count. Audio is stream-copied; MP4 retries with AAC
+frame count and audio-stream count. Audio is stream-copied. MP4 retries with AAC
 192 kbps if stream-copy fails. MKV also copies subtitle streams. Existing audio
 starts are offset relative to the source video start. Metadata and chapters are
-copied; arbitrary attachments/data tracks and full HDR semantics are not retained.
+copied. Arbitrary attachments/data tracks and full HDR semantics are not retained.
 
 The job retains its lossless chunks and final movie. Measured disk preflight uses
-an uncompressed RGB estimate and reserve; Kaggle film-length disk/time limits still
+an uncompressed RGB estimate and reserve. Kaggle film-length disk/time limits still
 apply. No automatic deletion. Across sessions, restore the saved `movie-jobs`
 directory to the configured working output path before resuming. Model packs alone
 do not save movies/checkpoints. Software and tunnel startup still need Internet.
@@ -91,12 +91,12 @@ do not save movies/checkpoints. Software and tunnel startup still need Internet.
 - Cloudflared: 2026.10.7, size and SHA-256 pinned.
 
 All model sizes and SHA-256 values are embedded in `assets.py` and both notebooks.
-The VAE and Real-ESRGAN weights can be reused from an attached Image Studio pack;
-its native INT8 SeedVR2 weights are different from this extension's GGUF weights.
+The VAE and Real-ESRGAN weights can be reused from an attached Image Studio pack.
+Its native INT8 SeedVR2 weights are different from this extension's GGUF weights.
 The startup constrains Kaggle's Torch/TorchVision/TorchAudio/NumPy/SciPy instead
 of replacing them, and saves installed package versions and source/model provenance.
 Base-image compatibility can still change. Source licenses remain applicable:
-SeedVR2 extension uses Apache-2.0 and Real-ESRGAN code uses BSD-3-Clause; consult
+SeedVR2 extension uses Apache-2.0 and Real-ESRGAN code uses BSD-3-Clause. Consult
 linked model cards for weight terms. No paid creator workflow was copied.
 
 ## Validation
@@ -114,26 +114,26 @@ Completed locally:
   real file chooser selection in both graphs, server byte integrity, connected
   source/resize paths, lossless defaults and every exported SeedVR2 setting.
 - **v2 actual Real-ESRGAN CPU integration:** upload → 2× inference → pause/resume
-  → MP4 with audio; completed-job lossless re-export without repeating inference;
-  automatic continuation across three chunks; a single scale edit produces exact
+  → MP4 with audio, followed by completed-job lossless re-export without repeating inference;
+  automatic continuation across three chunks. A single scale edit produces exact
   4× dimensions and a lossless movie. FFV1 output RGB bytes match saved chunks.
 - Both exported v2 API graphs pass the actual pinned ComfyUI validator. The CPU
-  SeedVR2 schema checkout exposes CUDA dropdown labels only; it never executes
+  SeedVR2 schema checkout exposes CUDA dropdown labels only. It never executes
   SeedVR2 inference, and this schema-only modification is not shipped.
 - **8 model-pack/Dataset tests:** HTTP Range resume, server restart fallback, corrupt-file
   preservation, copying actual attached files into a completed pack, failed-pack
-  handling; private Dataset creation, flat upload contents, repeat-submission reuse, and failed/corrupt upload rejection. These use small synthetic model files and mocked HTTP/API responses.
-- Both notebooks compile and pass notebook-v4 schema validation; embedded source
+  handling. Tests cover private Dataset creation, flat upload contents, repeat-submission reuse, and failed/corrupt upload rejection. These use small synthetic model files and mocked HTTP/API responses.
+- Both notebooks compile and pass notebook-v4 schema validation. Embedded source
   and graph payloads match their checked-in sources.
-- Both real connected graphs loaded in Chromium; the exported API confirms actual
+- Both real connected graphs loaded in Chromium. The exported API confirms actual
   widget values/links, temporal batch/overlap, tiled VAE and 2× downsampling.
-- Actual official Real-ESRGAN CPU inference through the real graph on a tiny video;
+- Actual official Real-ESRGAN CPU inference through the real graph on a tiny video:
   24×16 → 48×32, all three frames and audio retained. Verified pause/resume without
   recomputing the first checkpoint, then automatic continuation through three
   one-frame chunks. This verifies execution and media handling, not visual quality.
 
 The upstream SeedVR2 schema assumes a GPU exists. For CPU-only graph inspection,
-the development checkout's empty device list was locally changed to expose `cpu`;
+the development checkout's empty device list was locally changed to expose `cpu`.
 that test-only adjustment is **not shipped**. No SeedVR2 model inference was run.
 
 Not validated: Kaggle GPU startup, real T4 memory use/speed, SeedVR2 visual output,

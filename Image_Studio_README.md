@@ -2,11 +2,11 @@
 
 **[Open Image Studio Normal v10](Image_Studio_Normal_v10.ipynb)**
 
-Attach your existing **ONE ALL MODELS Dataset**. Select Kaggle GPU T4, enable Internet for software/tunnel setup, run the single code cell and open ComfyUI. Choose **Image Studio - Create - Cinematic**, write your prompt and press Run. Your Dataset, models, credentials and uploader are unchanged: **do not rebuild the Dataset for this notebook**.
+Attach your existing **ONE ALL MODELS Dataset**. Select Kaggle GPU T4, enable Internet for software/tunnel setup, run the single code cell and open ComfyUI. Choose **Image Studio - Create - Cinematic**, write your prompt and press Run. Nothing changes in your Dataset, models, credentials or uploader: **do not rebuild the Dataset for this notebook**.
 
 Normal workflows only:
 
-- Create cinematic images with ordinary prompt, width, height and seed controls.
+- Create cinematic images with ordinary prompt controls for width and height, plus a seed.
 - Edit images or paint a mask for local edits.
 - Face identity editing, masked face editing, BFS head replacement and a simple pixel-composite fallback.
 - Upscale 2×, Upscale 4× and SeedVR2 restoration. These original upscaling graphs are unchanged.

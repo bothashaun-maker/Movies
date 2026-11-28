@@ -10,15 +10,15 @@ Two separate self-contained notebooks, using AIQUEST's native Gradio/Wan2GP engi
 
 Use the images you already approved for composition. Start-frame input is first-frame conditioning, not a loose character reference. End-frame input controls the endpoint; it does not guarantee a perfect trajectory or identity in between. Keep important faces readable and plan exact edits in the editor. A single short shot is the most useful first test of your image and motion needs.
 
-This edition generates its own audio. It does not take your existing song as an audio-conditioning input. Singing/lip-sync from supplied audio would use a separate audio-driven mode; no extra LoRA/model is added for that here. Use your song as the final master in the editor for this test.
+This edition generates its own audio. It does not take your existing song as an audio-conditioning input. Singing/lip-sync from supplied audio would use a separate audio-driven mode. No extra LoRA/model is added for that here. Use your song as the final master in the editor for this test.
 
 ## Dataset and storage
 
-13 required files, **36.867 GiB** total, each with exact bytes, SHA-256 and an immutable Hugging Face revision. The CPU builder streams one verified file through Kaggle's native uploader at a time, requiring only the largest missing file (**18.145 GiB**) plus 2 GiB reserve locally. It reuses verified attached files and releases only its own uploaded temporary downloads. Dataset creation is private; no credentials are included in receipts, notebooks or manifests.
+13 required files, **36.867 GiB** total, each with exact bytes, SHA-256 and an immutable Hugging Face revision. The CPU builder streams one verified file through Kaggle's native uploader at a time, requiring only the largest missing file (**18.145 GiB**) plus 2 GiB reserve locally. It reuses verified attached files and releases only its own uploaded temporary downloads. Dataset creation is private. No credentials are included in receipts, notebooks or manifests.
 
 The GPU cell needs enough measured local scratch for the missing part of the complete set plus 6 GiB. It stages/hashes from the attached Dataset, preserving it, and does not download models. Models are not inferred directly from a potentially slow Dataset mount. Software/source setup still needs Internet. The native engine loads once and stays resident between jobs.
 
-Keep the cell running. Native Stop cancels a job. Defaults allow 1200 seconds for engine startup and 1800 seconds per generation, independently of model staging/package setup. These are editable spending limits, not speed claims. Only the owned app/process tree is stopped. Completed files remain in `/kaggle/working/jjp-ltx25/outputs/`; save them before the session ends. Dataset submission does not save generated clips.
+Keep the cell running. Native Stop cancels a job. Defaults allow 1200 seconds for engine startup and 1800 seconds per generation, independent of model staging/package setup. These are editable spending limits, not speed claims. Only the owned app/process tree is stopped. Completed files remain in `/kaggle/working/jjp-ltx25/outputs/`; save them before the session ends. Dataset submission does not save generated clips.
 
 ## Pinned integration and changes
 
@@ -28,7 +28,7 @@ Keep the cell running. Native Stop cancels a job. Defaults allow 1200 seconds fo
 - Retains the native tensor-parallel blocks, INT8 kernels, FP16 computation, FP32 numerical protections, reference preparation and decoding.
 - Eight-step schedule only. Invalid image conditioning is never silently replaced with zeros. Invalid text features, denoising callbacks or decoded video/audio fail clearly.
 - All nine upstream numerical patches must apply to the pinned source before model loading.
-- Exact default landscape text-to-video dimensions are **832×512**, not 480 pixels tall. An 864×480 image at that preset is prepared on a rounded **896×512** grid. Exact job geometry is logged. Higher presets exist but full-size T4 fit is not certified.
+- Exact default wide-format text-to-video dimensions are **832×512**, not 480 pixels tall. An 864×480 image at that preset is prepared on a rounded **896×512** grid. Exact job geometry is logged. Higher presets exist but full-size T4 fit is not certified.
 - Native MP4 export remains H.264 CRF 17 / veryfast with generated AAC audio. This is not an upscale notebook or a lossless restoration pipeline.
 
 AIQUEST/TeamAIQ credit remains in the native interface and engine. Original model/source licences apply. [Original notebook](https://github.com/TeamAIQ/Colab-notebooks/blob/e297aa0fb6eb1c9eaa57c855fc1cf66657b4b66b/kaggle_notebooks/ltx-2-5-22b-distilled-video-generator.ipynb).
